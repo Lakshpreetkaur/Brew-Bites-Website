@@ -1,8 +1,12 @@
 /**
  * Brew & Bite - Main JavaScript
  * Handles frame preloading, scroll scrubbing, hero text animation,
- * floating navbar transitions, mobile drawer navigation, and dynamic product rendering.
+ * floating navbar transitions, mobile drawer navigation, dynamic product rendering,
+ * and in-memory cart ordering.
  */
+
+// Global In-Memory Cart State
+let cart = [];
 
 document.addEventListener('DOMContentLoaded', () => {
   const animContainer = document.getElementById('animation-container');
@@ -61,6 +65,39 @@ document.addEventListener('DOMContentLoaded', () => {
     isTicking = false;
   }
 
+  // Visual Confirmation Feedback on Button Click
+  function showAddedFeedback(button) {
+    if (!button) return;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<span>Added ✓</span>';
+    button.classList.add('bg-tertiary', 'text-on-tertiary', 'pink-glow');
+    button.classList.remove('bg-secondary-container', 'text-on-secondary-container');
+
+    setTimeout(() => {
+      button.innerHTML = originalText;
+      button.classList.remove('bg-tertiary', 'text-on-tertiary', 'pink-glow');
+      button.classList.add('bg-secondary-container', 'text-on-secondary-container');
+    }, 1000);
+  }
+
+  // Add to Cart Logic
+  function addToCart(productId, button) {
+    if (!productId) return;
+
+    const existingItem = cart.find(item => item.productId === productId);
+    if (existingItem) {
+      existingItem.quantity += 1;
+    } else {
+      cart.push({ productId: productId, quantity: 1 });
+    }
+
+    console.log("Cart:", cart);
+
+    if (button) {
+      showAddedFeedback(button);
+    }
+  }
+
   // Dynamic Product Rendering from PRODUCTS array
   function renderProducts() {
     if (typeof PRODUCTS === 'undefined' || !Array.isArray(PRODUCTS)) return;
@@ -78,7 +115,12 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <h4 class="font-display text-xl font-bold text-primary mb-2">${item.name}</h4>
           <p class="font-body-md text-on-surface-variant mb-4">${item.description}</p>
-          <span class="font-label-bold text-secondary-container bg-secondary-container/10 px-4 py-2 rounded-full">$${item.price.toFixed(2)}</span>
+          <div class="flex flex-col items-center gap-3 w-full mt-auto">
+            <span class="font-label-bold text-secondary-container bg-secondary-container/10 px-4 py-1.5 rounded-full">$${item.price.toFixed(2)}</span>
+            <button data-product-id="${item.id}" class="add-to-order-btn w-full bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-sm py-2.5 px-4 rounded-full transition-all duration-200 shadow-xs hover:shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-1.5">
+              <span>Add to Order +</span>
+            </button>
+          </div>
         </div>
       `).join('');
     }
@@ -91,15 +133,31 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="w-32 h-32 ${item.accentColor} rounded-2xl overflow-hidden flex-shrink-0">
             <img alt="${item.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform" src="${item.image}" />
           </div>
-          <div>
-            <h4 class="font-display text-xl font-bold text-primary mb-2">${item.name}</h4>
-            <p class="font-body-md text-on-surface-variant mb-4">${item.description}</p>
-            <span class="font-label-bold text-secondary bg-secondary/10 px-4 py-2 rounded-full">$${item.price.toFixed(2)}</span>
+          <div class="flex flex-col items-start justify-between flex-1 h-full py-1">
+            <div>
+              <h4 class="font-display text-xl font-bold text-primary mb-1">${item.name}</h4>
+              <p class="font-body-md text-on-surface-variant mb-3">${item.description}</p>
+            </div>
+            <div class="flex items-center gap-3 w-full flex-wrap">
+              <span class="font-label-bold text-secondary bg-secondary/10 px-4 py-1.5 rounded-full">$${item.price.toFixed(2)}</span>
+              <button data-product-id="${item.id}" class="add-to-order-btn bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs py-2 px-4 rounded-full transition-all duration-200 shadow-xs hover:shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-1">
+                <span>Add to Order +</span>
+              </button>
+            </div>
           </div>
         </div>
       `).join('');
     }
   }
+
+  // Bind Event Delegation for "Add to Order" Buttons
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.add-to-order-btn');
+    if (btn) {
+      const productId = btn.getAttribute('data-product-id');
+      addToCart(productId, btn);
+    }
+  });
 
   // Floating Navbar Transparency and Blur on Scroll
   const mainNav = document.getElementById('main-nav');
