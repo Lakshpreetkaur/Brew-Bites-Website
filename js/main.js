@@ -2,11 +2,12 @@
  * Brew & Bite - Main JavaScript
  * Handles frame preloading, scroll scrubbing, hero text animation,
  * floating navbar transitions, mobile drawer navigation, dynamic product rendering,
- * and customer-facing shopping cart drawer with quantity controls and item removal.
+ * and persistent customer-facing shopping cart drawer with localStorage.
  */
 
 // Global In-Memory Cart State
 let cart = [];
+const CART_STORAGE_KEY = "brewBiteCart";
 
 document.addEventListener('DOMContentLoaded', () => {
   const animContainer = document.getElementById('animation-container');
@@ -90,6 +91,52 @@ document.addEventListener('DOMContentLoaded', () => {
   const cartItemsContainer = document.getElementById('cart-items-container');
   const cartSubtotal = document.getElementById('cart-subtotal');
 
+  // Save Cart to LocalStorage
+  function saveCart() {
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+    } catch (err) {
+      console.warn("Could not save cart to localStorage:", err);
+    }
+  }
+
+  // Load Cart from LocalStorage with Safe Product Validation
+  function loadCart() {
+    try {
+      const savedData = localStorage.getItem(CART_STORAGE_KEY);
+      if (!savedData) {
+        cart = [];
+        return;
+      }
+
+      const parsed = JSON.parse(savedData);
+      if (!Array.isArray(parsed)) {
+        cart = [];
+        return;
+      }
+
+      // Filter and validate: item must exist in PRODUCTS and quantity must be positive integer
+      const validItems = [];
+      parsed.forEach(item => {
+        if (!item || typeof item !== 'object') return;
+        const { productId, quantity } = item;
+        const exists = (typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS))
+          ? PRODUCTS.some(p => p.id === productId)
+          : false;
+
+        const numQty = Math.floor(Number(quantity));
+        if (exists && numQty > 0) {
+          validItems.push({ productId: productId, quantity: numQty });
+        }
+      });
+
+      cart = validItems;
+    } catch (err) {
+      console.warn("Could not load cart from localStorage:", err);
+      cart = [];
+    }
+  }
+
   // Open Cart Drawer
   function openCart() {
     if (!cartDrawer || !cartOverlay) return;
@@ -135,6 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const item = cart.find(i => i.productId === productId);
     if (item) {
       item.quantity += 1;
+      saveCart();
       console.log("Cart:", cart);
       updateCartCount();
       renderCart();
@@ -150,6 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (cart[itemIndex].quantity <= 0) {
         cart.splice(itemIndex, 1);
       }
+      saveCart();
       console.log("Cart:", cart);
       updateCartCount();
       renderCart();
@@ -160,6 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function removeFromCart(productId) {
     if (!productId) return;
     cart = cart.filter(item => item.productId !== productId);
+    saveCart();
     console.log("Cart:", cart);
     updateCartCount();
     renderCart();
@@ -251,6 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
       cart.push({ productId: productId, quantity: 1 });
     }
 
+    saveCart();
     console.log("Cart:", cart);
 
     updateCartCount();
@@ -420,6 +471,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // Initialize
+  loadCart();
   renderProducts();
   updateCartCount();
   updateNavStyle();
