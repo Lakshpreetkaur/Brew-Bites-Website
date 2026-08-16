@@ -2,7 +2,7 @@
  * Brew & Bite - Main JavaScript
  * Handles frame preloading, scroll scrubbing, hero text animation,
  * floating navbar transitions, mobile drawer navigation, dynamic product rendering,
- * and in-memory cart ordering.
+ * and customer-facing shopping cart drawer.
  */
 
 // Global In-Memory Cart State
@@ -80,6 +80,104 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 1000);
   }
 
+  // Cart Drawer UI Elements
+  const cartDrawer = document.getElementById('cart-drawer');
+  const cartOverlay = document.getElementById('cart-overlay');
+  const cartBtn = document.getElementById('cart-btn');
+  const closeCartBtn = document.getElementById('close-cart-btn');
+  const cartBadge = document.getElementById('cart-badge');
+  const cartHeaderCount = document.getElementById('cart-header-count');
+  const cartItemsContainer = document.getElementById('cart-items-container');
+  const cartSubtotal = document.getElementById('cart-subtotal');
+
+  // Open Cart Drawer
+  function openCart() {
+    if (!cartDrawer || !cartOverlay) return;
+    renderCart();
+    cartOverlay.classList.remove('opacity-0', 'pointer-events-none');
+    cartOverlay.classList.add('opacity-100', 'pointer-events-auto');
+    cartDrawer.classList.remove('translate-x-full');
+    cartDrawer.classList.add('translate-x-0');
+    document.body.classList.add('overflow-hidden');
+  }
+
+  // Close Cart Drawer
+  function closeCart() {
+    if (!cartDrawer || !cartOverlay) return;
+    cartOverlay.classList.remove('opacity-100', 'pointer-events-auto');
+    cartOverlay.classList.add('opacity-0', 'pointer-events-none');
+    cartDrawer.classList.remove('translate-x-0');
+    cartDrawer.classList.add('translate-x-full');
+    document.body.classList.remove('overflow-hidden');
+  }
+
+  // Update Cart Count Badge
+  function updateCartCount() {
+    const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+    if (cartBadge) {
+      cartBadge.textContent = totalCount;
+      if (totalCount > 0) {
+        cartBadge.classList.remove('hidden');
+      } else {
+        cartBadge.classList.add('hidden');
+      }
+    }
+
+    if (cartHeaderCount) {
+      cartHeaderCount.textContent = `(${totalCount} item${totalCount === 1 ? '' : 's'})`;
+    }
+  }
+
+  // Render Cart Items & Subtotal
+  function renderCart() {
+    if (!cartItemsContainer || !cartSubtotal) return;
+
+    if (cart.length === 0) {
+      cartItemsContainer.innerHTML = `
+        <div class="flex flex-col items-center justify-center h-full text-center py-12 px-4">
+          <div class="w-20 h-20 bg-secondary-container/20 text-secondary-container rounded-full flex items-center justify-center mb-4">
+            <span class="material-symbols-outlined text-4xl">local_cafe</span>
+          </div>
+          <h3 class="font-display text-lg font-bold text-primary mb-1">Your order is empty</h3>
+          <p class="font-body-md text-sm text-on-surface-variant max-w-xs">Add something delicious to get started.</p>
+        </div>
+      `;
+      cartSubtotal.textContent = '$0.00';
+      return;
+    }
+
+    let subtotal = 0;
+    const itemsHTML = cart.map(cartItem => {
+      const product = (typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS))
+        ? PRODUCTS.find(p => p.id === cartItem.productId)
+        : null;
+
+      if (!product) return '';
+
+      const lineTotal = product.price * cartItem.quantity;
+      subtotal += lineTotal;
+
+      return `
+        <div class="flex items-center gap-4 p-3.5 rounded-2xl bg-surface border border-outline-variant/20 shadow-xs hover:border-outline-variant/40 transition-colors">
+          <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 ${product.accentColor} p-1">
+            <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover rounded-lg" />
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 class="font-display font-bold text-primary text-sm truncate">${product.name}</h4>
+            <p class="font-body-md text-xs text-on-surface-variant mt-0.5">$${product.price.toFixed(2)} × ${cartItem.quantity}</p>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <span class="font-label-bold text-primary text-sm">$${lineTotal.toFixed(2)}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    cartItemsContainer.innerHTML = itemsHTML;
+    cartSubtotal.textContent = `$${subtotal.toFixed(2)}`;
+  }
+
   // Add to Cart Logic
   function addToCart(productId, button) {
     if (!productId) return;
@@ -92,6 +190,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     console.log("Cart:", cart);
+
+    updateCartCount();
+    renderCart();
 
     if (button) {
       showAddedFeedback(button);
@@ -159,6 +260,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Cart Drawer Toggle Listeners
+  if (cartBtn) {
+    cartBtn.addEventListener('click', openCart);
+  }
+  if (closeCartBtn) {
+    closeCartBtn.addEventListener('click', closeCart);
+  }
+  if (cartOverlay) {
+    cartOverlay.addEventListener('click', closeCart);
+  }
+
+  // Escape Key Closes Cart Drawer
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeCart();
+    }
+  });
+
   // Floating Navbar Transparency and Blur on Scroll
   const mainNav = document.getElementById('main-nav');
   function updateNavStyle() {
@@ -214,6 +333,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize
   renderProducts();
+  updateCartCount();
   updateNavStyle();
   updateFrame();
 });
