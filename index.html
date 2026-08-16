@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html class="scroll-smooth" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Brew &amp; Bite | Premium Chilled Coffee</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Sora:wght@600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed-dim": "#f4b6c1",
+                        "on-surface": "#1b1d0e",
+                        "surface-variant": "#e4e4cc",
+                        "inverse-primary": "#e1c1a4",
+                        "secondary-container": "#fdbe49",
+                        "surface": "#fbfbe2",
+                        "secondary-fixed-dim": "#fabc46",
+                        "surface-container": "#efefd7",
+                        "surface-dim": "#dbdcc3",
+                        "on-secondary-fixed-variant": "#5f4100",
+                        "on-surface-variant": "#4e453d",
+                        "on-primary-container": "#bd9f83",
+                        "primary-container": "#4b3621",
+                        "on-primary": "#ffffff",
+                        "surface-container-high": "#eaead1",
+                        "on-secondary-container": "#704e00",
+                        "on-error": "#ffffff",
+                        "tertiary-container": "#582d37",
+                        "surface-container-highest": "#e4e4cc",
+                        "on-primary-fixed": "#291806",
+                        "on-primary-fixed-variant": "#59422c",
+                        "surface-bright": "#fbfbe2",
+                        "on-error-container": "#93000a",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed-variant": "#663a43",
+                        "inverse-on-surface": "#f2f2d9",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-surface": "#303221",
+                        "outline-variant": "#d2c4ba",
+                        "on-tertiary-container": "#cf959f",
+                        "primary": "#33210d",
+                        "surface-container-low": "#f5f5dc",
+                        "primary-fixed-dim": "#e1c1a4",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed": "#ffdeab",
+                        "on-background": "#1b1d0e",
+                        "tertiary-fixed": "#ffd9df",
+                        "on-secondary-fixed": "#271900",
+                        "secondary": "#7d5700",
+                        "background": "#fbfbe2",
+                        "surface-tint": "#725a42",
+                        "error-container": "#ffdad6",
+                        "tertiary": "#3e1821",
+                        "outline": "#80756c",
+                        "primary-fixed": "#fedcbe",
+                        "error": "#ba1a1a",
+                        "on-tertiary-fixed": "#330f19"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "container-margin-desktop": "80px",
+                        "section-gap": "64px",
+                        "base": "8px",
+                        "container-margin-mobile": "20px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "label-bold": ["Sora"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "headline-lg": ["Sora"],
+                        "headline-md": ["Sora"],
+                        "headline-xl": ["Sora"],
+                        "headline-lg-mobile": ["Sora"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "caption": ["Plus Jakarta Sans"],
+                        "display": ["Sora"]
+                    },
+                    "fontSize": {
+                        "label-bold": ["14px", { "lineHeight": "20px", "fontWeight": "700" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
+                        "display-lg": ["80px", { "lineHeight": "88px", "letterSpacing": "-0.04em", "fontWeight": "900" }],
+                        "headline-lg-mobile": ["28px", { "lineHeight": "34px", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "caption": ["12px", { "lineHeight": "16px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-panel-extreme {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+        }
+        .pink-glow {
+            box-shadow: 0 0 60px 20px rgba(244, 182, 193, 0.4);
+        }
+        .caramel-glow-strong {
+            box-shadow: 0 10px 40px 10px rgba(253, 190, 73, 0.3);
+        }
+        .text-gradient-buzz {
+            background: linear-gradient(135deg, #3e1821, #f4b6c1, #fdbe49);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% 200%;
+            animation: gradient-shift 5s ease infinite;
+        }
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .blob-1 { animation: float 8s ease-in-out infinite; }
+        .blob-2 { animation: float 12s ease-in-out infinite reverse; }
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        .image-breakout {
+            mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+        }
+        @keyframes heroTextEnter {
+            0% {
+                opacity: 0;
+                transform: translateY(28px) scale(0.97);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .hero-text-overlay {
+            animation: heroTextEnter 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            will-change: opacity, transform;
+        }
+        .text-shadow-subtle {
+            text-shadow: 0 2px 24px rgba(251, 251, 226, 0.9), 0 4px 12px rgba(255, 255, 255, 0.85);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md selection:bg-tertiary-fixed-dim selection:text-primary overflow-x-hidden">
+
+<!-- Floating Transparent Glass Navbar -->
+<header id="main-nav" class="fixed top-4 sm:top-6 left-1/2 -translate-x-1/2 w-[92%] max-w-7xl rounded-full z-50 transition-all duration-500 border border-white/20 bg-white/10 backdrop-blur-xs py-3 sm:py-3.5 px-6 md:px-8">
+  <div class="flex items-center justify-between w-full">
+    <!-- Left: Brand / Logo -->
+    <a href="#animation-container" class="text-xl sm:text-2xl font-display font-black text-primary tracking-tighter hover:scale-105 transition-transform flex items-center gap-2">
+      <span>Brew &amp; Bite</span>
+    </a>
+
+    <!-- Center: Navigation Links (Desktop / Tablet) -->
+    <nav class="hidden md:flex items-center gap-7 lg:gap-9">
+      <a href="#animation-container" class="font-label-bold text-sm text-primary/80 hover:text-tertiary hover:scale-105 transition-all">Home</a>
+      <a href="#coffee-section" class="font-label-bold text-sm text-primary/80 hover:text-tertiary hover:scale-105 transition-all">Coffee</a>
+      <a href="#bites-section" class="font-label-bold text-sm text-primary/80 hover:text-tertiary hover:scale-105 transition-all">Bites</a>
+      <a href="#story-section" class="font-label-bold text-sm text-primary/80 hover:text-tertiary hover:scale-105 transition-all">Our Story</a>
+      <a href="#reviews-section" class="font-label-bold text-sm text-primary/80 hover:text-tertiary hover:scale-105 transition-all">Reviews</a>
+    </nav>
+
+    <!-- Right: Order Now Button & Mobile Hamburger -->
+    <div class="flex items-center gap-3">
+      <!-- Order Now CTA (Desktop / Tablet) -->
+      <a href="#order-section" class="hidden sm:inline-flex items-center gap-2 bg-tertiary text-on-tertiary font-label-bold text-xs sm:text-sm px-5 py-2.5 rounded-full hover:scale-105 hover:-translate-y-0.5 transition-all duration-300 shadow-md pink-glow">
+        <span>Order Now</span>
+        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+      </a>
+
+      <!-- Mobile Hamburger Button -->
+      <button id="mobile-menu-btn" aria-label="Toggle navigation menu" class="md:hidden flex items-center justify-center p-2 rounded-full text-primary hover:bg-white/30 transition-colors">
+        <span id="menu-icon" class="material-symbols-outlined text-2xl">menu</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Glass Dropdown Menu -->
+  <div id="mobile-menu" class="hidden md:hidden flex flex-col gap-3 mt-3 pt-3 border-t border-primary/10 transition-all">
+    <div class="flex flex-col gap-2.5 text-left px-2">
+      <a href="#animation-container" class="mobile-nav-link font-label-bold text-base text-primary/90 hover:text-tertiary py-1">Home</a>
+      <a href="#coffee-section" class="mobile-nav-link font-label-bold text-base text-primary/90 hover:text-tertiary py-1">Coffee</a>
+      <a href="#bites-section" class="mobile-nav-link font-label-bold text-base text-primary/90 hover:text-tertiary py-1">Bites</a>
+      <a href="#story-section" class="mobile-nav-link font-label-bold text-base text-primary/90 hover:text-tertiary py-1">Our Story</a>
+      <a href="#reviews-section" class="mobile-nav-link font-label-bold text-base text-primary/90 hover:text-tertiary py-1">Reviews</a>
+    </div>
+    <div class="pt-2 px-2 pb-1">
+      <a href="#order-section" class="mobile-nav-link flex items-center justify-center gap-2 w-full bg-tertiary text-on-tertiary font-label-bold text-sm py-2.5 rounded-full shadow-md pink-glow">
+        <span>Order Now</span>
+        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+      </a>
+    </div>
+  </div>
+</header>
+
+<!-- Scroll Animation Section (Hero) -->
+<section id="animation-container" class="relative w-full h-[300vh] bg-surface-container-low overflow-clip">
+  <div class="sticky top-0 h-screen w-full flex flex-col items-center justify-center overflow-hidden px-4 sm:px-6 md:px-10 lg:px-16">
+    <!-- Ambient glowing backgrounds matching the theme -->
+    <div class="absolute top-1/4 -left-1/4 w-[700px] h-[700px] bg-tertiary-fixed-dim rounded-full mix-blend-multiply filter blur-[130px] opacity-45 blob-1 pointer-events-none"></div>
+    <div class="absolute bottom-1/4 -right-1/4 w-[700px] h-[700px] bg-secondary-container rounded-full mix-blend-multiply filter blur-[110px] opacity-40 blob-2 pointer-events-none"></div>
+
+    <!-- Main Two-Column Hero Composition -->
+    <div class="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-8 lg:gap-14 relative z-10 py-6 sm:py-8 lg:py-0">
+      
+      <!-- LEFT COLUMN: Dedicated Text Content (~38% width on desktop) -->
+      <div id="hero-text-col" class="hero-text-overlay w-full lg:w-[40%] flex flex-col items-start justify-center gap-4 sm:gap-5 lg:gap-6 z-20 text-left transition-all duration-300">
+        
+        <!-- Pill Label -->
+        <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 backdrop-blur-md border border-primary/20 shadow-xs text-primary font-label-bold text-xs tracking-wider uppercase">
+          <span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse"></span>
+          <span>MOCHA CREAM • SIGNATURE BLEND</span>
+        </div>
+
+        <!-- Brand Name & Main Headline -->
+        <div class="space-y-1.5 w-full">
+          <span class="block font-display font-bold text-lg md:text-xl tracking-tight text-primary/80 uppercase">
+            BREW &amp; BITE
+          </span>
+          <h1 class="font-display font-black text-3xl sm:text-4xl md:text-5xl lg:text-[42px] xl:text-[50px] text-primary leading-[1.12] tracking-tight">
+            YOUR NEW COFFEE <br class="hidden sm:inline"/>
+            <span class="text-gradient-buzz inline-block">OBSESSION.</span>
+          </h1>
+        </div>
+
+        <!-- Subtitle Description -->
+        <p class="font-body-md text-base sm:text-lg text-on-surface-variant font-normal leading-relaxed max-w-md">
+          Rich coffee. Creamy indulgence. Made to crave.
+        </p>
+
+        <!-- Compact Rounded CTA Button -->
+        <div class="pt-1 sm:pt-2">
+          <a href="#menu-section" class="group inline-flex items-center gap-2.5 bg-primary text-on-primary font-label-bold text-sm sm:text-base px-6 sm:px-7 py-3 sm:py-3.5 rounded-full hover:scale-105 hover:bg-tertiary transition-all duration-300 shadow-md caramel-glow-strong">
+            <span>Discover the flavour</span>
+            <span class="material-symbols-outlined text-base sm:text-lg transition-transform duration-300 group-hover:translate-x-1" data-icon="arrow_forward">arrow_forward</span>
+          </a>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: Animation Showcase Card (~58% width on desktop) -->
+      <div class="w-full lg:w-[58%] flex items-center justify-center relative z-10">
+        <div class="w-full max-w-[500px] lg:max-w-[620px] aspect-[4/3] sm:aspect-[16/11] lg:aspect-[4/3] flex items-center justify-center p-3 sm:p-5 rounded-3xl bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_20px_50px_rgba(75,54,33,0.09)] transition-all">
+          <img id="anim" alt="Brew &amp; Bite Product Animation" class="w-full h-full object-contain rounded-2xl select-none pointer-events-none drop-shadow-xl" />
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Interactive Scroll Guide Hint -->
+    <div id="scroll-hint" class="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1 text-primary/70 font-label-bold text-xs sm:text-sm bg-white/60 backdrop-blur-md px-4 sm:px-5 py-2 rounded-full border border-white/70 shadow-md transition-opacity duration-300 pointer-events-none">
+      <span>Scroll to explore</span>
+      <span class="material-symbols-outlined text-base sm:text-lg animate-bounce" data-icon="expand_more">expand_more</span>
+    </div>
+  </div>
+</section>
+
+<!-- Featured Menu Grid -->
+<section id="menu-section" class="py-24 px-container-margin-mobile md:px-container-margin-desktop bg-surface relative">
+<div class="max-w-7xl mx-auto">
+<div class="text-center mb-16">
+<h2 class="font-display text-headline-xl text-primary mb-4">Our Favorites</h2>
+<p class="font-body-lg text-on-surface-variant max-w-2xl mx-auto">The lineup everyone's talking about. Find your new go-to.</p>
+</div>
+<div id="coffee-section" class="mb-16 scroll-mt-28">
+<h3 class="font-display text-headline-md text-tertiary mb-8">Signature Brews</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Brew Card 1 -->
+<div class="bg-surface-container-lowest rounded-3xl p-6 shadow-lg hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-outline-variant/30 flex flex-col items-center text-center group">
+<div class="w-48 h-48 bg-tertiary-fixed rounded-full mb-6 overflow-hidden flex items-center justify-center p-4 group-hover:scale-105 transition-transform">
+<img alt="Mocha Cream" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtSiT_nuRPIxzhj711u9ztYqTFzl0Z4q3f1qZeoxCMm12hYlHJrQPx_1AqNFrrecyeXojJdwdqXzgSR3nRcUB479GqfpmYBN7FB2iPxiUk6BRwGjOTKLg9OuLoBJr3li9iFrleZ6Tzb5sjIwglBYcgJDwZUsMFmj4FNvjNpp61OJ95CaYEu3MUHYlDafF5ixP55sP-ptpitvlUBkcLxTNZdb4qm26_T-0bENJsIz-Js25dN40TPB2NYA"/>
+</div>
+<h4 class="font-display text-xl font-bold text-primary mb-2">Mocha Cream</h4>
+<p class="font-body-md text-on-surface-variant mb-4">Rich chocolate meets velvety smooth espresso.</p>
+<span class="font-label-bold text-secondary-container bg-secondary-container/10 px-4 py-2 rounded-full">$5.50</span>
+</div>
+<!-- Brew Card 2 -->
+<div class="bg-surface-container-lowest rounded-3xl p-6 shadow-lg hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-outline-variant/30 flex flex-col items-center text-center group">
+<div class="w-48 h-48 bg-secondary-fixed rounded-full mb-6 overflow-hidden flex items-center justify-center p-4 group-hover:scale-105 transition-transform">
+<img alt="Caramel Latte" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqDTWHE52mfNwiTjNBEw8GXOgnjze1rUxrjvt5p4UijuKmcxfrL5Ouh4cnAfRYXjKWKBVfMSRsRE1G7LsiMzGWQ4KVYPg5yXZytNpJKpteFErIrYQ54vgNccelNal4gpXIvChDxZ3J3oA3-IDhm7O6BCVt1w21NFrjszlqF-MX9m5w_VzpjFjVQHVoONMDXAJa9g9CvaGqoZgSH3QYQSTvHLI0g8MyaBq-Dq9kpW_OcBl9MNsWVMTCrQ"/>
+</div>
+<h4 class="font-display text-xl font-bold text-primary mb-2">Caramel Latte</h4>
+<p class="font-body-md text-on-surface-variant mb-4">Sweet caramel ribbons in a creamy delight.</p>
+<span class="font-label-bold text-secondary-container bg-secondary-container/10 px-4 py-2 rounded-full">$5.00</span>
+</div>
+<!-- Brew Card 3 -->
+<div class="bg-surface-container-lowest rounded-3xl p-6 shadow-lg hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-outline-variant/30 flex flex-col items-center text-center group">
+<div class="w-48 h-48 bg-primary-fixed rounded-full mb-6 overflow-hidden flex items-center justify-center p-4 group-hover:scale-105 transition-transform">
+<img alt="Vanilla Cream" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoaLrYFOPEhOmL8osLHUKp52_5DbHhKfnrNc-RoPw-0aoNEcMqXPDBrAYfIFuGKom6Q0ri3hzYuz63mjl3aWIMUA8PIG4QYEt-C-MFBQhdhbDYMXGTUYM2rEThpNZvfLAQUUDCmFZPaXycZRDFR0xfo1a9w6CP0tT-IxV6_fZOzNc8m5_mHNl8CqOL-KBdnk4xHJcRtnGfEfRfWEtg_8uvI850aepHiJJTkA3ePlwZ6IDtSIYi5OxM5Q"/>
+</div>
+<h4 class="font-display text-xl font-bold text-primary mb-2">Vanilla Cream</h4>
+<p class="font-body-md text-on-surface-variant mb-4">Classic vanilla bean infused for maximum chill.</p>
+<span class="font-label-bold text-secondary-container bg-secondary-container/10 px-4 py-2 rounded-full">$4.50</span>
+</div>
+</div>
+</div>
+<div id="bites-section" class="scroll-mt-28">
+<h3 class="font-display text-headline-md text-tertiary mb-8">Bakery Bites</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Bite Card 1 -->
+<div class="bg-surface-container-lowest rounded-3xl p-6 shadow-lg hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-outline-variant/30 flex flex-row items-center gap-6 group">
+<div class="w-32 h-32 bg-secondary-fixed-dim rounded-2xl overflow-hidden flex-shrink-0">
+<img alt="Chocolate Croissant" class="w-full h-full object-cover group-hover:scale-110 transition-transform" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLKhoQuUwFMcB6cvwqpvy3l01CLRMOQ023hE2yalcGxkf6NoPB_U-ItebPRcs4Xafj_RT8Z9sPUN9gPOX3AJDDI9gdGpmzymvjXSk8Lo3lvvQtVQ3mW9uyAsWg5DD6yJW4N6OnfHArvRcDKat_o2zGlDjO_c4msJNaC_Ofvbc7F2EjTnRI1uIOXO3v19aK4jiIEv8fK_yhnsptodn8fsEPY8bf5ByjLzR62ajmzkC3bbL4eDFYvtOPQA"/>
+</div>
+<div>
+<h4 class="font-display text-xl font-bold text-primary mb-2">Chocolate Croissant</h4>
+<p class="font-body-md text-on-surface-variant mb-4">Flaky, buttery, filled with dark chocolate.</p>
+<span class="font-label-bold text-secondary bg-secondary/10 px-4 py-2 rounded-full">$4.00</span>
+</div>
+</div>
+<!-- Bite Card 2 -->
+<div class="bg-surface-container-lowest rounded-3xl p-6 shadow-lg hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-outline-variant/30 flex flex-row items-center gap-6 group">
+<div class="w-32 h-32 bg-tertiary-fixed-dim rounded-2xl overflow-hidden flex-shrink-0">
+<img alt="Almond Brownie" class="w-full h-full object-cover group-hover:scale-110 transition-transform" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDubHxFP4arUQjOLfJ0FobeamSV2EaJDg-zT_-FUeyTNJ2L_zeK2pSUeFn9NjjLLxj4n4eBPOxRua-FBVnSHhvvkCrYycX_9PS-udUjwaqjLLqncbs-Xd5nY7-HOv0-pqO7vy3vP-2hAcEVkYEFnuWkwlVofoUSnH5nAhs6GH8-zQlew0KpjAQadJq0LQNfwG7CJTSwpE9DqxqJjNyQDcsryoMzNO5VkcBeKyQq67fjJ8UWz3apNT2KeA"/>
+</div>
+<div>
+<h4 class="font-display text-xl font-bold text-primary mb-2">Almond Brownie</h4>
+<p class="font-body-md text-on-surface-variant mb-4">Fudgy core, crispy edges, toasted almonds.</p>
+<span class="font-label-bold text-secondary bg-secondary/10 px-4 py-2 rounded-full">$3.50</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Our Brew Process (Our Story) -->
+<section id="story-section" class="py-24 px-container-margin-mobile md:px-container-margin-desktop bg-surface-container-high relative overflow-hidden scroll-mt-20">
+<div class="max-w-7xl mx-auto relative z-10">
+<h2 class="font-display text-headline-xl text-primary text-center mb-16">How We Do It</h2>
+<div class="flex flex-col md:flex-row justify-center items-start gap-12 md:gap-8">
+<!-- Step 1 -->
+<div class="flex-1 flex flex-col items-center text-center relative">
+<div class="w-24 h-24 bg-tertiary text-on-tertiary rounded-full flex items-center justify-center mb-6 shadow-lg transform hover:rotate-12 transition-transform">
+<span class="material-symbols-outlined text-4xl" data-icon="psychiatry">psychiatry</span>
+</div>
+<h3 class="font-display text-headline-md text-primary mb-3">1. Selection</h3>
+<p class="font-body-md text-on-surface-variant">We source only the finest, ethically grown beans from top farms.</p>
+<div class="hidden md:block absolute top-12 left-[60%] w-[80%] h-0.5 bg-outline-variant/50 border-t-2 border-dashed border-outline-variant/50"></div>
+</div>
+<!-- Step 2 -->
+<div class="flex-1 flex flex-col items-center text-center relative">
+<div class="w-24 h-24 bg-secondary-container text-on-secondary-container rounded-full flex items-center justify-center mb-6 shadow-lg transform hover:rotate-12 transition-transform">
+<span class="material-symbols-outlined text-4xl" data-icon="local_fire_department">local_fire_department</span>
+</div>
+<h3 class="font-display text-headline-md text-primary mb-3">2. Roasting</h3>
+<p class="font-body-md text-on-surface-variant">Carefully roasted in small batches to lock in those bold flavors.</p>
+<div class="hidden md:block absolute top-12 left-[60%] w-[80%] h-0.5 bg-outline-variant/50 border-t-2 border-dashed border-outline-variant/50"></div>
+</div>
+<!-- Step 3 -->
+<div class="flex-1 flex flex-col items-center text-center">
+<div class="w-24 h-24 bg-primary text-on-primary rounded-full flex items-center justify-center mb-6 shadow-lg transform hover:rotate-12 transition-transform">
+<span class="material-symbols-outlined text-4xl" data-icon="coffee_maker">coffee_maker</span>
+</div>
+<h3 class="font-display text-headline-md text-primary mb-3">3. Brewing</h3>
+<p class="font-body-md text-on-surface-variant">Cold-brewed to perfection, then chilled for the ultimate refreshment.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- The "Bite" Gallery -->
+<section class="py-24 px-container-margin-mobile md:px-container-margin-desktop bg-background">
+<div class="max-w-7xl mx-auto">
+<h2 class="font-display text-headline-xl text-primary text-center mb-16">The Perfect Match</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<div class="aspect-square rounded-3xl overflow-hidden group relative">
+<img alt="Coffee and Croissant" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKQ2dbJrh35_sCz6GFzKzIN4mCpvy5FC_xfUW4OwpKgL4WENK4cjMyybCrbQMpNWIQP2fXiNYqqB1y-EsFS9BdUaH1apEJZ-VN0xFsKz5228TeUG396nm2roGi4GhD-4ceFIsYOchN5hv1dDAmssalMMiCb83DU25aVLGdM4yNdzWVJ-b5pbEyZ2_UF9E1XQs7UJeugINMUQJRT8VLhLsejF4tz6LfZABjmEpCe4COM-1h0cI24N_C5Q"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+<span class="text-white font-label-bold text-lg">Morning Rituals</span>
+</div>
+</div>
+<div class="aspect-square rounded-3xl overflow-hidden group relative">
+<img alt="Iced Coffee and Brownie" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMZN_L7KvttHU-v8yk2Gzg4H6sJ5rE80bhsA0TJ3qi_JwrN113X8F7d4K7TN-Dwl1XztvXcNr92xOUk2n3duW7xbU_zmej4O61_LrXsPzHoM45p__AlcVMloSkph_ATX-T1RqA-SW7H_I_IwfjNewBafwlohoQ8kvXF3yN4H-qf54A3PaZfD49U6tHUuc3PAOTJKXla4B3fSKLruw0D2Fn0o33E-1eAJMjA7WDXJhVJMvz9zkAoIQttA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+<span class="text-white font-label-bold text-lg">Sweet Escape</span>
+</div>
+</div>
+<div class="aspect-square rounded-3xl overflow-hidden group relative hidden lg:block">
+<img alt="Pastry Assortment" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCeWHyo2qyr-Yhvp6T1MkYouUlmy_Y6JWtmKuUvx8x5IAg0_G179PNYD7xWML1EZusnzRPjNLoTUykxnX7SdWdEQE1GxNsoIEvAVXwKhm6849w4l2SiZ_9g01HQAeiwLXND4xKEdb1W1dE3HSYOw6TVx9wk4293z-lT7BvQFQbl2NSCkucT0UqNtp33iV372N3ZgbfA6Ynco2Zmue-4HvWNBP283j5N4mx3uBSXMedhjRgEPwgArSJXtQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
+<span class="text-white font-label-bold text-lg">Share the Love</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Bite Section moved up for impact -->
+<section class="py-24 px-container-margin-mobile md:px-container-margin-desktop relative bg-tertiary-fixed-dim/20 overflow-hidden">
+<div class="absolute right-0 top-0 w-1/2 h-full bg-secondary-fixed/30 rounded-l-[100px] -z-10"></div>
+<div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-16">
+<div class="w-full md:w-1/2 relative">
+<div class="aspect-square bg-gradient-to-br from-tertiary-fixed to-secondary-fixed rounded-full p-8 relative animate-[spin_30s_linear_infinite]">
+<div class="w-full h-full bg-white rounded-full flex items-center justify-center text-tertiary font-display text-4xl font-black overflow-hidden">
+<img alt="Brownie" class="w-full h-full object-cover rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZh_8FWrorHhEdSYevBAe9IOldSiLey9kHqZtw7fdcluobMBryNDEfo-lpxdZACMC2FV7TB40H8I9teiCY4eEoAe6HzkuSLDBoMtTLpm8Xauhvd5Hzjnl0_3y5F_Sk3DWQxVhH8q0MYcr2BGChGqskhs713UrYgFwLnyPN4ydrW-JGGe_4r5wdidCZjOIbJJ_rFkntLDpA-j7rEN6h_nCo4K7laznQqnnIH0MV0Ds1OqgvpJ5ASi1vuA"/>
+</div>
+</div>
+</div>
+<div class="w-full md:w-1/2 flex flex-col items-start gap-6 relative">
+<div class="absolute -top-10 -right-10 text-[120px] font-display font-black text-tertiary/10 rotate-12">SNACKS</div>
+<h2 class="font-display text-headline-xl text-primary">Pair it with <span class="text-tertiary">Play.</span></h2>
+<p class="font-body-lg text-on-surface-variant max-w-md">Our bakery bites are just as bold as our brews. Sticky, sweet, and totally craveable.</p>
+<button class="bg-secondary-container text-on-secondary-container font-label-bold px-8 py-4 rounded-full hover:scale-110 transition-transform shadow-lg hover:shadow-xl">Explore Bites</button>
+</div>
+</div>
+</section>
+<!-- Social Proof / Reviews -->
+<section id="reviews-section" class="py-24 px-container-margin-mobile md:px-container-margin-desktop bg-surface-container-lowest scroll-mt-20">
+<div class="max-w-7xl mx-auto">
+<h2 class="font-display text-headline-xl text-primary text-center mb-16">What the Gen-Z says</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<!-- Review 1 -->
+<div class="bg-surface p-8 rounded-3xl border border-outline-variant/30 shadow-md">
+<div class="flex text-secondary mb-4">
+<span class="material-symbols-outlined" data-icon="star">star</span>
+<span class="material-symbols-outlined" data-icon="star">star</span>
+<span class="material-symbols-outlined" data-icon="star">star</span>
+<span class="material-symbols-outlined" data-icon="star">star</span>
+<span class="material-symbols-outlined" data-icon="star">star</span>
+</div>
+<p class="font-body-lg text-on-surface-variant italic mb-6">"Literally the best iced mocha I've ever had. It's my new daily obsession."</p>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-tertiary-fixed rounded-full flex items-center justify-center text-tertiary font-bold">J</div>
+<span class="font-label-bold text-primary">@jess_vibes</span>
+</div>
+</div>
+<!-- Review 2 -->
+<div class="bg-surface p-8 rounded-3xl border border-outline-variant/30 shadow-md">
+<div class="flex text-secondary mb-4">
+<span class="material-symbols-outlined" data-icon="star">star</span>
+<span class="material-symbols-outlined" data-icon="star">star</span>
+<span class="material-symbols-outlined" data-icon="star">star</span>
+<span class="material-symbols-outlined" data-icon="star">star</span>
+<span class="material-symbols-outlined" data-icon="star">star</span>
+</div>
+<p class="font-body-lg text-on-surface-variant italic mb-6">"The packaging is fire, and the taste is even better. Plus, those brownies? Unreal."</p>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-secondary-fixed rounded-full flex items-center justify-center text-secondary font-bold">M</div>
+<span class="font-label-bold text-primary">@marcus_chills</span>
+</div>
+</div>
+<!-- Review 3 -->
+<div class="bg-surface p-8 rounded-3xl border border-outline-variant/30 shadow-md">
+<div class="flex text-secondary mb-4">
+<span class="material-symbols-outlined" data-icon="star">star</span>
+<span class="material-symbols-outlined" data-icon="star">star</span>
+<span class="material-symbols-outlined" data-icon="star">star</span>
+<span class="material-symbols-outlined" data-icon="star">star</span>
+<span class="material-symbols-outlined text-outline-variant" data-icon="star">star</span>
+</div>
+<p class="font-body-lg text-on-surface-variant italic mb-6">"Perfect for studying or just hanging out. Caramel Latte hits the spot every time."</p>
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 bg-primary-fixed rounded-full flex items-center justify-center text-primary font-bold">S</div>
+<span class="font-label-bold text-primary">@sarah_sweets</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Final CTA / Order Section -->
+<section id="order-section" class="py-32 px-container-margin-mobile md:px-container-margin-desktop bg-tertiary text-on-tertiary text-center relative overflow-hidden scroll-mt-20">
+<div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1559525839-b184a4d698c7?w=1600&amp;q=80')] bg-cover bg-center opacity-20 mix-blend-overlay"></div>
+<div class="relative z-10 max-w-3xl mx-auto flex flex-col items-center gap-8">
+<h2 class="font-display text-5xl md:text-[64px] leading-tight font-black">Your coffee break just got better.</h2>
+<p class="font-body-lg text-tertiary-fixed opacity-90">Join the movement and taste the difference today.</p>
+<button class="bg-surface-container-lowest text-tertiary font-label-bold text-xl px-12 py-6 rounded-full hover:scale-110 hover:-translate-y-2 transition-all duration-300 shadow-[0_0_40px_rgba(255,255,255,0.3)]">
+                Order Now
+            </button>
+</div>
+</section>
+<!-- Footer Component -->
+<footer class="bg-surface-container-highest w-full py-20 px-container-margin-mobile md:px-container-margin-desktop border-t-4 border-tertiary/20 relative overflow-hidden">
+<div class="absolute -bottom-20 -right-20 w-96 h-96 bg-tertiary-fixed-dim/40 rounded-full blur-3xl -z-10"></div>
+<div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-gutter relative z-10">
+<div class="col-span-1 md:col-span-1 flex flex-col gap-6">
+<h3 class="text-headline-lg font-display font-black text-tertiary mb-2 hover:skew-x-6 transition-transform w-fit">Brew &amp; Bite</h3>
+<p class="font-body-md text-body-md text-on-surface-variant opacity-80 max-w-xs">
+                    © 2024 Brew &amp; Bite. All rights reserved. Crafted for the caffeine-curious and the bold.
+                </p>
+</div>
+<div class="col-span-1 md:col-span-3 grid grid-cols-2 md:grid-cols-3 gap-8">
+<div class="flex flex-col gap-6">
+<h4 class="font-display font-bold text-primary text-xl">Shop</h4>
+<a class="font-label-bold text-label-bold text-tertiary hover:translate-x-2 transition-transform" href="#">Menu</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-tertiary hover:translate-x-2 transition-transform" href="#">Subscriptions</a>
+</div>
+<div class="flex flex-col gap-6">
+<h4 class="font-display font-bold text-primary text-xl">Find Us</h4>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-tertiary hover:translate-x-2 transition-transform" href="#">Locations</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-tertiary hover:translate-x-2 transition-transform" href="#">Brew Guide</a>
+</div>
+<div class="flex flex-col gap-6">
+<h4 class="font-display font-bold text-primary text-xl">More</h4>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-tertiary hover:translate-x-2 transition-transform" href="#">Sustainability</a>
+<a class="font-body-md text-body-md text-on-surface-variant hover:text-tertiary hover:translate-x-2 transition-transform" href="#">Join our Newsletter</a>
+</div>
+</div>
+</div>
+</footer>
+
+<!-- Frame Animation Scroll Script with Image Preloader -->
+<script>
+  const animContainer = document.getElementById('animation-container');
+  const img = document.getElementById('anim');
+  const scrollHint = document.getElementById('scroll-hint');
+  const heroTextCol = document.getElementById('hero-text-col');
+
+  const totalFrames = 222;
+  const pad = (num, size) => String(num).padStart(size, '0');
+  const frames = [];
+
+  // Generate frame list and preload for smooth rendering
+  for (let i = 1; i <= totalFrames; i++) {
+    const src = `ezgif-frame-${pad(i, 3)}.jpg`;
+    frames.push(src);
+    const preloadImg = new Image();
+    preloadImg.src = src;
+  }
+
+  // Set initial frame
+  if (frames.length > 0) {
+    img.src = frames[0];
+  }
+
+  let isTicking = false;
+
+  function updateFrame() {
+    if (!animContainer) return;
+    const rect = animContainer.getBoundingClientRect();
+    const scrollDistance = -rect.top;
+    const maxScroll = animContainer.offsetHeight - window.innerHeight;
+
+    if (maxScroll > 0) {
+      const progress = Math.min(Math.max(scrollDistance / maxScroll, 0), 1);
+      const frameIdx = Math.min(totalFrames - 1, Math.floor(progress * totalFrames));
+      
+      if (frames[frameIdx] && img.getAttribute('data-current-frame') !== String(frameIdx)) {
+        img.src = frames[frameIdx];
+        img.setAttribute('data-current-frame', String(frameIdx));
+      }
+
+      // Smoothly fade and slightly translate text upward as scroll animation progresses
+      if (heroTextCol) {
+        const fadeEnd = 0.22; // Smoothly fades out in initial scroll phase
+        const textOpacity = Math.max(0, 1 - (progress / fadeEnd));
+        const textTranslateY = -(progress / fadeEnd) * 36;
+        heroTextCol.style.opacity = textOpacity.toFixed(3);
+        heroTextCol.style.transform = `translateY(${textTranslateY.toFixed(1)}px)`;
+        heroTextCol.style.pointerEvents = textOpacity <= 0.05 ? 'none' : 'auto';
+      }
+
+      if (scrollHint) {
+        scrollHint.style.opacity = progress > 0.08 ? '0' : '1';
+      }
+    }
+    isTicking = false;
+  }
+
+  // Floating Navbar Transparency and Blur on Scroll
+  const mainNav = document.getElementById('main-nav');
+  function updateNavStyle() {
+    if (!mainNav) return;
+    if (window.scrollY > 30) {
+      mainNav.classList.remove('bg-white/10', 'backdrop-blur-xs', 'border-white/20');
+      mainNav.classList.add('bg-surface/85', 'backdrop-blur-xl', 'border-white/60', 'shadow-lg', 'shadow-primary/5');
+    } else {
+      mainNav.classList.add('bg-white/10', 'backdrop-blur-xs', 'border-white/20');
+      mainNav.classList.remove('bg-surface/85', 'backdrop-blur-xl', 'border-white/60', 'shadow-lg', 'shadow-primary/5');
+    }
+  }
+
+  // Mobile Menu Drawer Handler
+  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+  const mobileMenu = document.getElementById('mobile-menu');
+  const menuIcon = document.getElementById('menu-icon');
+  const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+
+  if (mobileMenuBtn && mobileMenu) {
+    mobileMenuBtn.addEventListener('click', () => {
+      const isHidden = mobileMenu.classList.contains('hidden');
+      if (isHidden) {
+        mobileMenu.classList.remove('hidden');
+        if (menuIcon) menuIcon.textContent = 'close';
+      } else {
+        mobileMenu.classList.add('hidden');
+        if (menuIcon) menuIcon.textContent = 'menu';
+      }
+    });
+
+    // Close mobile menu on clicking any navigation link
+    mobileNavLinks.forEach(link => {
+      link.addEventListener('click', () => {
+        mobileMenu.classList.add('hidden');
+        if (menuIcon) menuIcon.textContent = 'menu';
+      });
+    });
+  }
+
+  window.addEventListener('scroll', () => {
+    updateNavStyle();
+    if (!isTicking) {
+      window.requestAnimationFrame(updateFrame);
+      isTicking = true;
+    }
+  }, { passive: true });
+
+  window.addEventListener('resize', () => {
+    updateNavStyle();
+    updateFrame();
+  });
+
+  updateNavStyle();
+  updateFrame();
+</script>
+</body>
+</html>
