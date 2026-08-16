@@ -121,8 +121,13 @@
       <a href="#reviews-section" class="font-label-bold text-sm text-primary/80 hover:text-tertiary hover:scale-105 transition-all">Reviews</a>
     </nav>
 
-    <!-- Right: Cart Button, Order Now Button & Mobile Hamburger -->
+    <!-- Right: Profile Button, Cart Button, Order Now Button & Mobile Hamburger -->
     <div class="flex items-center gap-2 sm:gap-3">
+      <!-- Profile Button -->
+      <button id="profile-btn" aria-label="Customer Profile & Order History" class="flex items-center justify-center p-2.5 rounded-full bg-white/20 hover:bg-white/40 border border-white/30 text-primary transition-all duration-200 cursor-pointer shadow-xs active:scale-95">
+        <span class="material-symbols-outlined text-xl">person</span>
+      </button>
+
       <!-- Cart Drawer Toggle Button -->
       <button id="cart-btn" aria-label="View Cart" class="relative flex items-center justify-center p-2.5 rounded-full bg-white/20 hover:bg-white/40 border border-white/30 text-primary transition-all duration-200 cursor-pointer shadow-xs active:scale-95">
         <span class="material-symbols-outlined text-xl">shopping_bag</span>
@@ -151,6 +156,10 @@
       <a href="#bites-section" class="mobile-nav-link font-label-bold text-base text-primary/90 hover:text-tertiary py-1">Bites</a>
       <a href="#story-section" class="mobile-nav-link font-label-bold text-base text-primary/90 hover:text-tertiary py-1">Our Story</a>
       <a href="#reviews-section" class="mobile-nav-link font-label-bold text-base text-primary/90 hover:text-tertiary py-1">Reviews</a>
+      <button id="mobile-profile-btn" class="font-label-bold text-base text-primary/90 hover:text-tertiary py-1 text-left flex items-center gap-2 cursor-pointer">
+        <span class="material-symbols-outlined text-lg">person</span>
+        <span>My Profile &amp; Orders</span>
+      </button>
     </div>
     <div class="pt-2 px-2 pb-1">
       <a href="#order-section" class="mobile-nav-link flex items-center justify-center gap-2 w-full bg-tertiary text-on-tertiary font-label-bold text-sm py-2.5 rounded-full shadow-md pink-glow">
@@ -438,20 +447,88 @@
     <!-- Populated dynamically via js/main.js -->
   </div>
 
-  <!-- Cart Footer with Subtotal -->
-  <div id="cart-footer" class="p-6 border-t border-outline-variant/20 bg-surface/40 flex flex-col gap-3">
+  <!-- Cart Footer with Subtotal & Checkout CTA -->
+  <div id="cart-footer" class="p-6 border-t border-outline-variant/20 bg-surface/40 flex flex-col gap-3.5">
     <div class="flex items-center justify-between text-base">
       <span class="font-body-md text-on-surface-variant font-medium">Subtotal</span>
       <span id="cart-subtotal" class="font-display text-2xl font-bold text-primary">$0.00</span>
     </div>
+    <button id="open-checkout-btn" class="w-full bg-tertiary text-on-tertiary font-label-bold text-sm py-3 px-6 rounded-full hover:scale-102 transition-all duration-200 shadow-md pink-glow flex items-center justify-center gap-2 active:scale-95 cursor-pointer disabled:opacity-50 disabled:pointer-events-none">
+      <span>Proceed to Checkout</span>
+      <span class="material-symbols-outlined text-sm">arrow_forward</span>
+    </button>
     <p class="text-xs text-on-surface-variant/80 text-center">Taxes and discounts calculated during checkout</p>
   </div>
 </aside>
 
+<!-- Full-Page Checkout Overlay Modal -->
+<div id="checkout-modal" role="dialog" aria-labelledby="checkout-title" aria-modal="true" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+  <div id="checkout-modal-card" class="w-full max-w-4xl max-h-[92vh] overflow-y-auto bg-surface-container-lowest text-on-surface rounded-3xl shadow-2xl border border-outline-variant/30 flex flex-col transform scale-95 transition-transform duration-300 my-auto">
+    
+    <!-- Checkout Header -->
+    <div class="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-outline-variant/20 bg-surface/80 backdrop-blur-sm sticky top-0 z-10">
+      <div class="flex items-center gap-3">
+        <button id="back-to-cart-btn" aria-label="Back to cart" class="p-1.5 rounded-full text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors cursor-pointer flex items-center justify-center">
+          <span class="material-symbols-outlined text-xl">arrow_back</span>
+        </button>
+        <div>
+          <h2 id="checkout-title" class="font-display text-xl sm:text-2xl font-bold text-primary tracking-tight">Checkout</h2>
+          <p class="text-xs text-on-surface-variant">Brew &amp; Bite Express Ordering</p>
+        </div>
+      </div>
+      <button id="close-checkout-btn" aria-label="Close Checkout" class="p-2 rounded-full text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors cursor-pointer flex items-center justify-center">
+        <span class="material-symbols-outlined text-2xl">close</span>
+      </button>
+    </div>
+
+    <!-- Checkout Dynamic View Body -->
+    <div id="checkout-content" class="p-6 sm:p-8">
+      <!-- Injected via js/checkout.js -->
+    </div>
+  </div>
+</div>
+
+<!-- Full-Page Customer Profile & Orders Modal -->
+<div id="profile-modal" role="dialog" aria-labelledby="profile-title" aria-modal="true" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+  <div id="profile-modal-card" class="w-full max-w-3xl max-h-[92vh] overflow-y-auto bg-surface-container-lowest text-on-surface rounded-3xl shadow-2xl border border-outline-variant/30 flex flex-col transform scale-95 transition-transform duration-300 my-auto">
+    
+    <!-- Profile Modal Header -->
+    <div class="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-outline-variant/20 bg-surface/80 backdrop-blur-sm sticky top-0 z-10">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-full bg-secondary-container/20 text-primary flex items-center justify-center font-bold">
+          <span class="material-symbols-outlined text-xl">person</span>
+        </div>
+        <div>
+          <h2 id="profile-title" class="font-display text-xl sm:text-2xl font-bold text-primary tracking-tight">Customer Profile</h2>
+          <p class="text-xs text-on-surface-variant">Account &amp; Order History</p>
+        </div>
+      </div>
+      <button id="close-profile-btn" aria-label="Close Profile" class="p-2 rounded-full text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors cursor-pointer flex items-center justify-center">
+        <span class="material-symbols-outlined text-2xl">close</span>
+      </button>
+    </div>
+
+    <!-- Profile Dynamic View Body -->
+    <div id="profile-content" class="p-6 sm:p-8">
+      <!-- Injected via js/profile.js -->
+    </div>
+  </div>
+</div>
+
+<!-- Supabase Official CDN Client Library -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Supabase Client Initialization -->
+<script src="js/supabase.js" defer></script>
 <!-- Product Catalog Data -->
 <script src="js/products.js" defer></script>
 <!-- Shopping Cart Module -->
 <script src="js/cart.js" defer></script>
+<!-- Order Management Data Layer -->
+<script src="js/orders.js" defer></script>
+<!-- Checkout Module -->
+<script src="js/checkout.js" defer></script>
+<!-- Customer Profile & Order History Module -->
+<script src="js/profile.js" defer></script>
 <!-- Main Application JavaScript -->
 <script src="js/main.js" defer></script>
 </body>

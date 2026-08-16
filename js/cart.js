@@ -1,7 +1,7 @@
 /**
  * Brew & Bite - Shopping Cart Module (cart.js)
  * Handles in-memory cart state, localStorage persistence, quantity controls,
- * cart drawer open/close, and subtotal calculations.
+ * cart drawer open/close, subtotal calculations, and cart resetting.
  */
 
 // Global In-Memory Cart State
@@ -155,10 +155,20 @@ function removeFromCart(productId) {
   renderCart();
 }
 
+// Clear Cart (e.g., After Successful Checkout Placement)
+function clearCart() {
+  cart = [];
+  saveCart();
+  console.log("Cart cleared after checkout:", cart);
+  updateCartCount();
+  renderCart();
+}
+
 // Render Cart Items & Subtotal
 function renderCart() {
   const cartItemsContainer = document.getElementById('cart-items-container');
   const cartSubtotal = document.getElementById('cart-subtotal');
+  const openCheckoutBtn = document.getElementById('open-checkout-btn');
   if (!cartItemsContainer || !cartSubtotal) return;
 
   if (cart.length === 0) {
@@ -172,7 +182,14 @@ function renderCart() {
       </div>
     `;
     cartSubtotal.textContent = '$0.00';
+    if (openCheckoutBtn) {
+      openCheckoutBtn.classList.add('opacity-50', 'pointer-events-none');
+    }
     return;
+  }
+
+  if (openCheckoutBtn) {
+    openCheckoutBtn.classList.remove('opacity-50', 'pointer-events-none');
   }
 
   let subtotal = 0;
