@@ -2,7 +2,7 @@
  * Brew & Bite - Main JavaScript
  * Handles frame preloading, scroll scrubbing, hero text animation,
  * floating navbar transitions, mobile drawer navigation, dynamic product rendering,
- * and customer-facing shopping cart drawer.
+ * and customer-facing shopping cart drawer with quantity controls and item removal.
  */
 
 // Global In-Memory Cart State
@@ -129,6 +129,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Increase Product Quantity
+  function increaseQuantity(productId) {
+    if (!productId) return;
+    const item = cart.find(i => i.productId === productId);
+    if (item) {
+      item.quantity += 1;
+      console.log("Cart:", cart);
+      updateCartCount();
+      renderCart();
+    }
+  }
+
+  // Decrease Product Quantity
+  function decreaseQuantity(productId) {
+    if (!productId) return;
+    const itemIndex = cart.findIndex(i => i.productId === productId);
+    if (itemIndex > -1) {
+      cart[itemIndex].quantity -= 1;
+      if (cart[itemIndex].quantity <= 0) {
+        cart.splice(itemIndex, 1);
+      }
+      console.log("Cart:", cart);
+      updateCartCount();
+      renderCart();
+    }
+  }
+
+  // Remove Product Completely from Cart
+  function removeFromCart(productId) {
+    if (!productId) return;
+    cart = cart.filter(item => item.productId !== productId);
+    console.log("Cart:", cart);
+    updateCartCount();
+    renderCart();
+  }
+
   // Render Cart Items & Subtotal
   function renderCart() {
     if (!cartItemsContainer || !cartSubtotal) return;
@@ -159,16 +195,42 @@ document.addEventListener('DOMContentLoaded', () => {
       subtotal += lineTotal;
 
       return `
-        <div class="flex items-center gap-4 p-3.5 rounded-2xl bg-surface border border-outline-variant/20 shadow-xs hover:border-outline-variant/40 transition-colors">
+        <div class="flex items-center gap-3.5 p-3.5 rounded-2xl bg-surface border border-outline-variant/20 shadow-xs hover:border-outline-variant/40 transition-colors">
+          <!-- Product Image Thumbnail -->
           <div class="w-16 h-16 rounded-xl overflow-hidden flex-shrink-0 ${product.accentColor} p-1">
             <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover rounded-lg" />
           </div>
-          <div class="flex-1 min-w-0">
-            <h4 class="font-display font-bold text-primary text-sm truncate">${product.name}</h4>
-            <p class="font-body-md text-xs text-on-surface-variant mt-0.5">$${product.price.toFixed(2)} × ${cartItem.quantity}</p>
-          </div>
-          <div class="text-right flex-shrink-0">
-            <span class="font-label-bold text-primary text-sm">$${lineTotal.toFixed(2)}</span>
+
+          <!-- Product Info & Quantity Controls -->
+          <div class="flex-1 min-w-0 flex flex-col justify-between h-full py-0.5">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <h4 class="font-display font-bold text-primary text-sm truncate max-w-[140px] sm:max-w-[170px]">${product.name}</h4>
+                <p class="font-body-md text-xs text-on-surface-variant">$${product.price.toFixed(2)}</p>
+              </div>
+              <!-- Line Total -->
+              <span class="font-label-bold text-primary text-sm whitespace-nowrap">$${lineTotal.toFixed(2)}</span>
+            </div>
+
+            <!-- Quantity Selector & Remove Action -->
+            <div class="flex items-center justify-between mt-2 pt-1">
+              <!-- Quantity Buttons: [ - ] qty [ + ] -->
+              <div class="flex items-center gap-1.5 bg-surface-container-high/60 border border-outline-variant/30 rounded-full px-1.5 py-0.5">
+                <button data-product-id="${product.id}" aria-label="Decrease ${product.name} quantity" class="decrease-qty-btn w-6 h-6 rounded-full flex items-center justify-center text-primary hover:bg-white/80 active:scale-90 transition-all cursor-pointer font-bold text-sm">
+                  −
+                </button>
+                <span class="font-label-bold text-xs text-primary min-w-[16px] text-center">${cartItem.quantity}</span>
+                <button data-product-id="${product.id}" aria-label="Increase ${product.name} quantity" class="increase-qty-btn w-6 h-6 rounded-full flex items-center justify-center text-primary hover:bg-white/80 active:scale-90 transition-all cursor-pointer font-bold text-sm">
+                  +
+                </button>
+              </div>
+
+              <!-- Remove Action -->
+              <button data-product-id="${product.id}" aria-label="Remove ${product.name} from order" class="remove-item-btn text-xs font-label-bold text-on-surface-variant/70 hover:text-tertiary transition-colors cursor-pointer px-1 py-0.5 flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">delete</span>
+                <span class="hidden sm:inline">Remove</span>
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -251,12 +313,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Bind Event Delegation for "Add to Order" Buttons
+  // Bind Event Delegation for Cart Actions (+, -, Remove, and Add to Order)
   document.addEventListener('click', (e) => {
-    const btn = e.target.closest('.add-to-order-btn');
-    if (btn) {
-      const productId = btn.getAttribute('data-product-id');
-      addToCart(productId, btn);
+    // 1. Add to Order from product cards
+    const addBtn = e.target.closest('.add-to-order-btn');
+    if (addBtn) {
+      const productId = addBtn.getAttribute('data-product-id');
+      addToCart(productId, addBtn);
+      return;
+    }
+
+    // 2. Increase Quantity inside Cart Drawer
+    const incBtn = e.target.closest('.increase-qty-btn');
+    if (incBtn) {
+      const productId = incBtn.getAttribute('data-product-id');
+      increaseQuantity(productId);
+      return;
+    }
+
+    // 3. Decrease Quantity inside Cart Drawer
+    const decBtn = e.target.closest('.decrease-qty-btn');
+    if (decBtn) {
+      const productId = decBtn.getAttribute('data-product-id');
+      decreaseQuantity(productId);
+      return;
+    }
+
+    // 4. Remove Item from Cart Drawer
+    const remBtn = e.target.closest('.remove-item-btn');
+    if (remBtn) {
+      const productId = remBtn.getAttribute('data-product-id');
+      removeFromCart(productId);
+      return;
     }
   });
 
