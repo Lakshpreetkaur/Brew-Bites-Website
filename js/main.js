@@ -1,7 +1,7 @@
 /**
  * Brew & Bite - Main JavaScript
  * Handles frame preloading, scroll scrubbing, hero text animation,
- * floating navbar transitions, and mobile drawer navigation.
+ * floating navbar transitions, mobile drawer navigation, and dynamic product rendering.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -61,6 +61,46 @@ document.addEventListener('DOMContentLoaded', () => {
     isTicking = false;
   }
 
+  // Dynamic Product Rendering from PRODUCTS array
+  function renderProducts() {
+    if (typeof PRODUCTS === 'undefined' || !Array.isArray(PRODUCTS)) return;
+
+    const coffeeContainer = document.getElementById('coffee-products');
+    const biteContainer = document.getElementById('bite-products');
+
+    // 1. Render Signature Brews (Coffee Cards - Vertical Layout)
+    if (coffeeContainer) {
+      const coffeeItems = PRODUCTS.filter(item => item.category === 'coffee');
+      coffeeContainer.innerHTML = coffeeItems.map(item => `
+        <div class="bg-surface-container-lowest rounded-3xl p-6 shadow-lg hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-outline-variant/30 flex flex-col items-center text-center group">
+          <div class="w-48 h-48 ${item.accentColor} rounded-full mb-6 overflow-hidden flex items-center justify-center p-4 group-hover:scale-105 transition-transform">
+            <img alt="${item.name}" class="w-full h-full object-cover rounded-full" src="${item.image}" />
+          </div>
+          <h4 class="font-display text-xl font-bold text-primary mb-2">${item.name}</h4>
+          <p class="font-body-md text-on-surface-variant mb-4">${item.description}</p>
+          <span class="font-label-bold text-secondary-container bg-secondary-container/10 px-4 py-2 rounded-full">$${item.price.toFixed(2)}</span>
+        </div>
+      `).join('');
+    }
+
+    // 2. Render Bakery Bites (Bites Cards - Horizontal Layout)
+    if (biteContainer) {
+      const biteItems = PRODUCTS.filter(item => item.category === 'bites');
+      biteContainer.innerHTML = biteItems.map(item => `
+        <div class="bg-surface-container-lowest rounded-3xl p-6 shadow-lg hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-outline-variant/30 flex flex-row items-center gap-6 group">
+          <div class="w-32 h-32 ${item.accentColor} rounded-2xl overflow-hidden flex-shrink-0">
+            <img alt="${item.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform" src="${item.image}" />
+          </div>
+          <div>
+            <h4 class="font-display text-xl font-bold text-primary mb-2">${item.name}</h4>
+            <p class="font-body-md text-on-surface-variant mb-4">${item.description}</p>
+            <span class="font-label-bold text-secondary bg-secondary/10 px-4 py-2 rounded-full">$${item.price.toFixed(2)}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+
   // Floating Navbar Transparency and Blur on Scroll
   const mainNav = document.getElementById('main-nav');
   function updateNavStyle() {
@@ -114,6 +154,8 @@ document.addEventListener('DOMContentLoaded', () => {
     updateFrame();
   });
 
+  // Initialize
+  renderProducts();
   updateNavStyle();
   updateFrame();
 });
