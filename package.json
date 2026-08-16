@@ -5,10 +5,15 @@
   "main": "index.html",
   "scripts": {
     "dev": "serve . -p 3000",
-    "start": "serve . -p 3000",
-    "build": "echo 'Static build ready'"
+    "start": "serve . -p 3000"
   },
-  "keywords": ["coffee", "brew", "bites", "scroll-animation", "tailwind"],
+  "keywords": [
+    "coffee",
+    "brew",
+    "bites",
+    "scroll-animation",
+    "tailwind"
+  ],
   "author": "Lakshpreet Kaur",
   "license": "MIT",
   "devDependencies": {
