@@ -182,9 +182,9 @@ async function createAndSaveOrderInSupabase(cartItems, customerDetails, user) {
 
   // 1. Snapshot items and lock unit prices
   const orderItems = cartItems.map(cartItem => {
-    const product = (typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS))
-      ? PRODUCTS.find(p => p.id === cartItem.productId)
-      : null;
+    const product = (typeof getProductById === 'function')
+      ? getProductById(cartItem.productId)
+      : ((typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS)) ? PRODUCTS.find(p => p.id === cartItem.productId) : null);
 
     const unitPrice = product ? Number(product.price) : 0;
     const quantity = Number(cartItem.quantity) || 1;

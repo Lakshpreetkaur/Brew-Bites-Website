@@ -253,6 +253,19 @@ function renderCart() {
 function addToCart(productId, button) {
   if (!productId) return;
 
+  const product = (typeof getProductById === 'function')
+    ? getProductById(productId)
+    : ((typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS)) ? PRODUCTS.find(p => p.id === productId) : null);
+
+  const isAvail = (typeof normalizeProductAvailable === 'function')
+    ? normalizeProductAvailable(product?.available)
+    : (product?.available === true);
+
+  if (!isAvail) {
+    console.warn(`Product ${productId} is currently unavailable.`);
+    return;
+  }
+
   const existingItem = cart.find(item => item.productId === productId);
   if (existingItem) {
     existingItem.quantity += 1;
@@ -269,6 +282,18 @@ function addToCart(productId, button) {
   if (button) {
     showAddedFeedback(button);
   }
+}
+
+// Subscribe to dynamic product catalog updates
+if (typeof onProductsUpdated === 'function') {
+  onProductsUpdated(() => {
+    loadCart();
+    updateCartCount();
+    const cartDrawer = document.getElementById('cart-drawer');
+    if (cartDrawer && !cartDrawer.classList.contains('translate-x-full')) {
+      renderCart();
+    }
+  });
 }
 
 // Initialize Cart Event Listeners on DOM Ready
