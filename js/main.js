@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const FRAME_COUNT = 222;
   const imgElement = document.getElementById('anim');
   const scrollHint = document.getElementById('scroll-hint');
-  const heroSection = document.getElementById('hero-section');
+  const heroSection = document.getElementById('animation-container') || document.getElementById('hero-section');
 
   // Helper to format frame numbers with 3-digit padding (e.g. 1 -> "001")
   function padFrame(num) {
