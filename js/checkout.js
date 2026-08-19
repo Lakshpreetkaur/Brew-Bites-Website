@@ -389,7 +389,7 @@ async function handlePlaceOrder(event) {
   } catch (err) {
     console.error("Order submission error:", err);
     if (generalError) {
-      generalError.textContent = err.message || 'An unexpected error occurred.';
+      generalError.textContent = 'Unable to place your order right now. Please try again.';
       generalError.classList.remove('hidden');
     }
   } finally {

@@ -73,15 +73,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (coffeeContainer) {
       const coffeeItems = PRODUCTS.filter(item => item.category === 'coffee');
       coffeeContainer.innerHTML = coffeeItems.map(item => `
-        <div class="bg-surface-container-lowest rounded-3xl p-6 shadow-lg hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-outline-variant/30 flex flex-col items-center text-center group">
-          <div class="w-48 h-48 ${item.accentColor} rounded-full mb-6 overflow-hidden flex items-center justify-center p-4 group-hover:scale-105 transition-transform">
+        <div class="bg-surface-container-lowest rounded-3xl p-5 shadow-md hover:shadow-lg hover:-translate-y-1.5 transition-all duration-300 border border-outline-variant/30 flex flex-col items-center text-center group">
+          <div class="w-36 h-36 sm:w-40 sm:h-40 ${item.accentColor} rounded-full mb-4 overflow-hidden flex items-center justify-center p-3 group-hover:scale-105 transition-transform">
             <img alt="${item.name}" class="w-full h-full object-cover rounded-full" src="${item.image}" />
           </div>
-          <h4 class="font-display text-xl font-bold text-primary mb-2">${item.name}</h4>
-          <p class="font-body-md text-on-surface-variant mb-4">${item.description}</p>
-          <div class="flex flex-col items-center gap-3 w-full mt-auto">
-            <span class="font-label-bold text-secondary-container bg-secondary-container/10 px-4 py-1.5 rounded-full">$${item.price.toFixed(2)}</span>
-            <button data-product-id="${item.id}" class="add-to-order-btn w-full bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-sm py-2.5 px-4 rounded-full transition-all duration-200 shadow-xs hover:shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-1.5">
+          <h4 class="font-display text-lg font-bold text-primary mb-1.5">${item.name}</h4>
+          <p class="font-body-md text-xs sm:text-sm text-on-surface-variant mb-4">${item.description}</p>
+          <div class="flex flex-col items-center gap-2.5 w-full mt-auto">
+            <span class="font-label-bold text-xs text-secondary-container bg-secondary-container/10 px-3.5 py-1 rounded-full">$${item.price.toFixed(2)}</span>
+            <button data-product-id="${item.id}" class="add-to-order-btn w-full bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs py-2.5 px-4 rounded-full transition-all duration-200 shadow-xs hover:shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-1.5">
               <span>Add to Order +</span>
             </button>
           </div>
@@ -93,18 +93,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (biteContainer) {
       const biteItems = PRODUCTS.filter(item => item.category === 'bites');
       biteContainer.innerHTML = biteItems.map(item => `
-        <div class="bg-surface-container-lowest rounded-3xl p-6 shadow-lg hover:shadow-xl hover:-translate-y-2 transition-all duration-300 border border-outline-variant/30 flex flex-row items-center gap-6 group">
-          <div class="w-32 h-32 ${item.accentColor} rounded-2xl overflow-hidden flex-shrink-0">
+        <div class="bg-surface-container-lowest rounded-3xl p-5 shadow-md hover:shadow-lg hover:-translate-y-1.5 transition-all duration-300 border border-outline-variant/30 flex flex-row items-center gap-5 group">
+          <div class="w-28 h-28 sm:w-32 sm:h-32 ${item.accentColor} rounded-2xl overflow-hidden flex-shrink-0">
             <img alt="${item.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform" src="${item.image}" />
           </div>
-          <div class="flex flex-col items-start justify-between flex-1 h-full py-1">
+          <div class="flex flex-col items-start justify-between flex-1 h-full py-0.5">
             <div>
-              <h4 class="font-display text-xl font-bold text-primary mb-1">${item.name}</h4>
-              <p class="font-body-md text-on-surface-variant mb-3">${item.description}</p>
+              <h4 class="font-display text-lg font-bold text-primary mb-1">${item.name}</h4>
+              <p class="font-body-md text-xs sm:text-sm text-on-surface-variant mb-2.5">${item.description}</p>
             </div>
-            <div class="flex items-center gap-3 w-full flex-wrap">
-              <span class="font-label-bold text-secondary bg-secondary/10 px-4 py-1.5 rounded-full">$${item.price.toFixed(2)}</span>
-              <button data-product-id="${item.id}" class="add-to-order-btn bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs py-2 px-4 rounded-full transition-all duration-200 shadow-xs hover:shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-1">
+            <div class="flex items-center gap-2.5 w-full flex-wrap">
+              <span class="font-label-bold text-xs text-secondary bg-secondary/10 px-3 py-1 rounded-full">$${item.price.toFixed(2)}</span>
+              <button data-product-id="${item.id}" class="add-to-order-btn bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs py-1.5 px-3.5 rounded-full transition-all duration-200 shadow-xs hover:shadow-md active:scale-95 cursor-pointer flex items-center justify-center gap-1">
                 <span>Add to Order +</span>
               </button>
             </div>

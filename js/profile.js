@@ -1,16 +1,31 @@
 /**
- * Brew & Bite - Customer Profile & Real Supabase Authentication (profile.js)
- * Connects Customer Profile to the Supabase `profiles` table.
- * Handles customer authentication (signup, login, signout) using Supabase Auth,
- * profile data fetching/creation, user-isolated order history loading via orders.js,
- * and order detail inspection.
+ * Brew & Bite - Customer Profile, Country-Aware Phone & Supabase Authentication (profile.js)
+ * Connects Customer Profile directly to the Supabase `profiles` table.
+ *
+ * Supabase Profiles Schema:
+ * - public.profiles: (id, full_name, email, phone, created_at, updated_at)
  */
+
+// Standard Country dataset with flags and dialing codes
+const COUNTRIES = [
+  { name: "India", code: "IN", dial: "+91", flag: "🇮🇳" },
+  { name: "United States", code: "US", dial: "+1", flag: "🇺🇸" },
+  { name: "Canada", code: "CA", dial: "+1", flag: "🇨🇦" },
+  { name: "United Kingdom", code: "GB", dial: "+44", flag: "🇬🇧" },
+  { name: "Australia", code: "AU", dial: "+61", flag: "🇦🇺" },
+  { name: "United Arab Emirates", code: "AE", dial: "+971", flag: "🇦🇪" },
+  { name: "Germany", code: "DE", dial: "+49", flag: "🇩🇪" },
+  { name: "Singapore", code: "SG", dial: "+65", flag: "🇸🇬" },
+  { name: "France", code: "FR", dial: "+33", flag: "🇫🇷" },
+  { name: "New Zealand", code: "NZ", dial: "+64", flag: "🇳🇿" }
+];
 
 // Global Auth & Profile State
 let currentUser = null;
 let userProfile = null;
 let isProfileLoading = false;
 let currentAuthMode = 'login'; // 'login' | 'signup'
+let pendingVerificationEmail = null;
 
 // Initialize Supabase Auth Session and Listen for State Changes
 async function initSupabaseAuth() {
@@ -51,8 +66,8 @@ async function initSupabaseAuth() {
   }
 }
 
-// Fetch Profile from Supabase `profiles` table or create one if it doesn't exist
-async function fetchOrCreateUserProfile(user) {
+// Fetch Profile from Supabase `profiles` table or create/upsert one if it doesn't exist
+async function fetchOrCreateUserProfile(user, extraMetadata = null) {
   if (!user || !supabaseClient) return null;
 
   try {
@@ -61,25 +76,34 @@ async function fetchOrCreateUserProfile(user) {
     // 1. Query the existing `profiles` table for this authenticated user ID
     const { data: profile, error } = await supabaseClient
       .from('profiles')
-      .select('*')
+      .select('id, full_name, email, phone, created_at, updated_at')
       .eq('id', user.id)
       .maybeSingle();
 
     if (error) {
-      console.warn("Supabase profiles table query info:", error.message);
+      console.warn("Supabase profiles table query note:", error.message);
     }
 
-    if (profile) {
+    if (profile && profile.full_name) {
       userProfile = profile;
       isProfileLoading = false;
       return profile;
     }
 
-    // 2. If profile does not exist yet, create a new profile record
+    // 2. If profile is missing or needs creation, build payload using verified columns
+    const meta = user.user_metadata || {};
+    const firstName = extraMetadata?.firstName || meta.first_name || '';
+    const lastName = extraMetadata?.lastName || meta.last_name || '';
+    const fullName = extraMetadata?.fullName || meta.full_name || (firstName ? `${firstName} ${lastName}`.trim() : user.email.split('@')[0]);
+    const dialCode = extraMetadata?.dialCode || meta.dial_code || '+91';
+    const rawPhone = extraMetadata?.phone || meta.phone || '';
+    const formattedPhone = rawPhone ? (rawPhone.startsWith('+') ? rawPhone : `${dialCode} ${rawPhone}`.trim()) : '';
+
     const newProfileData = {
       id: user.id,
-      full_name: user.user_metadata?.full_name || user.email.split('@')[0] || 'Brew & Bite Member',
+      full_name: fullName || 'Brew & Bite Member',
       email: user.email,
+      phone: formattedPhone,
       updated_at: new Date().toISOString()
     };
 
@@ -90,10 +114,11 @@ async function fetchOrCreateUserProfile(user) {
       .maybeSingle();
 
     if (insertError) {
-      console.warn("Could not insert profile into Supabase profiles table:", insertError.message);
+      console.error("Could not upsert into Supabase profiles table:", insertError.message);
       userProfile = newProfileData;
     } else {
       userProfile = insertedProfile || newProfileData;
+      console.log("Profile successfully synchronized to Supabase:", userProfile);
     }
 
     isProfileLoading = false;
@@ -180,28 +205,30 @@ function renderProfileMain() {
   if (currentUser) {
     const displayName = userProfile?.full_name || currentUser.user_metadata?.full_name || currentUser.email.split('@')[0] || 'Valued Member';
     const displayEmail = userProfile?.email || currentUser.email || '';
+    const displayCountry = currentUser.user_metadata?.country || '';
+    const displayPhone = userProfile?.phone || (currentUser.user_metadata?.phone ? `${currentUser.user_metadata?.dial_code || ''} ${currentUser.user_metadata?.phone}`.trim() : '');
     const initial = displayName.charAt(0).toUpperCase();
 
-    // Retrieve user's isolated orders from orders.js
+    // Retrieve user's isolated orders from orders.js (authoritative from Supabase)
     const orders = (typeof getOrders === 'function') ? getOrders() : [];
 
     let ordersHTML = '';
     if (orders.length === 0) {
       ordersHTML = `
-        <div class="flex flex-col items-center justify-center text-center py-10 px-4 bg-surface/50 border border-outline-variant/20 rounded-2xl">
-          <div class="w-16 h-16 bg-secondary-container/20 text-secondary rounded-full flex items-center justify-center mb-3">
-            <span class="material-symbols-outlined text-3xl">receipt_long</span>
+        <div class="flex flex-col items-center justify-center text-center py-8 px-4 bg-surface/50 border border-outline-variant/20 rounded-2xl">
+          <div class="w-14 h-14 bg-secondary-container/20 text-secondary rounded-full flex items-center justify-center mb-2.5">
+            <span class="material-symbols-outlined text-2xl">receipt_long</span>
           </div>
-          <h4 class="font-display text-lg font-bold text-primary mb-1">No orders yet</h4>
-          <p class="font-body-md text-sm text-on-surface-variant max-w-xs mb-5">Your completed orders will appear here.</p>
-          <button id="profile-browse-menu-btn" class="bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs py-2.5 px-6 rounded-full transition-all duration-200 shadow-md cursor-pointer active:scale-95">
+          <h4 class="font-display text-base font-bold text-primary mb-1">No orders yet</h4>
+          <p class="font-body-md text-xs text-on-surface-variant max-w-xs mb-4">Your completed orders will appear here.</p>
+          <button id="profile-browse-menu-btn" class="bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs py-2 px-5 rounded-full transition-all duration-200 shadow-sm cursor-pointer active:scale-95">
             <span>Browse Menu</span>
           </button>
         </div>
       `;
     } else {
       ordersHTML = `
-        <div class="flex flex-col gap-3 max-h-[300px] overflow-y-auto pr-1">
+        <div class="flex flex-col gap-2.5 max-h-[280px] overflow-y-auto pr-1">
           ${orders.map(order => {
             const totalItems = Array.isArray(order.items)
               ? order.items.reduce((sum, item) => sum + (item.quantity || 1), 0)
@@ -212,18 +239,18 @@ function renderProfileMain() {
               : 'Recent Order';
 
             return `
-              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-surface border border-outline-variant/20 shadow-xs hover:border-outline-variant/40 transition-colors">
-                <div class="flex flex-col gap-1">
-                  <div class="flex items-center gap-2.5 flex-wrap">
-                    <span class="font-display font-bold text-primary text-sm">${order.orderId}</span>
-                    <span class="bg-secondary/15 text-secondary font-label-bold text-[11px] uppercase tracking-wider px-2.5 py-0.5 rounded-full">${order.status || 'placed'}</span>
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-surface border border-outline-variant/20 shadow-xs hover:border-outline-variant/40 transition-colors">
+                <div class="flex flex-col gap-0.5">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="font-display font-bold text-primary text-xs sm:text-sm">${order.orderId}</span>
+                    <span class="bg-secondary/15 text-secondary font-label-bold text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full">${order.status || 'placed'}</span>
                   </div>
-                  <p class="text-xs text-on-surface-variant font-body-md">${dateStr} • ${totalItems} item${totalItems === 1 ? '' : 's'}</p>
+                  <p class="text-[11px] text-on-surface-variant font-body-md">${dateStr} • ${totalItems} item${totalItems === 1 ? '' : 's'}</p>
                 </div>
 
-                <div class="flex items-center justify-between sm:justify-end gap-4 border-t sm:border-t-0 border-outline-variant/15 pt-2 sm:pt-0">
-                  <span class="font-display font-bold text-primary text-base">$${Number(order.subtotal || 0).toFixed(2)}</span>
-                  <button data-order-id="${order.orderId}" class="view-order-btn bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs py-1.5 px-4 rounded-full transition-all duration-200 shadow-xs cursor-pointer active:scale-95">
+                <div class="flex items-center justify-between sm:justify-end gap-3 border-t sm:border-t-0 border-outline-variant/15 pt-1.5 sm:pt-0">
+                  <span class="font-display font-bold text-primary text-sm sm:text-base">$${Number(order.subtotal || 0).toFixed(2)}</span>
+                  <button data-order-id="${order.orderId}" class="view-order-btn bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs py-1.5 px-3.5 rounded-full transition-all duration-200 shadow-xs cursor-pointer active:scale-95">
                     <span>View Order</span>
                   </button>
                 </div>
@@ -235,22 +262,28 @@ function renderProfileMain() {
     }
 
     profileContent.innerHTML = `
-      <div class="flex flex-col gap-6">
+      <div class="flex flex-col gap-5">
         
         <!-- Logged-in Customer Information Card (Populated from Supabase profiles table) -->
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl bg-surface border border-outline-variant/25 shadow-xs">
-          <div class="flex items-center gap-4">
-            <div class="w-14 h-14 rounded-2xl bg-secondary-container text-on-secondary-container flex items-center justify-center font-display font-black text-xl shadow-xs">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-surface border border-outline-variant/25 shadow-xs">
+          <div class="flex items-center gap-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-secondary-container text-on-secondary-container flex items-center justify-center font-display font-black text-lg shadow-xs">
               ${initial}
             </div>
             <div>
-              <h3 class="font-display text-lg font-bold text-primary">${displayName}</h3>
+              <h3 class="font-display text-base sm:text-lg font-bold text-primary">${displayName}</h3>
               <p class="text-xs text-on-surface-variant font-medium">${displayEmail}</p>
+              ${displayCountry || displayPhone ? `
+                <div class="flex items-center gap-2 mt-1 text-[11px] text-on-surface-variant font-medium">
+                  ${displayCountry ? `<span class="bg-surface-container-high/60 px-2 py-0.5 rounded-md border border-outline-variant/20">${displayCountry}</span>` : ''}
+                  ${displayPhone ? `<span>${displayPhone}</span>` : ''}
+                </div>
+              ` : ''}
             </div>
           </div>
 
-          <div class="flex items-center gap-3">
-            <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-secondary/15 border border-secondary/30 text-secondary font-label-bold text-[11px] uppercase tracking-wider">
+          <div class="flex items-center gap-2.5">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary/15 border border-secondary/30 text-secondary font-label-bold text-[10px] uppercase tracking-wider">
               <span>Verified Account</span>
             </span>
             <button id="auth-signout-btn" class="text-xs text-on-surface-variant hover:text-red-600 flex items-center gap-1 font-label-bold border border-outline-variant/40 hover:border-red-300 px-3 py-1.5 rounded-full transition-colors cursor-pointer active:scale-95">
@@ -260,10 +293,10 @@ function renderProfileMain() {
           </div>
         </div>
 
-        <!-- My Orders Section (User Isolated) -->
+        <!-- My Orders Section (User Isolated & Persistent via Supabase) -->
         <div class="flex flex-col gap-3">
           <div class="flex items-center justify-between border-b border-outline-variant/20 pb-2">
-            <h3 class="font-display text-lg font-bold text-primary">My Orders</h3>
+            <h3 class="font-display text-base sm:text-lg font-bold text-primary">My Orders</h3>
             <span class="text-xs font-label-bold text-on-surface-variant">${orders.length} Order${orders.length === 1 ? '' : 's'} Total</span>
           </div>
 
@@ -290,12 +323,12 @@ function renderProfileMain() {
 
   // Case 2: User is NOT Logged In - Render Auth Form (Login / Sign Up)
   profileContent.innerHTML = `
-    <div class="flex flex-col gap-6 max-w-md mx-auto py-2">
+    <div class="flex flex-col gap-5 max-w-md mx-auto py-1">
       <div class="text-center">
-        <div class="w-14 h-14 bg-secondary-container/20 text-secondary rounded-full flex items-center justify-center mx-auto mb-3">
-          <span class="material-symbols-outlined text-3xl">account_circle</span>
+        <div class="w-12 h-12 bg-secondary-container/20 text-secondary rounded-full flex items-center justify-center mx-auto mb-2.5">
+          <span class="material-symbols-outlined text-2xl">account_circle</span>
         </div>
-        <h3 class="font-display text-2xl font-bold text-primary mb-1">
+        <h3 class="font-display text-xl sm:text-2xl font-bold text-primary mb-1">
           ${currentAuthMode === 'login' ? 'Welcome Back' : 'Join Brew & Bite'}
         </h3>
         <p class="font-body-md text-xs text-on-surface-variant">
@@ -303,30 +336,64 @@ function renderProfileMain() {
         </p>
       </div>
 
-      <!-- Auth Form -->
-      <form id="auth-form" class="flex flex-col gap-4">
-        ${currentAuthMode === 'signup' ? `
+      ${pendingVerificationEmail ? `
+        <!-- Email Verification Banner -->
+        <div class="bg-secondary/15 border border-secondary/35 rounded-2xl p-3.5 text-xs text-primary flex items-start gap-2.5">
+          <span class="material-symbols-outlined text-secondary text-lg flex-shrink-0 mt-0.5">mark_email_read</span>
           <div>
-            <label for="auth-name" class="block font-label-bold text-xs text-primary mb-1 uppercase tracking-wider">Full Name *</label>
-            <input type="text" id="auth-name" required placeholder="e.g. Lakshpreet Kaur" class="w-full px-4 py-2.5 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-sm text-on-surface" />
+            <strong class="block font-label-bold text-primary mb-0.5">Verification Email Sent!</strong>
+            <span>We sent a confirmation link to <strong class="text-secondary">${pendingVerificationEmail}</strong>. Please verify your email before signing in.</span>
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- Auth Form -->
+      <form id="auth-form" class="flex flex-col gap-3.5">
+        ${currentAuthMode === 'signup' ? `
+          <!-- First & Last Name (2 columns) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label for="auth-first-name" class="block font-label-bold text-[11px] text-primary mb-1 uppercase tracking-wider">First Name *</label>
+              <input type="text" id="auth-first-name" required placeholder="e.g. Lakshpreet" class="w-full px-3.5 py-2 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-xs text-on-surface" />
+            </div>
+            <div>
+              <label for="auth-last-name" class="block font-label-bold text-[11px] text-primary mb-1 uppercase tracking-wider">Last Name *</label>
+              <input type="text" id="auth-last-name" required placeholder="e.g. Kaur" class="w-full px-3.5 py-2 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-xs text-on-surface" />
+            </div>
+          </div>
+
+          <!-- Country & Phone Number (Country-Aware) -->
+          <div>
+            <label for="auth-country" class="block font-label-bold text-[11px] text-primary mb-1 uppercase tracking-wider">Country *</label>
+            <select id="auth-country" class="w-full px-3.5 py-2 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-xs text-on-surface cursor-pointer">
+              ${COUNTRIES.map(c => `<option value="${c.name}" data-dial="${c.dial}">${c.flag} ${c.name} (${c.dial})</option>`).join('')}
+            </select>
+          </div>
+
+          <div>
+            <label for="auth-phone" class="block font-label-bold text-[11px] text-primary mb-1 uppercase tracking-wider">Phone Number *</label>
+            <div class="flex items-center gap-2">
+              <span id="auth-dial-code-badge" class="px-3 py-2 rounded-2xl bg-surface border border-outline-variant/40 text-xs font-bold text-primary select-none">+91</span>
+              <input type="tel" id="auth-phone" required placeholder="e.g. 9876543210" class="flex-1 px-3.5 py-2 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-xs text-on-surface" />
+            </div>
           </div>
         ` : ''}
 
         <div>
-          <label for="auth-email" class="block font-label-bold text-xs text-primary mb-1 uppercase tracking-wider">Email Address *</label>
-          <input type="email" id="auth-email" required placeholder="e.g. laksh@example.com" class="w-full px-4 py-2.5 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-sm text-on-surface" />
+          <label for="auth-email" class="block font-label-bold text-[11px] text-primary mb-1 uppercase tracking-wider">Email Address *</label>
+          <input type="email" id="auth-email" required placeholder="e.g. laksh@example.com" class="w-full px-3.5 py-2 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-xs text-on-surface" />
         </div>
 
         <div>
-          <label for="auth-password" class="block font-label-bold text-xs text-primary mb-1 uppercase tracking-wider">Password *</label>
-          <input type="password" id="auth-password" required minlength="6" placeholder="Minimum 6 characters" class="w-full px-4 py-2.5 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-sm text-on-surface" />
+          <label for="auth-password" class="block font-label-bold text-[11px] text-primary mb-1 uppercase tracking-wider">Password *</label>
+          <input type="password" id="auth-password" required minlength="6" placeholder="Minimum 6 characters" class="w-full px-3.5 py-2 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-xs text-on-surface" />
         </div>
 
         <!-- Status / Error Notification Paragraph -->
         <p id="auth-status-msg" class="hidden text-xs font-medium text-center"></p>
 
         <!-- Submit Button -->
-        <button type="submit" id="auth-submit-btn" class="w-full mt-2 bg-tertiary text-on-tertiary font-label-bold text-sm py-3 px-6 rounded-full hover:scale-102 transition-all duration-200 shadow-md pink-glow flex items-center justify-center gap-2 active:scale-95 cursor-pointer disabled:opacity-50">
+        <button type="submit" id="auth-submit-btn" class="w-full mt-1.5 bg-tertiary text-on-tertiary font-label-bold text-xs sm:text-sm py-2.5 px-6 rounded-full hover:scale-102 transition-all duration-200 shadow-md pink-glow flex items-center justify-center gap-2 active:scale-95 cursor-pointer disabled:opacity-50">
           <span>${currentAuthMode === 'login' ? 'Sign In' : 'Create Account'}</span>
           <span class="material-symbols-outlined text-base">arrow_forward</span>
         </button>
@@ -341,6 +408,17 @@ function renderProfileMain() {
     </div>
   `;
 
+  // Attach Country Selector Change Listener
+  const countrySelect = document.getElementById('auth-country');
+  const dialBadge = document.getElementById('auth-dial-code-badge');
+  if (countrySelect && dialBadge) {
+    countrySelect.addEventListener('change', () => {
+      const selectedOption = countrySelect.options[countrySelect.selectedIndex];
+      const dial = selectedOption.getAttribute('data-dial') || '+91';
+      dialBadge.textContent = dial;
+    });
+  }
+
   // Attach Form Submit Listener
   const authForm = document.getElementById('auth-form');
   if (authForm) {
@@ -348,12 +426,16 @@ function renderProfileMain() {
       e.preventDefault();
       const email = document.getElementById('auth-email')?.value.trim();
       const password = document.getElementById('auth-password')?.value;
-      const name = document.getElementById('auth-name')?.value.trim() || '';
 
       if (currentAuthMode === 'login') {
         handleSignIn(email, password);
       } else {
-        handleSignUp(email, password, name);
+        const firstName = document.getElementById('auth-first-name')?.value.trim() || '';
+        const lastName = document.getElementById('auth-last-name')?.value.trim() || '';
+        const country = countrySelect ? countrySelect.value : 'India';
+        const dialCode = dialBadge ? dialBadge.textContent : '+91';
+        const phone = document.getElementById('auth-phone')?.value.trim() || '';
+        handleSignUp(email, password, firstName, lastName, country, dialCode, phone);
       }
     });
   }
@@ -363,6 +445,7 @@ function renderProfileMain() {
   if (toggleBtn) {
     toggleBtn.addEventListener('click', () => {
       currentAuthMode = currentAuthMode === 'login' ? 'signup' : 'login';
+      pendingVerificationEmail = null;
       renderProfileMain();
     });
   }
@@ -403,13 +486,23 @@ async function handleSignIn(email, password) {
     });
 
     if (error) {
-      if (statusMsg) {
-        statusMsg.textContent = error.message;
-        statusMsg.className = 'text-xs text-red-600 font-medium text-center';
-        statusMsg.classList.remove('hidden');
+      // Check for unverified email error
+      if (error.message.toLowerCase().includes('email not confirmed') || error.message.toLowerCase().includes('not verified')) {
+        if (statusMsg) {
+          statusMsg.textContent = 'Please verify your email before signing in. Check your inbox for the confirmation link.';
+          statusMsg.className = 'text-xs text-secondary font-bold text-center';
+          statusMsg.classList.remove('hidden');
+        }
+      } else {
+        if (statusMsg) {
+          statusMsg.textContent = error.message;
+          statusMsg.className = 'text-xs text-red-600 font-medium text-center';
+          statusMsg.classList.remove('hidden');
+        }
       }
     } else {
       currentUser = data.user;
+      pendingVerificationEmail = null;
       await fetchOrCreateUserProfile(currentUser);
       if (typeof fetchOrdersForUser === 'function') {
         await fetchOrdersForUser(currentUser.id);
@@ -430,14 +523,25 @@ async function handleSignIn(email, password) {
   }
 }
 
-// Handle Real Supabase Sign Up (Email/Password with Full Name Metadata)
-async function handleSignUp(email, password, fullName) {
+// Handle Real Supabase Sign Up (Email/Password with Full Country, Phone & Metadata)
+async function handleSignUp(email, password, firstName, lastName, country, dialCode, phone) {
   const statusMsg = document.getElementById('auth-status-msg');
   const submitBtn = document.getElementById('auth-submit-btn');
 
-  if (!email || !password) {
+  if (!email || !password || !firstName || !lastName || !phone) {
     if (statusMsg) {
       statusMsg.textContent = 'Please fill all required fields.';
+      statusMsg.className = 'text-xs text-red-600 font-medium text-center';
+      statusMsg.classList.remove('hidden');
+    }
+    return;
+  }
+
+  // Basic phone length validation
+  const cleanPhone = phone.replace(/[^0-9]/g, '');
+  if (cleanPhone.length < 6 || cleanPhone.length > 15) {
+    if (statusMsg) {
+      statusMsg.textContent = 'Please enter a valid phone number.';
       statusMsg.className = 'text-xs text-red-600 font-medium text-center';
       statusMsg.classList.remove('hidden');
     }
@@ -458,12 +562,22 @@ async function handleSignUp(email, password, fullName) {
     submitBtn.innerHTML = '<span>Creating account...</span>';
   }
 
+  const fullName = `${firstName} ${lastName}`.trim();
+  const formattedPhone = `${dialCode} ${phone}`.trim();
+
   try {
     const { data, error } = await supabaseClient.auth.signUp({
       email: email,
       password: password,
       options: {
-        data: { full_name: fullName }
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+          full_name: fullName,
+          country: country,
+          dial_code: dialCode,
+          phone: formattedPhone
+        }
       }
     });
 
@@ -474,23 +588,19 @@ async function handleSignUp(email, password, fullName) {
         statusMsg.classList.remove('hidden');
       }
     } else {
-      if (data.session) {
+      // If session is immediately returned (Email confirmation disabled or auto-confirmed)
+      if (data.session && data.user) {
         currentUser = data.user;
-        await fetchOrCreateUserProfile(currentUser);
+        await fetchOrCreateUserProfile(currentUser, { firstName, lastName, fullName, country, dialCode, phone: formattedPhone });
         if (typeof fetchOrdersForUser === 'function') {
           await fetchOrdersForUser(currentUser.id);
         }
         renderProfileMain();
       } else {
-        if (statusMsg) {
-          statusMsg.textContent = 'Account created successfully! You may now sign in.';
-          statusMsg.className = 'text-xs text-secondary font-bold text-center';
-          statusMsg.classList.remove('hidden');
-        }
+        // Email confirmation is required by Supabase Auth
+        pendingVerificationEmail = email;
         currentAuthMode = 'login';
-        setTimeout(() => {
-          renderProfileMain();
-        }, 1500);
+        renderProfileMain();
       }
     }
   } catch (err) {
@@ -507,17 +617,18 @@ async function handleSignUp(email, password, fullName) {
   }
 }
 
-// Handle Real Supabase Sign Out (Purges User State and Cached Orders)
+// Handle Real Supabase Sign Out (Purges Session State and In-Memory Orders)
 async function handleSignOut() {
   if (typeof supabaseClient !== 'undefined' && supabaseClient) {
     try {
       await supabaseClient.auth.signOut();
       currentUser = null;
       userProfile = null;
+      pendingVerificationEmail = null;
       if (typeof clearUserOrderState === 'function') {
         clearUserOrderState();
       }
-      console.log("Supabase Sign Out completed. Data purged.");
+      console.log("Supabase Sign Out completed. In-memory session purged.");
       renderProfileMain();
     } catch (err) {
       console.warn("Sign Out error:", err);
@@ -535,7 +646,7 @@ function openOrderDetail(orderId) {
   if (!order) {
     profileContent.innerHTML = `
       <div class="text-center py-8">
-        <p class="text-sm text-red-600 font-bold mb-4">Order not found.</p>
+        <p class="text-xs text-red-600 font-bold mb-4">Order not found.</p>
         <button id="back-to-orders-btn" class="bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs py-2 px-5 rounded-full cursor-pointer">
           <span>← Back to Orders</span>
         </button>
@@ -552,10 +663,10 @@ function openOrderDetail(orderId) {
 
   const itemsListHTML = Array.isArray(order.items)
     ? order.items.map(item => `
-        <div class="flex items-center justify-between py-2 border-b border-outline-variant/15 text-sm">
+        <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/15 text-xs">
           <div>
             <h5 class="font-display font-bold text-primary text-xs">${item.name || item.productId}</h5>
-            <p class="text-xs text-on-surface-variant">$${Number(item.unitPrice || 0).toFixed(2)} × ${item.quantity}</p>
+            <p class="text-[11px] text-on-surface-variant">$${Number(item.unitPrice || 0).toFixed(2)} × ${item.quantity}</p>
           </div>
           <span class="font-label-bold text-primary text-xs">$${Number(item.lineTotal || 0).toFixed(2)}</span>
         </div>
@@ -563,32 +674,32 @@ function openOrderDetail(orderId) {
     : '<p class="text-xs text-on-surface-variant">No items recorded.</p>';
 
   profileContent.innerHTML = `
-    <div class="flex flex-col gap-5">
+    <div class="flex flex-col gap-4">
       
       <!-- Back Navigation Header -->
-      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-2.5">
         <button id="back-to-orders-btn" class="inline-flex items-center gap-1.5 text-xs font-label-bold text-primary hover:text-tertiary transition-colors cursor-pointer py-1">
           <span class="material-symbols-outlined text-sm">arrow_back</span>
           <span>Back to Orders</span>
         </button>
-        <span class="bg-secondary/15 text-secondary font-label-bold text-xs uppercase tracking-wider px-3 py-0.5 rounded-full">${order.status || 'placed'}</span>
+        <span class="bg-secondary/15 text-secondary font-label-bold text-[11px] uppercase tracking-wider px-2.5 py-0.5 rounded-full">${order.status || 'placed'}</span>
       </div>
 
       <!-- Order Summary Card -->
-      <div class="p-5 rounded-2xl bg-surface border border-outline-variant/30 flex flex-col gap-4 shadow-xs">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-outline-variant/15 pb-3">
+      <div class="p-4 sm:p-5 rounded-2xl bg-surface border border-outline-variant/30 flex flex-col gap-3.5 shadow-xs">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-outline-variant/15 pb-2.5">
           <div>
-            <span class="text-xs text-on-surface-variant uppercase font-label-bold tracking-wider">Order Reference</span>
-            <h4 class="font-display text-lg font-black text-primary">${order.orderId}</h4>
+            <span class="text-[11px] text-on-surface-variant uppercase font-label-bold tracking-wider">Order Reference</span>
+            <h4 class="font-display text-base sm:text-lg font-black text-primary">${order.orderId}</h4>
           </div>
           <div class="text-left sm:text-right">
-            <span class="text-xs text-on-surface-variant uppercase font-label-bold tracking-wider">Date &amp; Time</span>
+            <span class="text-[11px] text-on-surface-variant uppercase font-label-bold tracking-wider">Date &amp; Time</span>
             <p class="text-xs font-medium text-primary">${formattedDate}</p>
           </div>
         </div>
 
         <!-- Customer & Delivery Info -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-surface-container-high/30 p-3.5 rounded-xl border border-outline-variant/15">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs bg-surface-container-high/30 p-3 rounded-xl border border-outline-variant/15">
           <div>
             <span class="text-on-surface-variant font-bold block mb-0.5">Customer Name:</span>
             <span class="text-primary font-medium">${order.customer.name || 'Brew & Bite Customer'}</span>
@@ -613,16 +724,16 @@ function openOrderDetail(orderId) {
 
         <!-- Purchased Line Items (Immutable Historical Snapshot) -->
         <div class="flex flex-col gap-1">
-          <span class="text-xs text-on-surface-variant uppercase font-label-bold tracking-wider mb-1">Purchased Items</span>
-          <div class="max-h-[160px] overflow-y-auto pr-1">
+          <span class="text-[11px] text-on-surface-variant uppercase font-label-bold tracking-wider mb-0.5">Purchased Items</span>
+          <div class="max-h-[140px] overflow-y-auto pr-1">
             ${itemsListHTML}
           </div>
         </div>
 
         <!-- Total Calculation -->
-        <div class="border-t border-outline-variant/20 pt-3 flex items-center justify-between">
-          <span class="font-display font-bold text-sm text-primary">Subtotal Paid</span>
-          <span class="font-display font-black text-xl text-primary">$${Number(order.subtotal || 0).toFixed(2)}</span>
+        <div class="border-t border-outline-variant/20 pt-2.5 flex items-center justify-between">
+          <span class="font-display font-bold text-xs sm:text-sm text-primary">Subtotal Paid</span>
+          <span class="font-display font-black text-base sm:text-lg text-primary">$${Number(order.subtotal || 0).toFixed(2)}</span>
         </div>
       </div>
 
