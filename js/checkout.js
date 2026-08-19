@@ -1,8 +1,8 @@
 /**
  * Brew & Bite - Checkout Experience Module (checkout.js)
- * Handles customer checkout modal display, order summary rendering,
- * conditional delivery address toggling, form validation, order creation via orders.js,
- * active cart clearing, and demo confirmation receipt rendering.
+ * Handles customer checkout modal display, guest checkout protection,
+ * conditional delivery address toggling, form validation, authenticated order persistence
+ * via orders.js to Supabase, active cart clearing, and order confirmation receipt rendering.
  */
 
 // Open Checkout Modal
@@ -57,7 +57,7 @@ function backToMenu() {
   }
 }
 
-// Render Checkout Content (Empty Cart State or Active 2-Column Form)
+// Render Checkout Content (Empty Cart State, Guest Auth Prompt, or Active 2-Column Form)
 function renderCheckout() {
   const checkoutContent = document.getElementById('checkout-content');
   if (!checkoutContent) return;
@@ -111,18 +111,49 @@ function renderCheckout() {
     `;
   }).join('');
 
+  // Determine current user data for auto-population
+  const isAuthenticated = typeof currentUser !== 'undefined' && currentUser !== null;
+  const prefillName = (typeof userProfile !== 'undefined' && userProfile?.full_name) || (isAuthenticated ? (currentUser.user_metadata?.full_name || '') : '');
+  const prefillEmail = (typeof userProfile !== 'undefined' && userProfile?.email) || (isAuthenticated ? (currentUser.email || '') : '');
+
   checkoutContent.innerHTML = `
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
       
       <!-- LEFT COLUMN: Customer Information Form -->
-      <div class="lg:col-span-7 flex flex-col gap-5">
+      <div class="lg:col-span-7 flex flex-col gap-4">
+        
+        ${!isAuthenticated ? `
+          <!-- Guest Notice: Authentication Required Before Placing Order -->
+          <div class="bg-secondary/10 border border-secondary/30 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 text-xs text-primary">
+              <span class="material-symbols-outlined text-secondary text-xl flex-shrink-0">lock</span>
+              <div>
+                <strong class="block text-primary font-label-bold">Sign In Required to Order</strong>
+                <span class="text-on-surface-variant">Please sign in or create an account to link and place your order.</span>
+              </div>
+            </div>
+            <button type="button" id="checkout-auth-prompt-btn" class="bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs py-2 px-4 rounded-full transition-all cursor-pointer flex-shrink-0 active:scale-95 shadow-xs whitespace-nowrap">
+              <span>Sign In / Sign Up</span>
+            </button>
+          </div>
+        ` : `
+          <!-- Authenticated Account Badge -->
+          <div class="bg-surface border border-outline-variant/20 rounded-2xl px-4 py-2.5 flex items-center justify-between">
+            <div class="flex items-center gap-2 text-xs">
+              <span class="material-symbols-outlined text-secondary text-lg">verified_user</span>
+              <span class="text-on-surface-variant">Ordering as <strong class="text-primary">${prefillName || prefillEmail}</strong></span>
+            </div>
+            <span class="text-[11px] font-label-bold uppercase tracking-wider text-secondary bg-secondary/15 px-2.5 py-0.5 rounded-full">Authenticated</span>
+          </div>
+        `}
+
         <h3 class="font-display text-lg font-bold text-primary border-b border-outline-variant/20 pb-2">Customer Details</h3>
         
         <form id="checkout-form" novalidate class="flex flex-col gap-4">
           <!-- Full Name -->
           <div>
             <label for="cust-name" class="block font-label-bold text-xs text-primary mb-1 uppercase tracking-wider">Full Name *</label>
-            <input type="text" id="cust-name" name="name" required placeholder="e.g. Lakshpreet Kaur" class="w-full px-4 py-2.5 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-sm text-on-surface" />
+            <input type="text" id="cust-name" name="name" value="${prefillName}" required placeholder="e.g. Lakshpreet Kaur" class="w-full px-4 py-2.5 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-sm text-on-surface" />
             <p id="error-cust-name" class="hidden text-xs text-red-600 font-medium mt-1"></p>
           </div>
 
@@ -135,7 +166,7 @@ function renderCheckout() {
             </div>
             <div>
               <label for="cust-email" class="block font-label-bold text-xs text-primary mb-1 uppercase tracking-wider">Email Address *</label>
-              <input type="email" id="cust-email" name="email" required placeholder="e.g. laksh@example.com" class="w-full px-4 py-2.5 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-sm text-on-surface" />
+              <input type="email" id="cust-email" name="email" value="${prefillEmail}" required placeholder="e.g. laksh@example.com" class="w-full px-4 py-2.5 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-sm text-on-surface" />
               <p id="error-cust-email" class="hidden text-xs text-red-600 font-medium mt-1"></p>
             </div>
           </div>
@@ -162,9 +193,12 @@ function renderCheckout() {
             <textarea id="cust-notes" name="notes" rows="2" placeholder="Any special requests or instructions..." class="w-full px-4 py-2 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-sm text-on-surface resize-none"></textarea>
           </div>
 
+          <!-- General Form Error Notice -->
+          <p id="checkout-general-error" class="hidden text-xs text-red-600 font-medium text-center"></p>
+
           <!-- Place Order Button -->
-          <button type="submit" class="w-full mt-2 bg-tertiary text-on-tertiary font-label-bold text-sm sm:text-base py-3 px-6 rounded-full hover:scale-102 transition-all duration-200 shadow-md pink-glow flex items-center justify-center gap-2 active:scale-95 cursor-pointer">
-            <span>Place Demo Order</span>
+          <button type="submit" id="place-order-submit-btn" class="w-full mt-2 bg-tertiary text-on-tertiary font-label-bold text-sm sm:text-base py-3 px-6 rounded-full hover:scale-102 transition-all duration-200 shadow-md pink-glow flex items-center justify-center gap-2 active:scale-95 cursor-pointer disabled:opacity-50">
+            <span>Place Order</span>
             <span class="material-symbols-outlined text-base">check_circle</span>
           </button>
         </form>
@@ -199,6 +233,17 @@ function renderCheckout() {
     </div>
   `;
 
+  // Attach Auth Prompt Button Listener if guest
+  const authPromptBtn = document.getElementById('checkout-auth-prompt-btn');
+  if (authPromptBtn) {
+    authPromptBtn.addEventListener('click', () => {
+      closeCheckout();
+      if (typeof openProfile === 'function') {
+        openProfile();
+      }
+    });
+  }
+
   // Attach Order Type Toggle Listener
   const orderTypeSelect = document.getElementById('cust-order-type');
   const addressGroup = document.getElementById('address-group');
@@ -223,8 +268,8 @@ function renderCheckout() {
   }
 }
 
-// Form Validation and Order Submission Handler
-function handlePlaceOrder(event) {
+// Form Validation and Authenticated Order Submission Handler
+async function handlePlaceOrder(event) {
   event.preventDefault();
 
   const nameInput = document.getElementById('cust-name');
@@ -233,6 +278,8 @@ function handlePlaceOrder(event) {
   const orderTypeSelect = document.getElementById('cust-order-type');
   const addressInput = document.getElementById('cust-address');
   const notesInput = document.getElementById('cust-notes');
+  const generalError = document.getElementById('checkout-general-error');
+  const submitBtn = document.getElementById('place-order-submit-btn');
 
   const errorName = document.getElementById('error-cust-name');
   const errorPhone = document.getElementById('error-cust-phone');
@@ -241,7 +288,7 @@ function handlePlaceOrder(event) {
 
   // Reset errors
   let isValid = true;
-  [errorName, errorPhone, errorEmail, errorAddress].forEach(el => {
+  [errorName, errorPhone, errorEmail, errorAddress, generalError].forEach(el => {
     if (el) {
       el.textContent = '';
       el.classList.add('hidden');
@@ -291,8 +338,22 @@ function handlePlaceOrder(event) {
     isValid = false;
   }
 
-  // If validation fails, DO NOT create an order or clear the cart
+  // If basic form validation fails, abort
   if (!isValid) return;
+
+  // 5. Authentication Check (Guest Protection)
+  if (typeof currentUser === 'undefined' || !currentUser || !currentUser.id) {
+    if (generalError) {
+      generalError.textContent = 'You must be signed in to place an order. Please click "Sign In / Sign Up" above.';
+      generalError.classList.remove('hidden');
+    }
+    return;
+  }
+
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<span>Creating Order...</span>`;
+  }
 
   const customerData = {
     name: nameVal,
@@ -303,29 +364,40 @@ function handlePlaceOrder(event) {
     notes: notesInput ? notesInput.value.trim() : ""
   };
 
-  // 1. Create Completed Order Snapshot using orders.js
-  let completedOrder = null;
-  if (typeof createOrder === 'function') {
-    completedOrder = createOrder(cart, customerData);
-  }
+  try {
+    // 6. Create and persist authenticated order into Supabase
+    let completedOrder = null;
+    if (typeof createAndSaveOrderInSupabase === 'function') {
+      completedOrder = await createAndSaveOrderInSupabase(cart, customerData, currentUser);
+    }
 
-  if (!completedOrder) {
-    console.error("Could not create order object.");
-    return;
-  }
+    if (!completedOrder) {
+      if (generalError) {
+        generalError.textContent = 'Could not create order. Please try again.';
+        generalError.classList.remove('hidden');
+      }
+      return;
+    }
 
-  // 2. Save Order Record to Order History Storage
-  if (typeof saveOrder === 'function') {
-    saveOrder(completedOrder);
-  }
+    // 7. Clear Active Cart, LocalStorage, and Badge
+    if (typeof clearCart === 'function') {
+      clearCart();
+    }
 
-  // 3. Clear Active Cart, LocalStorage, and Badge
-  if (typeof clearCart === 'function') {
-    clearCart();
+    // 8. Render Confirmation Receipt View
+    renderOrderSuccess(completedOrder);
+  } catch (err) {
+    console.error("Order submission error:", err);
+    if (generalError) {
+      generalError.textContent = err.message || 'An unexpected error occurred.';
+      generalError.classList.remove('hidden');
+    }
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = `<span>Place Order</span><span class="material-symbols-outlined text-base">check_circle</span>`;
+    }
   }
-
-  // 4. Render Polished Confirmation State using the completedOrder record
-  renderOrderSuccess(completedOrder);
 }
 
 // Render Order Success / Confirmation View
@@ -349,13 +421,13 @@ function renderOrderSuccess(order) {
       </div>
       
       <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-secondary/15 border border-secondary/30 text-secondary font-label-bold text-xs uppercase tracking-wider mb-2">
-        <span>Frontend Demo Preview</span>
+        <span>Order Confirmed</span>
       </div>
 
-      <h3 class="font-display text-2xl sm:text-3xl font-black text-primary mb-1">Order Ready!</h3>
-      <p class="font-body-md text-sm text-on-surface-variant mb-5">Thanks, <strong class="text-primary">${order.customer.name}</strong>! Your order has been prepared for the next step.</p>
+      <h3 class="font-display text-2xl sm:text-3xl font-black text-primary mb-1">Order Placed!</h3>
+      <p class="font-body-md text-sm text-on-surface-variant mb-5">Thanks, <strong class="text-primary">${order.customer.name}</strong>! Your order is securely stored under your account.</p>
 
-      <!-- Demo Receipt Card (Rendered strictly from immutable snapshot) -->
+      <!-- Receipt Card (Rendered strictly from immutable snapshot) -->
       <div class="w-full bg-surface border border-outline-variant/30 rounded-2xl p-4 sm:p-5 mb-6 text-left shadow-xs flex flex-col gap-2.5">
         <div class="flex items-center justify-between border-b border-outline-variant/20 pb-2 text-xs text-on-surface-variant font-label-bold">
           <span>REFERENCE: <strong class="text-primary">${order.orderId}</strong></span>

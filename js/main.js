@@ -114,16 +114,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 4. Floating Navbar Transparency and Blur on Scroll
+  // 4. Floating Navbar Transparency, Compact Sizing and Blur on Scroll
   const mainNav = document.getElementById('main-nav');
   function updateNavStyle() {
     if (!mainNav) return;
     if (window.scrollY > 30) {
-      mainNav.classList.remove('bg-white/10', 'backdrop-blur-xs', 'border-white/20');
-      mainNav.classList.add('bg-surface/85', 'backdrop-blur-xl', 'border-white/60', 'shadow-lg', 'shadow-primary/5');
+      mainNav.classList.remove('bg-white/10', 'backdrop-blur-xs', 'border-white/20', 'top-4', 'sm:top-6', 'py-3', 'sm:py-3.5');
+      mainNav.classList.add('bg-surface/90', 'backdrop-blur-xl', 'border-outline-variant/30', 'shadow-md', 'top-2', 'sm:top-3', 'py-2', 'sm:py-2.5');
     } else {
-      mainNav.classList.add('bg-white/10', 'backdrop-blur-xs', 'border-white/20');
-      mainNav.classList.remove('bg-surface/85', 'backdrop-blur-xl', 'border-white/60', 'shadow-lg', 'shadow-primary/5');
+      mainNav.classList.add('bg-white/10', 'backdrop-blur-xs', 'border-white/20', 'top-4', 'sm:top-6', 'py-3', 'sm:py-3.5');
+      mainNav.classList.remove('bg-surface/90', 'backdrop-blur-xl', 'border-outline-variant/30', 'shadow-md', 'top-2', 'sm:top-3', 'py-2', 'sm:py-2.5');
     }
   }
 

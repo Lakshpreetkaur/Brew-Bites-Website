@@ -2,7 +2,7 @@
  * Brew & Bite - Customer Profile & Real Supabase Authentication (profile.js)
  * Connects Customer Profile to the Supabase `profiles` table.
  * Handles customer authentication (signup, login, signout) using Supabase Auth,
- * profile data fetching/creation from Supabase `profiles`, order history list rendering,
+ * profile data fetching/creation, user-isolated order history loading via orders.js,
  * and order detail inspection.
  */
 
@@ -21,14 +21,23 @@ async function initSupabaseAuth() {
 
       if (currentUser) {
         await fetchOrCreateUserProfile(currentUser);
+        if (typeof fetchOrdersForUser === 'function') {
+          await fetchOrdersForUser(currentUser.id);
+        }
       }
 
       supabaseClient.auth.onAuthStateChange(async (_event, session) => {
         currentUser = session?.user || null;
         if (currentUser) {
           await fetchOrCreateUserProfile(currentUser);
+          if (typeof fetchOrdersForUser === 'function') {
+            await fetchOrdersForUser(currentUser.id);
+          }
         } else {
           userProfile = null;
+          if (typeof clearUserOrderState === 'function') {
+            clearUserOrderState();
+          }
         }
 
         const profileModal = document.getElementById('profile-modal');
@@ -111,9 +120,14 @@ async function openProfile() {
   if (typeof closeCart === 'function') closeCart();
   if (typeof closeCheckout === 'function') closeCheckout();
 
-  // If user is authenticated but profile is not loaded, fetch it
-  if (currentUser && !userProfile && !isProfileLoading) {
-    await fetchOrCreateUserProfile(currentUser);
+  // If user is authenticated, ensure profile and user-specific orders are loaded
+  if (currentUser) {
+    if (!userProfile && !isProfileLoading) {
+      await fetchOrCreateUserProfile(currentUser);
+    }
+    if (typeof fetchOrdersForUser === 'function') {
+      await fetchOrdersForUser(currentUser.id);
+    }
   }
 
   // Render the profile overview / auth form
@@ -168,7 +182,7 @@ function renderProfileMain() {
     const displayEmail = userProfile?.email || currentUser.email || '';
     const initial = displayName.charAt(0).toUpperCase();
 
-    // Retrieve completed orders from orders.js
+    // Retrieve user's isolated orders from orders.js
     const orders = (typeof getOrders === 'function') ? getOrders() : [];
 
     let ordersHTML = '';
@@ -246,7 +260,7 @@ function renderProfileMain() {
           </div>
         </div>
 
-        <!-- My Orders Section -->
+        <!-- My Orders Section (User Isolated) -->
         <div class="flex flex-col gap-3">
           <div class="flex items-center justify-between border-b border-outline-variant/20 pb-2">
             <h3 class="font-display text-lg font-bold text-primary">My Orders</h3>
@@ -397,6 +411,9 @@ async function handleSignIn(email, password) {
     } else {
       currentUser = data.user;
       await fetchOrCreateUserProfile(currentUser);
+      if (typeof fetchOrdersForUser === 'function') {
+        await fetchOrdersForUser(currentUser.id);
+      }
       renderProfileMain();
     }
   } catch (err) {
@@ -460,6 +477,9 @@ async function handleSignUp(email, password, fullName) {
       if (data.session) {
         currentUser = data.user;
         await fetchOrCreateUserProfile(currentUser);
+        if (typeof fetchOrdersForUser === 'function') {
+          await fetchOrdersForUser(currentUser.id);
+        }
         renderProfileMain();
       } else {
         if (statusMsg) {
@@ -487,14 +507,17 @@ async function handleSignUp(email, password, fullName) {
   }
 }
 
-// Handle Real Supabase Sign Out
+// Handle Real Supabase Sign Out (Purges User State and Cached Orders)
 async function handleSignOut() {
   if (typeof supabaseClient !== 'undefined' && supabaseClient) {
     try {
       await supabaseClient.auth.signOut();
       currentUser = null;
       userProfile = null;
-      console.log("Supabase Sign Out completed.");
+      if (typeof clearUserOrderState === 'function') {
+        clearUserOrderState();
+      }
+      console.log("Supabase Sign Out completed. Data purged.");
       renderProfileMain();
     } catch (err) {
       console.warn("Sign Out error:", err);
