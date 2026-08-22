@@ -7,6 +7,136 @@
 
 let isSubmittingCheckout = false;
 
+/**
+ * Country-Based Phone Configuration and Validation Helper
+ */
+function getCountryPhoneConfig(currencyCode) {
+  const code = (currencyCode || (typeof getActiveCurrency === 'function' ? getActiveCurrency() : 'USD')).toUpperCase();
+
+  switch (code) {
+    case 'INR':
+      return {
+        country: 'India',
+        currency: 'INR',
+        dialCode: '+91',
+        placeholder: '+91 98765 43210',
+        labelHint: 'Indian (+91)',
+        errorMessage: 'Please enter a valid 10-digit Indian mobile number (e.g. +91 98765 43210 or 9876543210).',
+        validate: (input) => {
+          if (!input) return { valid: false };
+          const cleaned = String(input).trim().replace(/[\s\-\(\)]/g, '');
+          let digits = '';
+          if (cleaned.startsWith('+91')) {
+            digits = cleaned.slice(3);
+          } else if (cleaned.startsWith('91') && cleaned.length === 12) {
+            digits = cleaned.slice(2);
+          } else if (cleaned.startsWith('0') && cleaned.length === 11) {
+            digits = cleaned.slice(1);
+          } else if (cleaned.length === 10) {
+            digits = cleaned;
+          } else {
+            return { valid: false };
+          }
+          const isValid = /^[6-9]\d{9}$/.test(digits);
+          return {
+            valid: isValid,
+            e164Phone: isValid ? `+91 ${digits.slice(0, 5)} ${digits.slice(5)}` : null
+          };
+        }
+      };
+
+    case 'CAD':
+      return {
+        country: 'Canada',
+        currency: 'CAD',
+        dialCode: '+1',
+        placeholder: '+1 (416) 123-4567',
+        labelHint: 'Canada (+1)',
+        errorMessage: 'Please enter a valid 10-digit Canadian phone number (e.g. +1 416 123-4567).',
+        validate: (input) => {
+          if (!input) return { valid: false };
+          const cleaned = String(input).trim().replace(/[\s\-\(\)\.]/g, '');
+          let digits = '';
+          if (cleaned.startsWith('+1')) {
+            digits = cleaned.slice(2);
+          } else if (cleaned.startsWith('1') && cleaned.length === 11) {
+            digits = cleaned.slice(1);
+          } else if (cleaned.length === 10) {
+            digits = cleaned;
+          } else {
+            return { valid: false };
+          }
+          const isValid = /^[2-9]\d{2}[2-9]\d{6}$/.test(digits);
+          return {
+            valid: isValid,
+            e164Phone: isValid ? `+1 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}` : null
+          };
+        }
+      };
+
+    case 'GBP':
+      return {
+        country: 'United Kingdom',
+        currency: 'GBP',
+        dialCode: '+44',
+        placeholder: '+44 7911 123456',
+        labelHint: 'UK (+44)',
+        errorMessage: 'Please enter a valid UK phone number (e.g. +44 7911 123456 or 07911123456).',
+        validate: (input) => {
+          if (!input) return { valid: false };
+          const cleaned = String(input).trim().replace(/[\s\-\(\)\.]/g, '');
+          let digits = '';
+          if (cleaned.startsWith('+44')) {
+            digits = cleaned.slice(3);
+          } else if (cleaned.startsWith('44') && cleaned.length === 12) {
+            digits = cleaned.slice(2);
+          } else if (cleaned.startsWith('0') && (cleaned.length === 11 || cleaned.length === 10)) {
+            digits = cleaned.slice(1);
+          } else if (cleaned.length === 10) {
+            digits = cleaned;
+          } else {
+            return { valid: false };
+          }
+          const isValid = /^\d{10}$/.test(digits);
+          return {
+            valid: isValid,
+            e164Phone: isValid ? `+44 ${digits.slice(0, 4)} ${digits.slice(4)}` : null
+          };
+        }
+      };
+
+    case 'USD':
+    default:
+      return {
+        country: 'United States',
+        currency: 'USD',
+        dialCode: '+1',
+        placeholder: '+1 (555) 123-4567',
+        labelHint: 'US (+1)',
+        errorMessage: 'Please enter a valid 10-digit US phone number (e.g. +1 555 123-4567).',
+        validate: (input) => {
+          if (!input) return { valid: false };
+          const cleaned = String(input).trim().replace(/[\s\-\(\)\.]/g, '');
+          let digits = '';
+          if (cleaned.startsWith('+1')) {
+            digits = cleaned.slice(2);
+          } else if (cleaned.startsWith('1') && cleaned.length === 11) {
+            digits = cleaned.slice(1);
+          } else if (cleaned.length === 10) {
+            digits = cleaned;
+          } else {
+            return { valid: false };
+          }
+          const isValid = /^[2-9]\d{2}[2-9]\d{6}$/.test(digits);
+          return {
+            valid: isValid,
+            e164Phone: isValid ? `+1 (${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}` : null
+          };
+        }
+      };
+  }
+}
+
 // Open Checkout Modal
 function openCheckout() {
   const checkoutModal = document.getElementById('checkout-modal');
@@ -88,6 +218,10 @@ function renderCheckout() {
 
   // Case 2: Cart Has Items - Render 2-Column Layout
   let subtotal = 0;
+  const getDisplayPrice = (val) => {
+    return typeof formatCurrency === 'function' ? formatCurrency(val) : `$${Number(val || 0).toFixed(2)}`;
+  };
+
   const itemsSummaryHTML = cart.map(cartItem => {
     const product = (typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS))
       ? PRODUCTS.find(p => p.id === cartItem.productId)
@@ -105,13 +239,15 @@ function renderCheckout() {
           </div>
           <div class="min-w-0">
             <h4 class="font-bold text-primary text-xs truncate">${product.name}</h4>
-            <span class="text-[11px] text-on-surface-variant">${cartItem.quantity} × $${product.price.toFixed(2)}</span>
+            <span class="text-[11px] text-on-surface-variant">${cartItem.quantity} × ${getDisplayPrice(product.price)}</span>
           </div>
         </div>
-        <span class="font-label-bold text-primary text-xs flex-shrink-0">$${lineTotal.toFixed(2)}</span>
+        <span class="font-label-bold text-primary text-xs flex-shrink-0">${getDisplayPrice(lineTotal)}</span>
       </div>
     `;
   }).join('');
+  const activeCurr = (typeof getActiveCurrency === 'function') ? getActiveCurrency() : 'USD';
+  const phoneConfig = getCountryPhoneConfig(activeCurr);
 
   // Prefill details from authenticated profile if available
   const isAuth = typeof currentUser !== 'undefined' && currentUser && currentUser.id;
@@ -159,8 +295,8 @@ function renderCheckout() {
           <!-- Phone & Email (2-Column Grid) -->
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label for="cust-phone" class="block font-label-bold text-xs text-primary mb-1 uppercase tracking-wider">Phone Number *</label>
-              <input type="tel" id="cust-phone" name="phone" value="${prefillPhone}" required placeholder="e.g. +91 98765 43210" class="w-full px-4 py-2.5 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-sm text-on-surface" />
+              <label for="cust-phone" class="block font-label-bold text-xs text-primary mb-1 uppercase tracking-wider">Phone Number (${phoneConfig.labelHint}) *</label>
+              <input type="tel" id="cust-phone" name="phone" value="${prefillPhone}" required placeholder="e.g. ${phoneConfig.placeholder}" class="w-full px-4 py-2.5 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-sm text-on-surface" />
               <p id="error-cust-phone" class="hidden text-xs text-red-600 font-medium mt-1"></p>
             </div>
             <div>
@@ -292,7 +428,7 @@ function renderCheckout() {
         <div class="border-t border-outline-variant/20 pt-3 flex flex-col gap-2 text-sm">
           <div class="flex items-center justify-between text-on-surface-variant text-xs">
             <span>Subtotal</span>
-            <span class="font-label-bold text-primary">$${subtotal.toFixed(2)}</span>
+            <span class="font-label-bold text-primary">${getDisplayPrice(subtotal)}</span>
           </div>
           <div class="flex items-center justify-between text-on-surface-variant text-xs">
             <span id="checkout-fee-label">Pickup Fee</span>
@@ -300,7 +436,7 @@ function renderCheckout() {
           </div>
           <div class="border-t border-dashed border-outline-variant/30 pt-2.5 flex items-center justify-between">
             <span class="font-display font-bold text-primary text-base">Total Due</span>
-            <span id="checkout-total" class="font-display font-bold text-xl text-primary">$${subtotal.toFixed(2)}</span>
+            <span id="checkout-total" class="font-display font-bold text-xl text-primary">${getDisplayPrice(subtotal)}</span>
           </div>
         </div>
       </div>
@@ -449,12 +585,15 @@ async function handlePlaceOrder(event) {
     isValid = false;
   }
 
-  // 2. Phone Validation
+  // 2. Phone Validation (Country & Currency Sensitive)
   const phoneVal = phoneInput ? phoneInput.value.trim() : '';
-  const phoneRegex = /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
-  if (!phoneVal || !phoneRegex.test(phoneVal.replace(/\s+/g, ''))) {
+  const currentCurrency = (typeof getActiveCurrency === 'function') ? getActiveCurrency() : 'USD';
+  const phoneCfg = getCountryPhoneConfig(currentCurrency);
+  const phoneCheck = phoneCfg.validate(phoneVal);
+
+  if (!phoneVal || !phoneCheck.valid) {
     if (errorPhone) {
-      errorPhone.textContent = 'Please enter a valid phone number (e.g. 555-123-4567).';
+      errorPhone.textContent = phoneCfg.errorMessage;
       errorPhone.classList.remove('hidden');
     }
     isValid = false;
@@ -518,7 +657,7 @@ async function handlePlaceOrder(event) {
 
   const customerData = {
     name: nameVal,
-    phone: phoneVal,
+    phone: phoneCheck?.e164Phone || phoneVal,
     email: emailVal,
     orderType: isDelivery ? "delivery" : "pickup",
     address: isDelivery ? addressVal : "",
@@ -592,12 +731,19 @@ function renderOrderSuccess(order) {
   const paymentInfo = order.payment || {};
   const isPaid = paymentInfo.status === 'paid';
   const paymentMethodLabel = paymentInfo.method === 'online' ? 'Online Payment (Simulated)' : 'Cash on Delivery';
+  const orderCurr = order.currency || order.payment?.currency || 'USD';
+
+  const formatPrice = (val) => {
+    return typeof formatHistoricalCurrency === 'function'
+      ? formatHistoricalCurrency(val, orderCurr)
+      : `$${Number(val || 0).toFixed(2)}`;
+  };
 
   const itemsReceiptHTML = order.items.map(item => {
     return `
       <div class="flex items-center justify-between text-xs py-1 border-b border-outline-variant/10">
         <span class="text-on-surface">${item.name} × ${item.quantity}</span>
-        <span class="font-label-bold text-primary">$${item.lineTotal.toFixed(2)}</span>
+        <span class="font-label-bold text-primary">${formatPrice(item.lineTotal)}</span>
       </div>
     `;
   }).join('');
@@ -642,7 +788,7 @@ function renderOrderSuccess(order) {
 
         <div class="border-t border-outline-variant/20 pt-2 flex items-center justify-between">
           <span class="font-label-bold text-xs text-on-surface-variant">Total Amount:</span>
-          <span class="font-display font-bold text-lg text-primary">$${order.subtotal.toFixed(2)}</span>
+          <span class="font-display font-bold text-lg text-primary">${formatPrice(order.subtotal)}</span>
         </div>
 
         ${order.customer.address ? `
@@ -659,12 +805,12 @@ function renderOrderSuccess(order) {
       </div>
 
       <div class="flex items-center gap-3 flex-wrap justify-center">
-        <button id="success-track-order-btn" class="bg-tertiary text-on-tertiary hover:bg-primary font-label-bold text-xs sm:text-sm py-3 px-6 rounded-full transition-all duration-200 shadow-md pink-glow flex items-center gap-2 cursor-pointer active:scale-95">
-          <span>Track Order Status</span>
-          <span class="material-symbols-outlined text-base">near_me</span>
+        <button id="success-track-order-btn" class="bg-primary text-on-primary hover:bg-tertiary font-label-bold text-xs sm:text-sm py-2.5 px-6 rounded-full transition-colors flex items-center gap-1.5 cursor-pointer">
+          <span class="material-symbols-outlined text-base">receipt_long</span>
+          <span>Track Order in Profile</span>
         </button>
-        <button id="success-back-to-menu-btn" class="bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs sm:text-sm py-3 px-6 rounded-full transition-all duration-200 shadow-sm flex items-center gap-2 cursor-pointer active:scale-95">
-          <span>← Back to Menu</span>
+        <button id="success-back-to-menu-btn" class="bg-surface-container-high text-primary hover:bg-surface-container-highest font-label-bold text-xs sm:text-sm py-2.5 px-6 rounded-full transition-colors cursor-pointer">
+          <span>Back to Menu</span>
         </button>
       </div>
     </div>
@@ -687,6 +833,19 @@ function renderOrderSuccess(order) {
   if (successBackBtn) {
     successBackBtn.addEventListener('click', backToMenu);
   }
+}
+
+// Live sync of phone label and placeholder when currency changes
+if (typeof onCurrencyChanged === 'function') {
+  onCurrencyChanged((newCurr) => {
+    const phoneInput = document.getElementById('cust-phone');
+    const phoneLabel = document.querySelector('label[for="cust-phone"]');
+    if (phoneInput && phoneLabel) {
+      const cfg = getCountryPhoneConfig(newCurr);
+      phoneInput.placeholder = `e.g. ${cfg.placeholder}`;
+      phoneLabel.textContent = `Phone Number (${cfg.labelHint}) *`;
+    }
+  });
 }
 
 // Initialize Checkout Event Handlers

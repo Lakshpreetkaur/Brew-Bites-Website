@@ -129,6 +129,14 @@
         <span>Admin</span>
       </button>
 
+      <!-- Currency Selector -->
+      <select id="currency-selector" aria-label="Select Currency" class="bg-white/30 hover:bg-white/50 border border-white/40 text-primary text-xs font-label-bold px-2 py-1.5 rounded-full cursor-pointer transition-all outline-none">
+        <option value="USD">🇺🇸 USD ($)</option>
+        <option value="INR">🇮🇳 INR (₹)</option>
+        <option value="CAD">🇨🇦 CAD (CA$)</option>
+        <option value="GBP">🇬🇧 GBP (£)</option>
+      </select>
+
       <!-- Notification Bell Button -->
       <button id="notification-btn" aria-label="View Notifications" class="relative flex items-center justify-center p-2.5 rounded-full bg-white/20 hover:bg-white/40 border border-white/30 text-primary transition-all duration-200 cursor-pointer shadow-xs active:scale-95">
         <span class="material-symbols-outlined text-xl">notifications</span>
@@ -284,10 +292,37 @@
 <!-- Featured Menu Grid -->
 <section id="menu-section" class="py-16 sm:py-20 px-container-margin-mobile md:px-container-margin-desktop bg-surface relative">
 <div class="max-w-7xl mx-auto">
-<div class="text-center mb-10 sm:mb-12">
+<div class="text-center mb-8 sm:mb-10">
 <h2 class="font-display text-headline-xl text-primary mb-3">Our Favorites</h2>
 <p class="font-body-lg text-on-surface-variant max-w-2xl mx-auto text-sm sm:text-base">The lineup everyone's talking about. Find your new go-to.</p>
 </div>
+
+<!-- Storefront Product Search & Filter Bar -->
+<div class="mb-10 bg-surface-container-high/40 p-4 rounded-3xl border border-outline-variant/30 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xs">
+  <!-- Search Input -->
+  <div class="relative w-full md:w-80">
+    <span class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
+    <input id="menu-search-input" type="text" placeholder="Search coffee, bites, mocha..." class="w-full text-xs pl-10 pr-4 py-2.5 rounded-full bg-surface border border-outline-variant/40 text-primary focus:outline-none focus:border-tertiary shadow-2xs" />
+  </div>
+
+  <!-- Filters (Category & Availability) -->
+  <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-between md:justify-end">
+    <!-- Category Pills -->
+    <div class="flex items-center gap-1 bg-surface p-1 rounded-full border border-outline-variant/30">
+      <button data-menu-cat="all" class="menu-cat-btn px-3 py-1 rounded-full text-xs font-label-bold transition-all bg-primary text-on-primary shadow-2xs cursor-pointer">All</button>
+      <button data-menu-cat="coffee" class="menu-cat-btn px-3 py-1 rounded-full text-xs font-label-bold transition-all text-on-surface-variant hover:bg-surface-container-high cursor-pointer">Coffee</button>
+      <button data-menu-cat="bites" class="menu-cat-btn px-3 py-1 rounded-full text-xs font-label-bold transition-all text-on-surface-variant hover:bg-surface-container-high cursor-pointer">Bites</button>
+    </div>
+
+    <!-- Availability Select -->
+    <select id="menu-avail-filter" class="text-xs font-label-bold bg-surface border border-outline-variant/30 rounded-full px-3 py-1.5 text-primary cursor-pointer shadow-2xs">
+      <option value="all">All Items</option>
+      <option value="available">Available Only</option>
+      <option value="soldout">Sold Out Only</option>
+    </select>
+  </div>
+</div>
+
 <div id="coffee-section" class="mb-12 scroll-mt-28">
 <h3 class="font-display text-headline-md text-tertiary mb-6">Signature Brews</h3>
 <div id="coffee-products" class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
@@ -596,27 +631,38 @@
   </div>
 </div>
 
+<!-- Product Reviews & Ratings Modal -->
+<div id="product-reviews-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-300">
+  <div class="bg-surface-container-lowest max-w-lg w-full rounded-3xl p-6 border border-outline-variant/30 shadow-2xl flex flex-col gap-4 max-h-[88vh] overflow-hidden" id="product-reviews-modal-content">
+    <!-- Dynamically rendered from js/reviews.js -->
+  </div>
+</div>
+
 <!-- Supabase Official CDN Client Library -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Supabase Client Initialization -->
-<script src="js/supabase.js?v=2.6" defer></script>
+<script src="js/supabase.js?v=2.7" defer></script>
+<!-- Multi-Currency Engine -->
+<script src="js/currency.js?v=2.7" defer></script>
 <!-- Product Catalog Data -->
-<script src="js/products.js?v=2.6" defer></script>
+<script src="js/products.js?v=2.7" defer></script>
+<!-- Customer Reviews Module -->
+<script src="js/reviews.js?v=2.7" defer></script>
 <!-- Shopping Cart Module -->
-<script src="js/cart.js?v=2.6" defer></script>
+<script src="js/cart.js?v=2.7" defer></script>
 <!-- Address Book Data Layer -->
-<script src="js/addresses.js?v=2.6" defer></script>
+<script src="js/addresses.js?v=2.7" defer></script>
 <!-- Order Management Data Layer -->
-<script src="js/orders.js?v=2.6" defer></script>
+<script src="js/orders.js?v=2.7" defer></script>
 <!-- Notifications Module -->
-<script src="js/notifications.js?v=2.6" defer></script>
+<script src="js/notifications.js?v=2.7" defer></script>
 <!-- Checkout Module -->
-<script src="js/checkout.js?v=2.6" defer></script>
+<script src="js/checkout.js?v=2.7" defer></script>
 <!-- Customer Profile & Order History Module -->
-<script src="js/profile.js?v=2.6" defer></script>
+<script src="js/profile.js?v=2.7" defer></script>
 <!-- Admin Dashboard Module -->
-<script src="js/admin.js?v=2.6" defer></script>
+<script src="js/admin.js?v=2.7" defer></script>
 <!-- Main Application JavaScript -->
-<script src="js/main.js?v=2.6" defer></script>
+<script src="js/main.js?v=2.7" defer></script>
 </body>
 </html>

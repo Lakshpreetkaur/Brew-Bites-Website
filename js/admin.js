@@ -10,10 +10,11 @@ let adminOrderItems = [];
 let adminPayments = [];
 let adminProfiles = [];
 let adminProducts = [];
+let adminReviews = [];
 let isAdminDataLoading = false;
 
 // Navigation & Filters
-let adminCurrentTab = 'overview'; // 'overview' | 'orders' | 'customers' | 'products'
+let adminCurrentTab = 'overview'; // 'overview' | 'orders' | 'customers' | 'products' | 'reviews'
 let adminAnalyticsRange = '7days'; // 'today' | '7days' | 'month' | 'all'
 let adminStatusFilter = 'all';
 let adminPaymentFilter = 'all'; // 'all' | 'paid' | 'pending' | 'cod'
@@ -109,7 +110,15 @@ async function loadAdminData() {
       adminPayments = [];
     }
 
-    console.log(`[Admin] Loaded ${adminOrders.length} orders, ${adminPayments.length} payments, ${adminOrderItems.length} items, ${adminProfiles.length} profiles, ${adminProducts.length} products.`);
+    try {
+      const { data: revData } = await supabaseClient.from('reviews').select('*').order('created_at', { ascending: false });
+      adminReviews = revData || [];
+    } catch (revErr) {
+      console.warn("Notice: reviews table query note:", revErr);
+      adminReviews = [];
+    }
+
+    console.log(`[Admin] Loaded ${adminOrders.length} orders, ${adminPayments.length} payments, ${adminOrderItems.length} items, ${adminProfiles.length} profiles, ${adminProducts.length} products, ${adminReviews.length} reviews.`);
   } catch (err) {
     console.error("Error loading admin data from Supabase:", err);
   } finally {
@@ -359,6 +368,9 @@ function renderAdminDashboard() {
       <button data-admin-tab="products" class="admin-tab-btn px-4 py-2 rounded-full text-xs font-label-bold transition-all cursor-pointer ${adminCurrentTab === 'products' ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container-high/60 text-on-surface-variant hover:bg-surface-container-high'}">
         <span>Catalog (${totalProducts})</span>
       </button>
+      <button data-admin-tab="reviews" class="admin-tab-btn px-4 py-2 rounded-full text-xs font-label-bold transition-all cursor-pointer ${adminCurrentTab === 'reviews' ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container-high/60 text-on-surface-variant hover:bg-surface-container-high'}">
+        <span>Reviews (${adminReviews.length})</span>
+      </button>
     </div>
   `;
 
@@ -371,6 +383,8 @@ function renderAdminDashboard() {
     contentHTML += renderCustomersTab();
   } else if (adminCurrentTab === 'products') {
     contentHTML += renderProductsTab();
+  } else if (adminCurrentTab === 'reviews') {
+    contentHTML += renderReviewsTab();
   }
 
   // Drill-down Modal (Customer Orders)
@@ -1031,6 +1045,97 @@ function renderProductsTab() {
 }
 
 /**
+ * Delete a review as admin.
+ */
+async function deleteAdminReview(reviewId) {
+  if (!reviewId || typeof supabaseClient === 'undefined' || !supabaseClient) return;
+
+  try {
+    const { error } = await supabaseClient.from('reviews').delete().eq('id', reviewId);
+    if (error) {
+      alert(`Could not delete review: ${error.message}`);
+      return;
+    }
+
+    adminReviews = adminReviews.filter(r => r.id !== reviewId);
+    renderAdminDashboard();
+    if (typeof fetchAllReviewsFromSupabase === 'function') fetchAllReviewsFromSupabase();
+  } catch (err) {
+    console.error("Error moderating review:", err);
+  }
+}
+
+/**
+ * Tab 5: Customer Reviews Moderation Layout
+ */
+function renderReviewsTab() {
+  const reviewsRows = adminReviews.length === 0
+    ? `<tr><td colspan="7" class="py-6 text-center text-xs text-on-surface-variant">No customer reviews submitted yet.</td></tr>`
+    : adminReviews.map(r => {
+        const prod = adminProducts.find(p => p.id === r.product_id);
+        const prodName = prod?.name || r.product_id;
+        const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recent';
+        const starsStr = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+
+        return `
+          <tr class="border-b border-outline-variant/15 hover:bg-surface/50 text-xs">
+            <td class="py-3 px-3">
+              <span class="font-bold text-primary block">${prodName}</span>
+              <span class="text-[10px] text-on-surface-variant font-mono">${r.product_id}</span>
+            </td>
+            <td class="py-3 px-3 font-medium text-primary">${r.user_name}</td>
+            <td class="py-3 px-3">
+              <span class="text-amber-500 font-bold">${starsStr}</span>
+              <span class="text-[10px] text-on-surface-variant ml-1">(${r.rating}/5)</span>
+            </td>
+            <td class="py-3 px-3 max-w-[240px] truncate text-on-surface" title="${r.review_text}">${r.review_text}</td>
+            <td class="py-3 px-3">
+              <span class="px-2 py-0.5 rounded-full text-[9px] font-label-bold uppercase ${r.verified_purchase ? 'bg-green-100 text-green-800' : 'bg-surface-container-high text-on-surface-variant'}">
+                ${r.verified_purchase ? 'Verified' : 'Unverified'}
+              </span>
+            </td>
+            <td class="py-3 px-3 text-on-surface-variant">${dateStr}</td>
+            <td class="py-3 px-3 text-right">
+              <button data-review-id="${r.id}" class="admin-delete-review-btn text-xs font-label-bold px-3 py-1 rounded-full text-red-600 hover:text-red-800 border border-red-200 hover:bg-red-50 transition-colors cursor-pointer">
+                <span>Delete</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+  return `
+    <div class="bg-surface rounded-2xl p-5 border border-outline-variant/30 shadow-xs flex flex-col gap-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h4 class="font-display text-base font-bold text-primary">Customer Reviews &amp; Moderation</h4>
+          <span class="text-xs text-on-surface-variant">${adminReviews.length} Total Verified Reviews</span>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
+          <thead>
+            <tr class="border-b border-outline-variant/20 text-[11px] font-label-bold text-on-surface-variant uppercase tracking-wider">
+              <th class="py-2 px-3">Product</th>
+              <th class="py-2 px-3">Reviewer</th>
+              <th class="py-2 px-3">Rating</th>
+              <th class="py-2 px-3">Review Text</th>
+              <th class="py-2 px-3">Status</th>
+              <th class="py-2 px-3">Date</th>
+              <th class="py-2 px-3 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${reviewsRows}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+}
+
+/**
  * Customer Order History Drill-down Modal
  */
 function renderCustomerHistoryModal(customer) {
@@ -1393,6 +1498,16 @@ function attachAdminEvents() {
       renderAdminDashboard();
     });
   }
+
+  // Delete Review Action (Admin Moderation)
+  document.querySelectorAll('.admin-delete-review-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-review-id');
+      if (id && confirm("Are you sure you want to moderate and permanently delete this review?")) {
+        deleteAdminReview(id);
+      }
+    });
+  });
 }
 
 // Helper to get badge CSS color based on status

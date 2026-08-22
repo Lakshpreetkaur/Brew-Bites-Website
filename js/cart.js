@@ -192,6 +192,10 @@ function renderCart() {
     openCheckoutBtn.classList.remove('opacity-50', 'pointer-events-none');
   }
 
+  const getDisplayPrice = (val) => {
+    return typeof formatCurrency === 'function' ? formatCurrency(val) : `$${Number(val || 0).toFixed(2)}`;
+  };
+
   let subtotal = 0;
   const itemsHTML = cart.map(cartItem => {
     const product = (typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS))
@@ -215,10 +219,10 @@ function renderCart() {
           <div class="flex items-start justify-between gap-2">
             <div>
               <h4 class="font-display font-bold text-primary text-sm truncate max-w-[140px] sm:max-w-[170px]">${product.name}</h4>
-              <p class="font-body-md text-xs text-on-surface-variant">$${product.price.toFixed(2)}</p>
+              <p class="font-body-md text-xs text-on-surface-variant">${getDisplayPrice(product.price)}</p>
             </div>
             <!-- Line Total -->
-            <span class="font-label-bold text-primary text-sm whitespace-nowrap">$${lineTotal.toFixed(2)}</span>
+            <span class="font-label-bold text-primary text-sm whitespace-nowrap">${getDisplayPrice(lineTotal)}</span>
           </div>
 
           <!-- Quantity Selector & Remove Action -->
@@ -246,7 +250,7 @@ function renderCart() {
   }).join('');
 
   cartItemsContainer.innerHTML = itemsHTML;
-  cartSubtotal.textContent = `$${subtotal.toFixed(2)}`;
+  cartSubtotal.textContent = getDisplayPrice(subtotal);
 }
 
 // Add to Cart Logic

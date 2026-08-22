@@ -318,6 +318,8 @@ async function createAndSaveOrderInSupabase(cartItems, customerDetails, user, pa
     throw new Error(itemsError?.message || "Failed to create order line items in database.");
   }
 
+  const placedCurrency = (typeof getActiveCurrency === 'function') ? getActiveCurrency() : 'USD';
+
   // 4. Insert dedicated payment record into Supabase `payments` table
   let paymentRecord = null;
   try {
@@ -327,7 +329,7 @@ async function createAndSaveOrderInSupabase(cartItems, customerDetails, user, pa
       payment_method: paymentMethod,
       payment_status: paymentStatus,
       amount: subtotalValue,
-      currency: 'USD',
+      currency: placedCurrency,
       transaction_ref: transactionRef
     };
 
@@ -353,6 +355,7 @@ async function createAndSaveOrderInSupabase(cartItems, customerDetails, user, pa
     userId: user.id,
     createdAt: orderRecord.created_at || new Date().toISOString(),
     status: "placed",
+    currency: placedCurrency,
     customer: {
       name: customerDetails.name || "",
       phone: customerDetails.phone || "",
@@ -368,7 +371,7 @@ async function createAndSaveOrderInSupabase(cartItems, customerDetails, user, pa
       method: paymentMethod,
       status: paymentStatus,
       amount: subtotalValue,
-      currency: 'USD',
+      currency: placedCurrency,
       transactionRef: transactionRef,
       createdAt: paymentRecord?.created_at || new Date().toISOString()
     }
