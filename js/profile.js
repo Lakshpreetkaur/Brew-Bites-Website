@@ -1569,6 +1569,24 @@ function openOrderDetail(orderId) {
           ` : ''}
         </div>
 
+        <!-- Payment Information Card -->
+        <div class="p-3 rounded-xl bg-surface-container-high/30 border border-outline-variant/15 grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+          <div>
+            <span class="text-on-surface-variant font-bold block mb-0.5">Payment Method:</span>
+            <span class="text-primary font-medium">${order.payment?.method === 'online' ? 'Online Payment (Card/UPI)' : 'Cash on Delivery'}</span>
+          </div>
+          <div>
+            <span class="text-on-surface-variant font-bold block mb-0.5">Payment Status:</span>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-label-bold uppercase ${order.payment?.status === 'paid' ? 'bg-green-100 text-green-800 border border-green-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
+              ${order.payment?.status === 'paid' ? 'Paid' : 'Pending (COD)'}
+            </span>
+          </div>
+          <div>
+            <span class="text-on-surface-variant font-bold block mb-0.5">Transaction Ref:</span>
+            <span class="font-mono text-[11px] text-primary">${order.payment?.transactionRef || 'COD-' + order.orderId}</span>
+          </div>
+        </div>
+
         <!-- Purchased Line Items (Immutable Historical Snapshot) -->
         <div class="flex flex-col gap-1">
           <span class="text-[11px] text-on-surface-variant uppercase font-label-bold tracking-wider mb-0.5">Purchased Items</span>

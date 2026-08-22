@@ -1,17 +1,19 @@
 /**
  * Brew & Bite - Admin Dashboard Controller (admin.js)
- * Database-backed admin interface for sales analytics, readable order management,
+ * Database-backed admin interface for sales analytics, readable order & payments management,
  * customer activity directory, and live product catalog management.
  */
 
 // In-Memory Admin State
 let adminOrders = [];
 let adminOrderItems = [];
+let adminPayments = [];
 let adminProfiles = [];
 let adminProducts = [];
 let isAdminDataLoading = false;
 let adminCurrentTab = 'overview'; // 'overview' | 'orders' | 'customers' | 'products'
 let adminStatusFilter = 'all';
+let adminPaymentFilter = 'all'; // 'all' | 'paid' | 'pending' | 'cod'
 let adminDateSort = 'desc'; // 'desc' | 'asc'
 let adminSearchQuery = '';
 let adminSelectedCustomer = null; // For customer order history drill-down modal
@@ -90,7 +92,16 @@ async function loadAdminData() {
     adminProfiles = profilesRes.data || [];
     adminProducts = productsRes.data || [];
 
-    console.log(`[Admin] Loaded ${adminOrders.length} orders, ${adminOrderItems.length} items, ${adminProfiles.length} profiles, ${adminProducts.length} products.`);
+    // Attempt to load payments if table exists
+    try {
+      const { data: payData } = await supabaseClient.from('payments').select('*');
+      adminPayments = payData || [];
+    } catch (payErr) {
+      console.warn("Notice: payments table query note:", payErr);
+      adminPayments = [];
+    }
+
+    console.log(`[Admin] Loaded ${adminOrders.length} orders, ${adminPayments.length} payments, ${adminOrderItems.length} items, ${adminProfiles.length} profiles, ${adminProducts.length} products.`);
   } catch (err) {
     console.error("Error loading admin data from Supabase:", err);
   } finally {
@@ -253,7 +264,7 @@ function renderAdminDashboard() {
         <span>Overview &amp; Trends</span>
       </button>
       <button data-admin-tab="orders" class="admin-tab-btn px-4 py-2 rounded-full text-xs font-label-bold transition-all cursor-pointer ${adminCurrentTab === 'orders' ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container-high/60 text-on-surface-variant hover:bg-surface-container-high'}">
-        <span>Orders (${totalOrders})</span>
+        <span>Orders &amp; Payments (${totalOrders})</span>
       </button>
       <button data-admin-tab="customers" class="admin-tab-btn px-4 py-2 rounded-full text-xs font-label-bold transition-all cursor-pointer ${adminCurrentTab === 'customers' ? 'bg-primary text-on-primary shadow-sm' : 'bg-surface-container-high/60 text-on-surface-variant hover:bg-surface-container-high'}">
         <span>Customers (${totalCustomers})</span>
@@ -368,14 +379,25 @@ function renderOverviewTab(bestSellers) {
 }
 
 /**
- * Tab 2: Orders Management Layout with Search, Status Filter, and Date Sort
+ * Tab 2: Orders & Payments Management Layout with Search, Status Filter, Payment Filter, and Date Sort
  */
 function renderOrdersTab() {
   let filtered = [...adminOrders];
 
-  // Status Filter
+  // Lifecycle Status Filter
   if (adminStatusFilter !== 'all') {
     filtered = filtered.filter(o => (o.status || 'placed').toLowerCase() === adminStatusFilter.toLowerCase());
+  }
+
+  // Payment Status / Method Filter
+  if (adminPaymentFilter !== 'all') {
+    filtered = filtered.filter(o => {
+      const p = adminPayments.find(pay => pay.order_id === o.id);
+      if (adminPaymentFilter === 'paid') return p?.payment_status === 'paid';
+      if (adminPaymentFilter === 'pending') return p?.payment_status === 'pending';
+      if (adminPaymentFilter === 'cod') return p?.payment_method === 'cash_on_delivery' || !p;
+      return true;
+    });
   }
 
   // Search Filter
@@ -408,6 +430,12 @@ function renderOrdersTab() {
           ? new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
           : 'Recent';
 
+        // Find relational payment
+        const payment = adminPayments.find(p => p.order_id === order.id);
+        const isPaid = payment?.payment_status === 'paid';
+        const isCOD = payment?.payment_method === 'cash_on_delivery' || !payment;
+        const txnRef = payment?.transaction_ref || `COD-${order.order_reference || order.id?.slice(0, 8)}`;
+
         // Find relational order items for this order ID
         const items = adminOrderItems.filter(item => item.order_id === order.id);
 
@@ -428,16 +456,21 @@ function renderOrdersTab() {
             <!-- Order Header -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-outline-variant/15 pb-3">
               <div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
                   <span class="font-display text-base font-black text-primary">${order.order_reference || order.id?.slice(0, 8)}</span>
+                  <!-- Lifecycle Status Badge -->
                   <span class="px-2.5 py-0.5 rounded-full text-[10px] font-label-bold uppercase tracking-wider ${getStatusBadgeClass(order.status)}">${order.status || 'placed'}</span>
+                  <!-- Payment Status Badge -->
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-label-bold uppercase tracking-wider ${isPaid ? 'bg-green-100 text-green-800 border border-green-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
+                    ${isCOD ? 'COD: Pending' : (isPaid ? 'Online: Paid' : 'Online: Pending')}
+                  </span>
                 </div>
                 <p class="text-[11px] text-on-surface-variant mt-0.5">${dateStr} • Order ID: ${order.id}</p>
               </div>
 
               <!-- Status Changer Dropdown -->
               <div class="flex items-center gap-2">
-                <label class="text-[11px] font-label-bold text-on-surface-variant">Update Status:</label>
+                <label class="text-[11px] font-label-bold text-on-surface-variant">Update Order Status:</label>
                 <select data-order-id="${order.id}" class="order-status-select text-xs font-label-bold bg-surface-container-high/60 border border-outline-variant/40 rounded-lg px-2.5 py-1.5 text-primary cursor-pointer">
                   <option value="placed" ${order.status === 'placed' ? 'selected' : ''}>Placed</option>
                   <option value="confirmed" ${order.status === 'confirmed' ? 'selected' : ''}>Confirmed</option>
@@ -449,7 +482,7 @@ function renderOrdersTab() {
               </div>
             </div>
 
-            <!-- Customer & Delivery Information -->
+            <!-- Customer, Delivery & Payment Information -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs bg-surface-container-high/30 p-3.5 rounded-xl border border-outline-variant/15">
               <div>
                 <span class="text-on-surface-variant font-bold block mb-0.5">Customer Name:</span>
@@ -463,6 +496,14 @@ function renderOrdersTab() {
                 <span class="text-on-surface-variant font-bold block mb-0.5">Phone:</span>
                 <span class="text-primary font-medium">${customerPhone}</span>
               </div>
+              <div>
+                <span class="text-on-surface-variant font-bold block mb-0.5">Payment Method:</span>
+                <span class="text-secondary font-bold uppercase">${isCOD ? 'Cash on Delivery' : 'Online Payment'}</span>
+              </div>
+              <div>
+                <span class="text-on-surface-variant font-bold block mb-0.5">Transaction Ref:</span>
+                <span class="font-mono text-primary font-medium text-[11px]">${txnRef}</span>
+              </div>
               ${order.order_type ? `
                 <div>
                   <span class="text-on-surface-variant font-bold block mb-0.5">Order Type:</span>
@@ -470,7 +511,7 @@ function renderOrdersTab() {
                 </div>
               ` : ''}
               ${order.delivery_address ? `
-                <div class="sm:col-span-2">
+                <div class="sm:col-span-3">
                   <span class="text-on-surface-variant font-bold block mb-0.5">Delivery Address:</span>
                   <span class="text-primary font-medium">${order.delivery_address}</span>
                 </div>
@@ -493,7 +534,7 @@ function renderOrdersTab() {
 
             <!-- Total Calculation -->
             <div class="border-t border-outline-variant/20 pt-2.5 flex items-center justify-between">
-              <span class="text-xs font-label-bold text-on-surface-variant">Order Subtotal Paid</span>
+              <span class="text-xs font-label-bold text-on-surface-variant">Order Total</span>
               <span class="font-display font-black text-lg text-primary">$${Number(order.subtotal || 0).toFixed(2)}</span>
             </div>
           </div>
@@ -503,26 +544,42 @@ function renderOrdersTab() {
   return `
     <div class="flex flex-col gap-4">
       <!-- Search & Filters Bar -->
-      <div class="flex flex-col md:flex-row items-center justify-between gap-3 bg-surface p-3.5 rounded-2xl border border-outline-variant/25">
-        <input id="admin-orders-search" type="text" placeholder="Search by Order Ref, Customer Name, or Email..." value="${adminSearchQuery}" class="w-full md:w-80 text-xs px-3.5 py-2 rounded-xl bg-surface-container-high/40 border border-outline-variant/40 text-primary placeholder-on-surface-variant/60 focus:outline-none focus:border-tertiary" />
-
-        <div class="flex items-center gap-2 overflow-x-auto w-full md:w-auto">
-          <!-- Status Filter Buttons -->
-          <div class="flex items-center gap-1">
-            <button data-filter="all" class="admin-status-filter-btn px-2.5 py-1.5 rounded-full text-[11px] font-label-bold transition-all cursor-pointer ${adminStatusFilter === 'all' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high/50 text-on-surface-variant'}">All</button>
-            <button data-filter="placed" class="admin-status-filter-btn px-2.5 py-1.5 rounded-full text-[11px] font-label-bold transition-all cursor-pointer ${adminStatusFilter === 'placed' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high/50 text-on-surface-variant'}">Placed</button>
-            <button data-filter="confirmed" class="admin-status-filter-btn px-2.5 py-1.5 rounded-full text-[11px] font-label-bold transition-all cursor-pointer ${adminStatusFilter === 'confirmed' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high/50 text-on-surface-variant'}">Confirmed</button>
-            <button data-filter="preparing" class="admin-status-filter-btn px-2.5 py-1.5 rounded-full text-[11px] font-label-bold transition-all cursor-pointer ${adminStatusFilter === 'preparing' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high/50 text-on-surface-variant'}">Preparing</button>
-            <button data-filter="ready" class="admin-status-filter-btn px-2.5 py-1.5 rounded-full text-[11px] font-label-bold transition-all cursor-pointer ${adminStatusFilter === 'ready' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high/50 text-on-surface-variant'}">Ready</button>
-            <button data-filter="delivered" class="admin-status-filter-btn px-2.5 py-1.5 rounded-full text-[11px] font-label-bold transition-all cursor-pointer ${adminStatusFilter === 'delivered' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high/50 text-on-surface-variant'}">Delivered</button>
-            <button data-filter="cancelled" class="admin-status-filter-btn px-2.5 py-1.5 rounded-full text-[11px] font-label-bold transition-all cursor-pointer ${adminStatusFilter === 'cancelled' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high/50 text-on-surface-variant'}">Cancelled</button>
-          </div>
+      <div class="flex flex-col gap-3 bg-surface p-4 rounded-2xl border border-outline-variant/25">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-3">
+          <input id="admin-orders-search" type="text" placeholder="Search by Order Ref, Customer Name, or Email..." value="${adminSearchQuery}" class="w-full md:w-80 text-xs px-3.5 py-2 rounded-xl bg-surface-container-high/40 border border-outline-variant/40 text-primary placeholder-on-surface-variant/60 focus:outline-none focus:border-tertiary" />
 
           <!-- Date Sort Selector -->
-          <select id="admin-date-sort" class="text-[11px] font-label-bold bg-surface-container-high/60 border border-outline-variant/40 rounded-lg px-2.5 py-1.5 text-primary cursor-pointer">
-            <option value="desc" ${adminDateSort === 'desc' ? 'selected' : ''}>Newest First</option>
-            <option value="asc" ${adminDateSort === 'asc' ? 'selected' : ''}>Oldest First</option>
-          </select>
+          <div class="flex items-center gap-2 self-end md:self-auto">
+            <span class="text-[11px] font-label-bold text-on-surface-variant">Sort:</span>
+            <select id="admin-date-sort" class="text-[11px] font-label-bold bg-surface-container-high/60 border border-outline-variant/40 rounded-lg px-2.5 py-1.5 text-primary cursor-pointer">
+              <option value="desc" ${adminDateSort === 'desc' ? 'selected' : ''}>Newest First</option>
+              <option value="asc" ${adminDateSort === 'asc' ? 'selected' : ''}>Oldest First</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Filter Pills Rows -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-t border-outline-variant/15 pt-3">
+          <!-- Status Filter Buttons -->
+          <div class="flex items-center gap-1 overflow-x-auto w-full sm:w-auto">
+            <span class="text-[10px] uppercase font-label-bold text-on-surface-variant mr-1">Status:</span>
+            <button data-filter="all" class="admin-status-filter-btn px-2.5 py-1 rounded-full text-[11px] font-label-bold transition-all cursor-pointer ${adminStatusFilter === 'all' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high/50 text-on-surface-variant'}">All</button>
+            <button data-filter="placed" class="admin-status-filter-btn px-2.5 py-1 rounded-full text-[11px] font-label-bold transition-all cursor-pointer ${adminStatusFilter === 'placed' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high/50 text-on-surface-variant'}">Placed</button>
+            <button data-filter="confirmed" class="admin-status-filter-btn px-2.5 py-1 rounded-full text-[11px] font-label-bold transition-all cursor-pointer ${adminStatusFilter === 'confirmed' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high/50 text-on-surface-variant'}">Confirmed</button>
+            <button data-filter="preparing" class="admin-status-filter-btn px-2.5 py-1 rounded-full text-[11px] font-label-bold transition-all cursor-pointer ${adminStatusFilter === 'preparing' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high/50 text-on-surface-variant'}">Preparing</button>
+            <button data-filter="ready" class="admin-status-filter-btn px-2.5 py-1 rounded-full text-[11px] font-label-bold transition-all cursor-pointer ${adminStatusFilter === 'ready' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high/50 text-on-surface-variant'}">Ready</button>
+            <button data-filter="delivered" class="admin-status-filter-btn px-2.5 py-1 rounded-full text-[11px] font-label-bold transition-all cursor-pointer ${adminStatusFilter === 'delivered' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high/50 text-on-surface-variant'}">Delivered</button>
+            <button data-filter="cancelled" class="admin-status-filter-btn px-2.5 py-1 rounded-full text-[11px] font-label-bold transition-all cursor-pointer ${adminStatusFilter === 'cancelled' ? 'bg-secondary-container text-on-secondary-container' : 'bg-surface-container-high/50 text-on-surface-variant'}">Cancelled</button>
+          </div>
+
+          <!-- Payment Filter Buttons -->
+          <div class="flex items-center gap-1 overflow-x-auto w-full sm:w-auto">
+            <span class="text-[10px] uppercase font-label-bold text-on-surface-variant mr-1">Payment:</span>
+            <button data-pay-filter="all" class="admin-pay-filter-btn px-2.5 py-1 rounded-full text-[11px] font-label-bold transition-all cursor-pointer ${adminPaymentFilter === 'all' ? 'bg-primary text-on-primary' : 'bg-surface-container-high/50 text-on-surface-variant'}">All</button>
+            <button data-pay-filter="paid" class="admin-pay-filter-btn px-2.5 py-1 rounded-full text-[11px] font-label-bold transition-all cursor-pointer ${adminPaymentFilter === 'paid' ? 'bg-green-700 text-white' : 'bg-surface-container-high/50 text-on-surface-variant'}">Paid</button>
+            <button data-pay-filter="pending" class="admin-pay-filter-btn px-2.5 py-1 rounded-full text-[11px] font-label-bold transition-all cursor-pointer ${adminPaymentFilter === 'pending' ? 'bg-amber-700 text-white' : 'bg-surface-container-high/50 text-on-surface-variant'}">Pending</button>
+            <button data-pay-filter="cod" class="admin-pay-filter-btn px-2.5 py-1 rounded-full text-[11px] font-label-bold transition-all cursor-pointer ${adminPaymentFilter === 'cod' ? 'bg-secondary text-on-secondary' : 'bg-surface-container-high/50 text-on-surface-variant'}">COD</button>
+          </div>
         </div>
       </div>
 
@@ -818,12 +875,23 @@ function attachAdminEvents() {
     });
   });
 
-  // Status Filter Buttons
+  // Order Status Filter Buttons
   document.querySelectorAll('.admin-status-filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const filter = btn.getAttribute('data-filter');
       if (filter) {
         adminStatusFilter = filter;
+        renderAdminDashboard();
+      }
+    });
+  });
+
+  // Payment Status Filter Buttons
+  document.querySelectorAll('.admin-pay-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const payFilter = btn.getAttribute('data-pay-filter');
+      if (payFilter) {
+        adminPaymentFilter = payFilter;
         renderAdminDashboard();
       }
     });

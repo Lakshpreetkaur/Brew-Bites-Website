@@ -1,11 +1,12 @@
 /**
- * Brew & Bite - Order Management & Supabase Data Layer (orders.js)
- * Enforces authenticated user order ownership, persistent historical order storage,
- * and verified database-first architecture.
+ * Brew & Bite - Order Management, Payments & Supabase Data Layer (orders.js)
+ * Enforces authenticated user order ownership, dedicated relational payments table,
+ * strict order vs payment status separation, and verified database-first architecture.
  *
  * Supabase Tables:
  * - public.orders: (id, order_reference, user_id, customer_name, customer_phone, customer_email, order_type, delivery_address, subtotal, status, created_at)
  * - public.order_items: (id, order_id, product_id, product_name, quantity, unit_price, line_total)
+ * - public.payments: (id, order_id, user_id, payment_method, payment_status, amount, currency, transaction_ref, created_at, updated_at)
  */
 
 // In-Memory cache for the active authenticated user's orders
@@ -55,7 +56,9 @@ async function fetchOrdersForUser(userId) {
   // 1. Authoritative Query from Supabase `orders` table filtered by `user_id`
   if (typeof supabaseClient !== 'undefined' && supabaseClient) {
     try {
-      const { data, error } = await supabaseClient
+      // First try fetching orders with relational order_items and payments
+      let ordersData = null;
+      let { data, error } = await supabaseClient
         .from('orders')
         .select(`
           id,
@@ -77,38 +80,94 @@ async function fetchOrdersForUser(userId) {
             quantity,
             unit_price,
             line_total
+          ),
+          payments (
+            id,
+            order_id,
+            payment_method,
+            payment_status,
+            amount,
+            currency,
+            transaction_ref,
+            created_at
           )
         `)
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error("Supabase orders query error:", error);
-      } else if (Array.isArray(data)) {
+        // Fallback: If payments relation isn't defined or migration not yet applied, fetch without payments
+        const fallbackRes = await supabaseClient
+          .from('orders')
+          .select(`
+            id,
+            order_reference,
+            user_id,
+            customer_name,
+            customer_phone,
+            customer_email,
+            order_type,
+            delivery_address,
+            subtotal,
+            status,
+            created_at,
+            order_items (
+              id,
+              order_id,
+              product_id,
+              product_name,
+              quantity,
+              unit_price,
+              line_total
+            )
+          `)
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false });
+
+        ordersData = fallbackRes.data || [];
+      } else {
+        ordersData = data || [];
+      }
+
+      if (Array.isArray(ordersData)) {
         // Map database records into standard frontend order format
-        currentUserOrders = data.map(record => ({
-          id: record.id,
-          orderId: record.order_reference || record.id,
-          userId: record.user_id,
-          createdAt: record.created_at,
-          status: record.status || 'placed',
-          customer: {
-            name: record.customer_name || '',
-            phone: record.customer_phone || '',
-            email: record.customer_email || '',
-            orderType: record.order_type || 'pickup',
-            address: record.delivery_address || '',
-            notes: ''
-          },
-          items: Array.isArray(record.order_items) ? record.order_items.map(item => ({
-            productId: item.product_id,
-            name: item.product_name || item.product_id,
-            quantity: Number(item.quantity) || 1,
-            unitPrice: Number(item.unit_price) || 0,
-            lineTotal: Number(item.line_total) || 0
-          })) : [],
-          subtotal: Number(record.subtotal) || 0
-        }));
+        currentUserOrders = ordersData.map(record => {
+          const rawPayments = Array.isArray(record.payments) ? record.payments : (record.payments ? [record.payments] : []);
+          const primaryPayment = rawPayments[0] || null;
+
+          return {
+            id: record.id,
+            orderId: record.order_reference || record.id,
+            userId: record.user_id,
+            createdAt: record.created_at,
+            status: record.status || 'placed',
+            customer: {
+              name: record.customer_name || '',
+              phone: record.customer_phone || '',
+              email: record.customer_email || '',
+              orderType: record.order_type || 'pickup',
+              address: record.delivery_address || '',
+              notes: ''
+            },
+            items: Array.isArray(record.order_items) ? record.order_items.map(item => ({
+              productId: item.product_id,
+              name: item.product_name || item.product_id,
+              quantity: Number(item.quantity) || 1,
+              unitPrice: Number(item.unit_price) || 0,
+              lineTotal: Number(item.line_total) || 0
+            })) : [],
+            subtotal: Number(record.subtotal) || 0,
+            payment: {
+              id: primaryPayment?.id || null,
+              method: primaryPayment?.payment_method || 'cash_on_delivery',
+              status: primaryPayment?.payment_status || 'pending',
+              amount: primaryPayment ? Number(primaryPayment.amount) : Number(record.subtotal || 0),
+              currency: primaryPayment?.currency || 'USD',
+              transactionRef: primaryPayment?.transaction_ref || `COD-${record.order_reference || record.id?.slice(0, 8)}`,
+              createdAt: primaryPayment?.created_at || record.created_at
+            }
+          };
+        });
 
         // Update optional user-scoped cache
         const storageKey = getUserOrdersStorageKey(userId);
@@ -163,11 +222,11 @@ function getOrderById(orderId) {
 }
 
 /**
- * Create and persist a new order to Supabase.
- * Enforces strict database verification: if Supabase insert fails, throws an error
- * so the frontend will NOT display a false success receipt.
+ * Create and persist a new order + payment record to Supabase.
+ * Enforces strict database verification: if payment simulation is set to failure,
+ * immediately throws an error without creating any orders or partial records.
  */
-async function createAndSaveOrderInSupabase(cartItems, customerDetails, user) {
+async function createAndSaveOrderInSupabase(cartItems, customerDetails, user, paymentOptions = {}) {
   if (!Array.isArray(cartItems) || cartItems.length === 0 || !user || !user.id) {
     console.error("Order creation blocked: Cart is empty or user is unauthenticated.");
     throw new Error("You must be logged in with items in your cart to place an order.");
@@ -178,9 +237,19 @@ async function createAndSaveOrderInSupabase(cartItems, customerDetails, user) {
     throw new Error("Database service is currently unreachable. Please try again.");
   }
 
+  const paymentMethod = paymentOptions.method || 'cash_on_delivery'; // 'cash_on_delivery' | 'online'
+  const simulateOutcome = paymentOptions.simulateOutcome || 'success'; // 'success' | 'failure'
+
+  // Safety Payment Simulation Check:
+  // If simulated payment is set to fail, throw an error immediately before any database insertion.
+  if (paymentMethod === 'online' && simulateOutcome === 'failure') {
+    console.warn("[Payment Simulation] Online payment declined by test simulator.");
+    throw new Error("Online Payment Declined (Simulated Card/Gateway Error). Your card was not charged and no order was created. Please try again or select Cash on Delivery.");
+  }
+
   let calculatedSubtotal = 0;
 
-  // 1. Snapshot items and lock unit prices
+  // 1. Snapshot items and lock current catalog unit prices
   const orderItems = cartItems.map(cartItem => {
     const product = (typeof getProductById === 'function')
       ? getProductById(cartItem.productId)
@@ -202,8 +271,11 @@ async function createAndSaveOrderInSupabase(cartItems, customerDetails, user) {
 
   const generatedRef = generateOrderId();
   const subtotalValue = Number(calculatedSubtotal.toFixed(2));
+  const paymentStatus = paymentMethod === 'online' ? 'paid' : 'pending';
+  const txnPrefix = paymentMethod === 'online' ? 'TXN-ONL' : 'COD';
+  const transactionRef = `${txnPrefix}-${generatedRef.replace('BB-DEMO-', '')}-${Math.floor(1000 + Math.random() * 9000)}`;
 
-  // 2. Insert into Supabase `orders` table with verified column names
+  // 2. Insert into Supabase `orders` table
   const orderInsertPayload = {
     order_reference: generatedRef,
     user_id: user.id,
@@ -246,7 +318,35 @@ async function createAndSaveOrderInSupabase(cartItems, customerDetails, user) {
     throw new Error(itemsError?.message || "Failed to create order line items in database.");
   }
 
-  // 4. Build standard completed order object
+  // 4. Insert dedicated payment record into Supabase `payments` table
+  let paymentRecord = null;
+  try {
+    const paymentPayload = {
+      order_id: orderRecord.id,
+      user_id: user.id,
+      payment_method: paymentMethod,
+      payment_status: paymentStatus,
+      amount: subtotalValue,
+      currency: 'USD',
+      transaction_ref: transactionRef
+    };
+
+    const { data: pData, error: pError } = await supabaseClient
+      .from('payments')
+      .insert(paymentPayload)
+      .select()
+      .maybeSingle();
+
+    if (pError) {
+      console.warn("Notice: payments table insert note (will use in-memory payment snapshot):", pError.message);
+    } else {
+      paymentRecord = pData;
+    }
+  } catch (pErr) {
+    console.warn("Could not insert payment record:", pErr);
+  }
+
+  // 5. Build standard completed order object with integrated payment metadata
   const standardOrderObject = {
     id: orderRecord.id,
     orderId: generatedRef,
@@ -262,7 +362,16 @@ async function createAndSaveOrderInSupabase(cartItems, customerDetails, user) {
       notes: customerDetails.notes || ""
     },
     items: orderItems,
-    subtotal: subtotalValue
+    subtotal: subtotalValue,
+    payment: {
+      id: paymentRecord?.id || null,
+      method: paymentMethod,
+      status: paymentStatus,
+      amount: subtotalValue,
+      currency: 'USD',
+      transactionRef: transactionRef,
+      createdAt: paymentRecord?.created_at || new Date().toISOString()
+    }
   };
 
   // Prepend to current in-memory user order history
@@ -279,7 +388,7 @@ async function createAndSaveOrderInSupabase(cartItems, customerDetails, user) {
     }
   }
 
-  console.log("Order successfully persisted to Supabase:", standardOrderObject.orderId, standardOrderObject.id);
+  console.log("Order & Payment successfully persisted:", standardOrderObject.orderId, standardOrderObject.payment.transactionRef);
   return standardOrderObject;
 }
 

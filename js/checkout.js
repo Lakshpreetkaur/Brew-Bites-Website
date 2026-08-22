@@ -1,9 +1,11 @@
 /**
- * Brew & Bite - Checkout Experience Module (checkout.js)
- * Handles customer checkout modal display, guest checkout protection,
- * conditional delivery address toggling, form validation, authenticated order persistence
- * via orders.js to Supabase, active cart clearing, and order confirmation receipt rendering.
+ * Brew & Bite - Checkout & Payment Experience Module (checkout.js)
+ * Handles customer checkout modal display, payment method selection (Online Simulation vs COD),
+ * idempotency protection, availability checks, authenticated order + payment persistence,
+ * and order confirmation receipt rendering.
  */
+
+let isSubmittingCheckout = false;
 
 // Open Checkout Modal
 function openCheckout() {
@@ -98,56 +100,53 @@ function renderCheckout() {
     return `
       <div class="flex items-center justify-between gap-3 text-sm py-1.5 border-b border-outline-variant/15">
         <div class="flex items-center gap-2.5 min-w-0">
-          <div class="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 ${product.accentColor} p-0.5">
-            <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover rounded-md" />
+          <div class="w-8 h-8 rounded-lg bg-surface-container-high overflow-hidden flex-shrink-0">
+            <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover" />
           </div>
           <div class="min-w-0">
-            <h4 class="font-display font-bold text-primary text-xs truncate max-w-[130px] sm:max-w-[160px]">${product.name}</h4>
-            <p class="text-xs text-on-surface-variant">$${product.price.toFixed(2)} × ${cartItem.quantity}</p>
+            <h4 class="font-bold text-primary text-xs truncate">${product.name}</h4>
+            <span class="text-[11px] text-on-surface-variant">${cartItem.quantity} × $${product.price.toFixed(2)}</span>
           </div>
         </div>
-        <span class="font-label-bold text-primary text-xs whitespace-nowrap">$${lineTotal.toFixed(2)}</span>
+        <span class="font-label-bold text-primary text-xs flex-shrink-0">$${lineTotal.toFixed(2)}</span>
       </div>
     `;
   }).join('');
 
-  // Determine current user data for auto-population
-  const isAuthenticated = typeof currentUser !== 'undefined' && currentUser !== null;
-  const prefillName = (typeof userProfile !== 'undefined' && userProfile?.full_name) || (isAuthenticated ? (currentUser.user_metadata?.full_name || '') : '');
-  const prefillEmail = (typeof userProfile !== 'undefined' && userProfile?.email) || (isAuthenticated ? (currentUser.email || '') : '');
+  // Prefill details from authenticated profile if available
+  const isAuth = typeof currentUser !== 'undefined' && currentUser && currentUser.id;
+  const prefillName = (typeof userProfile !== 'undefined' && userProfile?.full_name) || (isAuth ? (currentUser.user_metadata?.full_name || '') : '');
+  const prefillEmail = (typeof userProfile !== 'undefined' && userProfile?.email) || (isAuth ? currentUser.email : '');
+  const prefillPhone = (typeof userProfile !== 'undefined' && userProfile?.phone) || (isAuth ? (currentUser.user_metadata?.phone || '') : '');
 
   checkoutContent.innerHTML = `
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
       
-      <!-- LEFT COLUMN: Customer Information Form -->
+      <!-- LEFT COLUMN: Customer & Payment Form -->
       <div class="lg:col-span-7 flex flex-col gap-4">
         
-        ${!isAuthenticated ? `
-          <!-- Guest Notice: Authentication Required Before Placing Order -->
-          <div class="bg-secondary/10 border border-secondary/30 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-            <div class="flex items-center gap-2.5 text-xs text-primary">
-              <span class="material-symbols-outlined text-secondary text-xl flex-shrink-0">lock</span>
-              <div>
-                <strong class="block text-primary font-label-bold">Sign In Required to Order</strong>
-                <span class="text-on-surface-variant">Please sign in or create an account to link and place your order.</span>
-              </div>
+        <!-- Authenticated Status Banner -->
+        ${!isAuth ? `
+          <div class="p-3.5 rounded-2xl bg-secondary-container/20 border border-secondary/30 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-secondary text-xl">account_circle</span>
+              <p class="text-xs text-primary font-medium">Have an account? Sign in for fast checkout.</p>
             </div>
-            <button type="button" id="checkout-auth-prompt-btn" class="bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs py-2 px-4 rounded-full transition-all cursor-pointer flex-shrink-0 active:scale-95 shadow-xs whitespace-nowrap">
+            <button id="checkout-auth-prompt-btn" class="bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary text-xs font-label-bold px-3 py-1.5 rounded-full transition-colors cursor-pointer whitespace-nowrap">
               <span>Sign In / Sign Up</span>
             </button>
           </div>
         ` : `
-          <!-- Authenticated Account Badge -->
-          <div class="bg-surface border border-outline-variant/20 rounded-2xl px-4 py-2.5 flex items-center justify-between">
-            <div class="flex items-center gap-2 text-xs">
-              <span class="material-symbols-outlined text-secondary text-lg">verified_user</span>
-              <span class="text-on-surface-variant">Ordering as <strong class="text-primary">${prefillName || prefillEmail}</strong></span>
+          <div class="p-3 rounded-2xl bg-surface border border-outline-variant/20 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-green-600 text-lg">verified_user</span>
+              <span class="text-on-surface-variant font-medium">Ordering as: <strong class="text-primary">${prefillName || prefillEmail}</strong></span>
             </div>
-            <span class="text-[11px] font-label-bold uppercase tracking-wider text-secondary bg-secondary/15 px-2.5 py-0.5 rounded-full">Authenticated</span>
+            <span class="text-[10px] font-label-bold uppercase tracking-wider text-secondary bg-secondary/10 px-2 py-0.5 rounded-full">Member</span>
           </div>
         `}
 
-        <h3 class="font-display text-lg font-bold text-primary border-b border-outline-variant/20 pb-2">Customer Details</h3>
+        <h3 class="font-display text-lg font-bold text-primary border-b border-outline-variant/20 pb-2">Customer &amp; Payment Details</h3>
         
         <form id="checkout-form" novalidate class="flex flex-col gap-4">
           <!-- Full Name -->
@@ -161,7 +160,7 @@ function renderCheckout() {
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label for="cust-phone" class="block font-label-bold text-xs text-primary mb-1 uppercase tracking-wider">Phone Number *</label>
-              <input type="tel" id="cust-phone" name="phone" required placeholder="e.g. (555) 000-1234" class="w-full px-4 py-2.5 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-sm text-on-surface" />
+              <input type="tel" id="cust-phone" name="phone" value="${prefillPhone}" required placeholder="e.g. +91 98765 43210" class="w-full px-4 py-2.5 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-sm text-on-surface" />
               <p id="error-cust-phone" class="hidden text-xs text-red-600 font-medium mt-1"></p>
             </div>
             <div>
@@ -193,12 +192,66 @@ function renderCheckout() {
             <textarea id="cust-notes" name="notes" rows="2" placeholder="Any special requests or instructions..." class="w-full px-4 py-2 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-sm text-on-surface resize-none"></textarea>
           </div>
 
-          <!-- General Form Error Notice -->
-          <p id="checkout-general-error" class="hidden text-xs text-red-600 font-medium text-center"></p>
+          <!-- Payment Method Selection Section -->
+          <div class="flex flex-col gap-2.5 border-t border-outline-variant/20 pt-3">
+            <label class="block font-label-bold text-xs text-primary uppercase tracking-wider">Payment Method *</label>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <!-- Cash on Delivery -->
+              <label class="payment-method-label flex items-start gap-3 p-3.5 rounded-2xl bg-surface border-2 border-tertiary cursor-pointer transition-all">
+                <input type="radio" name="paymentMethod" value="cash_on_delivery" checked class="mt-0.5 text-tertiary" />
+                <div class="flex flex-col">
+                  <div class="flex items-center gap-1.5 font-display font-bold text-xs text-primary">
+                    <span class="material-symbols-outlined text-base text-secondary">payments</span>
+                    <span>Cash on Delivery</span>
+                  </div>
+                  <span class="text-[11px] text-on-surface-variant mt-0.5">Pay when you pick up or receive order</span>
+                </div>
+              </label>
 
-          <!-- Place Order Button -->
+              <!-- Online Payment Simulation -->
+              <label class="payment-method-label flex items-start gap-3 p-3.5 rounded-2xl bg-surface border-2 border-outline-variant/40 cursor-pointer transition-all">
+                <input type="radio" name="paymentMethod" value="online" class="mt-0.5 text-tertiary" />
+                <div class="flex flex-col">
+                  <div class="flex items-center gap-1.5 font-display font-bold text-xs text-primary">
+                    <span class="material-symbols-outlined text-base text-tertiary">credit_card</span>
+                    <span>Online Payment</span>
+                  </div>
+                  <span class="text-[11px] text-on-surface-variant mt-0.5">Card / UPI Simulation (Safe Testing)</span>
+                </div>
+              </label>
+            </div>
+
+            <!-- Online Payment Simulator Sandbox Box -->
+            <div id="online-payment-simulation-box" class="hidden p-3.5 rounded-2xl bg-surface-container-high/30 border border-outline-variant/25 flex flex-col gap-2.5">
+              <div class="flex items-center justify-between">
+                <span class="text-[11px] font-label-bold text-primary flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-sm text-secondary">science</span>
+                  <span>Payment Simulation Mode</span>
+                </span>
+                <span class="text-[10px] bg-secondary-container/40 text-on-secondary-container px-2 py-0.5 rounded-md font-bold uppercase">Sandbox Test</span>
+              </div>
+              <p class="text-[11px] text-on-surface-variant">Safe testing environment. No real bank cards or money are charged. Select test outcome:</p>
+              
+              <div class="grid grid-cols-2 gap-2">
+                <label class="flex items-center gap-2 p-2 rounded-xl bg-surface border border-outline-variant/30 text-xs cursor-pointer has-[:checked]:border-green-600 has-[:checked]:bg-green-50/50">
+                  <input type="radio" name="simulatedOutcome" value="success" checked class="text-green-600 focus:ring-green-500" />
+                  <span class="font-bold text-green-800 text-[11px]">Simulate Success (Paid)</span>
+                </label>
+                <label class="flex items-center gap-2 p-2 rounded-xl bg-surface border border-outline-variant/30 text-xs cursor-pointer has-[:checked]:border-red-600 has-[:checked]:bg-red-50/50">
+                  <input type="radio" name="simulatedOutcome" value="failure" class="text-red-600 focus:ring-red-500" />
+                  <span class="font-bold text-red-800 text-[11px]">Simulate Decline (Fail)</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- General Form Error Notice -->
+          <p id="checkout-general-error" class="hidden text-xs text-red-600 font-medium text-center p-2.5 rounded-xl bg-red-50 border border-red-200"></p>
+
+          <!-- Place Order / Pay Button -->
           <button type="submit" id="place-order-submit-btn" class="w-full mt-2 bg-tertiary text-on-tertiary font-label-bold text-sm sm:text-base py-3 px-6 rounded-full hover:scale-102 transition-all duration-200 shadow-md pink-glow flex items-center justify-center gap-2 active:scale-95 cursor-pointer disabled:opacity-50">
-            <span>Place Order</span>
+            <span id="place-order-btn-text">Place Order (Cash on Delivery)</span>
             <span class="material-symbols-outlined text-base">check_circle</span>
           </button>
         </form>
@@ -261,6 +314,34 @@ function renderCheckout() {
     });
   }
 
+  // Payment Method Selection Toggle Handler
+  const paymentRadios = document.querySelectorAll('input[name="paymentMethod"]');
+  const simBox = document.getElementById('online-payment-simulation-box');
+  const btnText = document.getElementById('place-order-btn-text');
+
+  paymentRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      document.querySelectorAll('.payment-method-label').forEach(label => {
+        label.classList.remove('border-tertiary', 'bg-secondary-container/10');
+        label.classList.add('border-outline-variant/40');
+      });
+
+      const parentLabel = radio.closest('.payment-method-label');
+      if (parentLabel) {
+        parentLabel.classList.remove('border-outline-variant/40');
+        parentLabel.classList.add('border-tertiary', 'bg-secondary-container/10');
+      }
+
+      if (radio.value === 'online') {
+        if (simBox) simBox.classList.remove('hidden');
+        if (btnText) btnText.textContent = `Pay Now (Simulated $${subtotal.toFixed(2)})`;
+      } else {
+        if (simBox) simBox.classList.add('hidden');
+        if (btnText) btnText.textContent = 'Place Order (Cash on Delivery)';
+      }
+    });
+  });
+
   // Attach Form Submit Listener
   const checkoutForm = document.getElementById('checkout-form');
   if (checkoutForm) {
@@ -268,9 +349,15 @@ function renderCheckout() {
   }
 }
 
-// Form Validation and Authenticated Order Submission Handler
+// Form Validation and Authenticated Order & Payment Submission Handler
 async function handlePlaceOrder(event) {
   event.preventDefault();
+
+  // Idempotency Protection: Prevent duplicate submissions
+  if (isSubmittingCheckout) {
+    console.warn("Checkout submission already in progress. Ignoring duplicate click.");
+    return;
+  }
 
   const nameInput = document.getElementById('cust-name');
   const phoneInput = document.getElementById('cust-phone');
@@ -280,6 +367,12 @@ async function handlePlaceOrder(event) {
   const notesInput = document.getElementById('cust-notes');
   const generalError = document.getElementById('checkout-general-error');
   const submitBtn = document.getElementById('place-order-submit-btn');
+
+  const selectedPaymentRadio = document.querySelector('input[name="paymentMethod"]:checked');
+  const paymentMethod = selectedPaymentRadio ? selectedPaymentRadio.value : 'cash_on_delivery';
+
+  const selectedOutcomeRadio = document.querySelector('input[name="simulatedOutcome"]:checked');
+  const simulateOutcome = selectedOutcomeRadio ? selectedOutcomeRadio.value : 'success';
 
   const errorName = document.getElementById('error-cust-name');
   const errorPhone = document.getElementById('error-cust-phone');
@@ -362,9 +455,14 @@ async function handlePlaceOrder(event) {
     }
   }
 
+  // Lock submission state
+  isSubmittingCheckout = true;
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.innerHTML = `<span>Creating Order...</span>`;
+    submitBtn.innerHTML = `
+      <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+      <span>${paymentMethod === 'online' ? 'Processing Simulated Payment...' : 'Creating Order...'}</span>
+    `;
   }
 
   const customerData = {
@@ -376,16 +474,21 @@ async function handlePlaceOrder(event) {
     notes: notesInput ? notesInput.value.trim() : ""
   };
 
+  const paymentOptions = {
+    method: paymentMethod,
+    simulateOutcome: simulateOutcome
+  };
+
   try {
-    // 7. Create and persist authenticated order into Supabase
+    // 7. Create and persist authenticated order + payment into Supabase
     let completedOrder = null;
     if (typeof createAndSaveOrderInSupabase === 'function') {
-      completedOrder = await createAndSaveOrderInSupabase(cart, customerData, currentUser);
+      completedOrder = await createAndSaveOrderInSupabase(cart, customerData, currentUser, paymentOptions);
     }
 
     if (!completedOrder) {
       if (generalError) {
-        generalError.textContent = 'Could not create order. Please try again.';
+        generalError.textContent = 'Could not process order. Please try again.';
         generalError.classList.remove('hidden');
       }
       return;
@@ -399,23 +502,38 @@ async function handlePlaceOrder(event) {
     // 9. Render Confirmation Receipt View
     renderOrderSuccess(completedOrder);
   } catch (err) {
-    console.error("Order submission error:", err);
+    console.error("Payment & Order submission error:", err);
     if (generalError) {
-      generalError.textContent = err.message || 'Unable to place your order right now. Your cart has been saved.';
+      generalError.textContent = err.message || 'Payment could not be completed. Your cart has been safely preserved.';
       generalError.classList.remove('hidden');
     }
   } finally {
+    isSubmittingCheckout = false;
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = `<span>Place Order</span><span class="material-symbols-outlined text-base">check_circle</span>`;
+      const subtotalVal = (typeof cart !== 'undefined' && Array.isArray(cart))
+        ? cart.reduce((sum, item) => {
+            const p = (typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS)) ? PRODUCTS.find(prod => prod.id === item.productId) : null;
+            return sum + ((p ? p.price : 0) * item.quantity);
+          }, 0)
+        : 0;
+
+      submitBtn.innerHTML = `
+        <span>${paymentMethod === 'online' ? `Pay Now (Simulated $${subtotalVal.toFixed(2)})` : 'Place Order (Cash on Delivery)'}</span>
+        <span class="material-symbols-outlined text-base">check_circle</span>
+      `;
     }
   }
 }
 
-// Render Order Success / Confirmation View
+// Render Order Success / Confirmation View with Payment Details
 function renderOrderSuccess(order) {
   const checkoutContent = document.getElementById('checkout-content');
   if (!checkoutContent || !order) return;
+
+  const paymentInfo = order.payment || {};
+  const isPaid = paymentInfo.status === 'paid';
+  const paymentMethodLabel = paymentInfo.method === 'online' ? 'Online Payment (Simulated)' : 'Cash on Delivery';
 
   const itemsReceiptHTML = order.items.map(item => {
     return `
@@ -433,17 +551,31 @@ function renderOrderSuccess(order) {
       </div>
       
       <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-secondary/15 border border-secondary/30 text-secondary font-label-bold text-xs uppercase tracking-wider mb-2">
-        <span>Order Confirmed</span>
+        <span>Order Placed &amp; Confirmed</span>
       </div>
 
-      <h3 class="font-display text-2xl sm:text-3xl font-black text-primary mb-1">Order Placed!</h3>
-      <p class="font-body-md text-sm text-on-surface-variant mb-5">Thanks, <strong class="text-primary">${order.customer.name}</strong>! Your order is securely stored under your account.</p>
+      <h3 class="font-display text-2xl sm:text-3xl font-black text-primary mb-1">Thank You!</h3>
+      <p class="font-body-md text-sm text-on-surface-variant mb-5">Thanks, <strong class="text-primary">${order.customer.name}</strong>! Your order and payment details are securely saved.</p>
 
       <!-- Receipt Card (Rendered strictly from immutable snapshot) -->
       <div class="w-full bg-surface border border-outline-variant/30 rounded-2xl p-4 sm:p-5 mb-6 text-left shadow-xs flex flex-col gap-2.5">
         <div class="flex items-center justify-between border-b border-outline-variant/20 pb-2 text-xs text-on-surface-variant font-label-bold">
           <span>REFERENCE: <strong class="text-primary">${order.orderId}</strong></span>
           <span class="uppercase text-secondary font-bold">${order.customer.orderType}</span>
+        </div>
+
+        <!-- Payment Status Card -->
+        <div class="p-3 rounded-xl bg-surface-container-high/30 border border-outline-variant/15 flex items-center justify-between text-xs">
+          <div>
+            <span class="text-on-surface-variant font-bold block mb-0.5">Payment Method:</span>
+            <span class="text-primary font-medium">${paymentMethodLabel}</span>
+          </div>
+          <div class="text-right">
+            <span class="text-on-surface-variant font-bold block mb-0.5">Payment Status:</span>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-label-bold uppercase ${isPaid ? 'bg-green-100 text-green-800 border border-green-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
+              ${isPaid ? 'Paid' : 'Pending (COD)'}
+            </span>
+          </div>
         </div>
         
         <div class="flex flex-col gap-1 max-h-[140px] overflow-y-auto">
@@ -535,3 +667,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+// Exports for testing / Node environments
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    openCheckout,
+    closeCheckout,
+    renderCheckout,
+    handlePlaceOrder
+  };
+}
