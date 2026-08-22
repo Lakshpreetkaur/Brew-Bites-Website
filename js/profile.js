@@ -62,6 +62,14 @@ async function initSupabaseAuth() {
         if (typeof fetchOrdersForUser === 'function') {
           await fetchOrdersForUser(currentUser.id);
         }
+        if (typeof subscribeToUserOrders === 'function') {
+          subscribeToUserOrders(currentUser.id, () => {
+            const profileModal = document.getElementById('profile-modal');
+            if (profileModal && profileModal.classList.contains('opacity-100')) {
+              renderProfileMain();
+            }
+          });
+        }
       } else {
         userProfile = null;
       }
@@ -73,6 +81,14 @@ async function initSupabaseAuth() {
           await fetchOrCreateUserProfile(currentUser);
           if (typeof fetchOrdersForUser === 'function') {
             await fetchOrdersForUser(currentUser.id);
+          }
+          if (typeof subscribeToUserOrders === 'function') {
+            subscribeToUserOrders(currentUser.id, () => {
+              const profileModal = document.getElementById('profile-modal');
+              if (profileModal && profileModal.classList.contains('opacity-100')) {
+                renderProfileMain();
+              }
+            });
           }
         } else {
           userProfile = null;
@@ -729,7 +745,7 @@ async function handleSignOut() {
   }
 }
 
-// Render Specific Order Detail View
+// Render Specific Order Detail View with Visual Status Lifecycle Stepper
 function openOrderDetail(orderId) {
   const profileContent = document.getElementById('profile-content');
   if (!profileContent || !orderId) return;
@@ -748,6 +764,80 @@ function openOrderDetail(orderId) {
     const backBtn = document.getElementById('back-to-orders-btn');
     if (backBtn) backBtn.addEventListener('click', renderProfileMain);
     return;
+  }
+
+  const currentStatus = (order.status || 'placed').toLowerCase();
+  const isCancelled = currentStatus === 'cancelled';
+  const isCancellable = ['placed', 'pending', 'confirmed'].includes(currentStatus);
+
+  // Status mapping for 5-stage progress indicator
+  const stages = [
+    { key: 'placed', label: 'Placed', icon: 'receipt' },
+    { key: 'confirmed', label: 'Confirmed', icon: 'verified' },
+    { key: 'preparing', label: 'Preparing', icon: 'coffee_maker' },
+    { key: 'ready', label: (order.customer.orderType === 'delivery' ? 'Out for Delivery' : 'Ready'), icon: (order.customer.orderType === 'delivery' ? 'moped' : 'inventory_2') },
+    { key: 'delivered', label: (order.customer.orderType === 'delivery' ? 'Delivered' : 'Completed'), icon: 'task_alt' }
+  ];
+
+  const stageKeys = ['placed', 'confirmed', 'preparing', 'ready', 'delivered'];
+  let currentStageIndex = stageKeys.indexOf(currentStatus);
+  if (currentStatus === 'pending') currentStageIndex = 0;
+  if (currentStatus === 'completed') currentStageIndex = 4;
+  if (currentStageIndex === -1 && !isCancelled) currentStageIndex = 0;
+
+  // Render Visual Stepper
+  let stepperHTML = '';
+  if (isCancelled) {
+    stepperHTML = `
+      <div class="p-4 rounded-2xl bg-red-50/80 border border-red-200 text-center flex items-center justify-center gap-3">
+        <span class="material-symbols-outlined text-red-600 text-2xl">cancel</span>
+        <div class="text-left">
+          <h4 class="font-display font-bold text-sm text-red-800">Order Cancelled</h4>
+          <p class="text-xs text-red-600 font-medium">This order was cancelled before preparation began.</p>
+        </div>
+      </div>
+    `;
+  } else {
+    const stepsItemsHTML = stages.map((st, idx) => {
+      const isCompleted = idx <= currentStageIndex;
+      const isCurrent = idx === currentStageIndex;
+      
+      const circleClass = isCurrent
+        ? 'bg-tertiary text-on-tertiary ring-4 ring-tertiary/20 shadow-md scale-110'
+        : (isCompleted ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant/50');
+      
+      const labelClass = isCurrent
+        ? 'text-primary font-black'
+        : (isCompleted ? 'text-primary font-bold' : 'text-on-surface-variant/60 font-medium');
+
+      return `
+        <div class="flex flex-col items-center text-center flex-1 relative z-10">
+          <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-all duration-300 ${circleClass}">
+            <span class="material-symbols-outlined text-sm sm:text-base">${st.icon}</span>
+          </div>
+          <span class="text-[10px] sm:text-[11px] mt-2 leading-tight ${labelClass}">${st.label}</span>
+        </div>
+      `;
+    }).join('');
+
+    const progressPercent = Math.max(0, Math.min(100, (currentStageIndex / (stages.length - 1)) * 100));
+
+    stepperHTML = `
+      <div class="bg-surface rounded-2xl p-4 sm:p-5 border border-outline-variant/30 shadow-xs flex flex-col gap-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-label-bold text-primary uppercase tracking-wider">Live Order Progress</span>
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-label-bold uppercase tracking-wider ${getStatusBadgeClass(order.status)}">${order.status || 'placed'}</span>
+        </div>
+
+        <div class="relative flex items-center justify-between pt-2 pb-1">
+          <!-- Background Progress Bar Track -->
+          <div class="absolute left-6 right-6 top-[22px] sm:top-[24px] h-1 bg-surface-container-high rounded-full -z-0">
+            <div class="h-full bg-primary rounded-full transition-all duration-500" style="width: ${progressPercent}%;"></div>
+          </div>
+          ${stepsItemsHTML}
+        </div>
+      </div>
+    `;
   }
 
   const formattedDate = order.createdAt
@@ -775,8 +865,11 @@ function openOrderDetail(orderId) {
           <span class="material-symbols-outlined text-sm">arrow_back</span>
           <span>Back to Orders</span>
         </button>
-        <span class="bg-secondary/15 text-secondary font-label-bold text-[11px] uppercase tracking-wider px-2.5 py-0.5 rounded-full">${order.status || 'placed'}</span>
+        <span class="text-xs font-bold text-on-surface-variant">Ref: <strong class="text-primary font-display">${order.orderId}</strong></span>
       </div>
+
+      <!-- Stepper Tracking Widget -->
+      ${stepperHTML}
 
       <!-- Order Summary Card -->
       <div class="p-4 sm:p-5 rounded-2xl bg-surface border border-outline-variant/30 flex flex-col gap-3.5 shadow-xs">
@@ -830,12 +923,72 @@ function openOrderDetail(orderId) {
         </div>
       </div>
 
+      <!-- Order Cancellation Action Panel -->
+      ${isCancellable ? `
+        <div class="p-3.5 bg-surface rounded-2xl border border-outline-variant/25 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div>
+            <span class="font-bold text-xs text-primary block">Need to make changes?</span>
+            <span class="text-[11px] text-on-surface-variant">You can cancel this order before kitchen preparation begins.</span>
+          </div>
+          <button id="cancel-order-btn" data-order-id="${order.orderId}" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-label-bold px-4 py-2 rounded-full transition-all cursor-pointer active:scale-95 self-start sm:self-auto">
+            <span>Cancel Order</span>
+          </button>
+        </div>
+      ` : (!isCancelled ? `
+        <div class="p-3 bg-surface-container-high/30 rounded-2xl border border-outline-variant/15 flex items-center gap-2 text-xs text-on-surface-variant">
+          <span class="material-symbols-outlined text-base text-secondary">lock</span>
+          <span>Kitchen preparation has begun. This order can no longer be cancelled.</span>
+        </div>
+      ` : '')}
+
     </div>
   `;
 
   const backBtn = document.getElementById('back-to-orders-btn');
   if (backBtn) {
     backBtn.addEventListener('click', renderProfileMain);
+  }
+
+  // Attach Cancel Order Action Listener
+  const cancelBtn = document.getElementById('cancel-order-btn');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', async () => {
+      if (!confirm("Are you sure you want to cancel this order? This action cannot be undone.")) return;
+
+      cancelBtn.disabled = true;
+      cancelBtn.innerHTML = '<span>Cancelling...</span>';
+
+      try {
+        if (typeof cancelOrderInSupabase === 'function') {
+          await cancelOrderInSupabase(order.orderId);
+        }
+        // Re-render current order detail view to show cancelled state
+        openOrderDetail(order.orderId);
+      } catch (err) {
+        alert(err.message || "Failed to cancel order.");
+        cancelBtn.disabled = false;
+        cancelBtn.innerHTML = '<span>Cancel Order</span>';
+      }
+    });
+  }
+}
+
+// Helper to get status badge CSS class
+function getStatusBadgeClass(status) {
+  switch ((status || '').toLowerCase()) {
+    case 'delivered':
+    case 'completed':
+      return 'bg-green-100 text-green-800 border border-green-300';
+    case 'ready':
+      return 'bg-blue-100 text-blue-800 border border-blue-300';
+    case 'preparing':
+      return 'bg-amber-100 text-amber-800 border border-amber-300';
+    case 'confirmed':
+      return 'bg-purple-100 text-purple-800 border border-purple-300';
+    case 'cancelled':
+      return 'bg-red-100 text-red-800 border border-red-300';
+    default:
+      return 'bg-secondary/15 text-secondary border border-secondary/30';
   }
 }
 

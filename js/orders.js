@@ -282,3 +282,133 @@ async function createAndSaveOrderInSupabase(cartItems, customerDetails, user) {
   console.log("Order successfully persisted to Supabase:", standardOrderObject.orderId, standardOrderObject.id);
   return standardOrderObject;
 }
+
+/**
+ * Validate that every product in the active cart still exists in the catalog and is marked available.
+ */
+function validateCartProductsAvailable(cartItems) {
+  if (!Array.isArray(cartItems) || cartItems.length === 0) {
+    return { valid: false, error: "Your cart is empty." };
+  }
+
+  for (const item of cartItems) {
+    const product = (typeof getProductById === 'function')
+      ? getProductById(item.productId)
+      : ((typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS)) ? PRODUCTS.find(p => p.id === item.productId) : null);
+
+    if (!product) {
+      return { valid: false, error: `Product "${item.productId}" is no longer available in the menu.` };
+    }
+
+    if (product.available === false) {
+      return { valid: false, error: `"${product.name}" is currently sold out. Please remove it from your cart to proceed.` };
+    }
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Cancel an order if it is in a cancellable lifecycle stage (placed, pending, confirmed).
+ */
+async function cancelOrderInSupabase(orderId) {
+  if (!orderId) throw new Error("Order ID is required.");
+  if (typeof supabaseClient === 'undefined' || !supabaseClient) {
+    throw new Error("Supabase client is not connected.");
+  }
+
+  const order = getOrderById(orderId);
+  if (!order) throw new Error("Order not found.");
+
+  const currentStatus = (order.status || 'placed').toLowerCase();
+  const allowedCancellable = ['placed', 'pending', 'confirmed'];
+
+  if (!allowedCancellable.includes(currentStatus)) {
+    throw new Error(`This order cannot be cancelled because it is already in "${currentStatus}" status.`);
+  }
+
+  const targetId = order.id || orderId;
+
+  const { error } = await supabaseClient
+    .from('orders')
+    .update({ status: 'cancelled' })
+    .eq('id', targetId);
+
+  if (error) {
+    console.error("Failed to cancel order in Supabase:", error);
+    throw new Error(error.message || "Failed to cancel order.");
+  }
+
+  // Update in-memory state
+  order.status = 'cancelled';
+
+  // Update cache
+  if (activeUserId) {
+    const storageKey = getUserOrdersStorageKey(activeUserId);
+    if (storageKey) {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(currentUserOrders));
+      } catch (e) {
+        console.warn("Could not update local cache after cancellation:", e);
+      }
+    }
+  }
+
+  return order;
+}
+
+/**
+ * Real-time subscription to orders changes for active user.
+ */
+let userOrdersSubscription = null;
+
+function subscribeToUserOrders(userId, onUpdateCallback) {
+  if (!userId || typeof supabaseClient === 'undefined' || !supabaseClient) return;
+
+  // Cleanup prior subscription if exists
+  if (userOrdersSubscription) {
+    supabaseClient.removeChannel(userOrdersSubscription);
+    userOrdersSubscription = null;
+  }
+
+  try {
+    userOrdersSubscription = supabaseClient
+      .channel(`public:orders:${userId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `user_id=eq.${userId}`
+        },
+        async (payload) => {
+          console.log("[Realtime] Order change event received:", payload);
+          await fetchOrdersForUser(userId);
+          if (typeof onUpdateCallback === 'function') {
+            onUpdateCallback(payload);
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log(`[Realtime] Orders channel status: ${status}`);
+      });
+  } catch (err) {
+    console.warn("Could not establish Realtime orders subscription:", err);
+  }
+}
+
+// Exports for testing / Node environments
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    generateOrderId,
+    clearUserOrderState,
+    fetchOrdersForUser,
+    getOrders,
+    getOrderById,
+    createAndSaveOrderInSupabase,
+    validateCartProductsAvailable,
+    cancelOrderInSupabase,
+    subscribeToUserOrders
+  };
+}

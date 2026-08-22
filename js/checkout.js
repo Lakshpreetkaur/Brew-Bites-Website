@@ -350,6 +350,18 @@ async function handlePlaceOrder(event) {
     return;
   }
 
+  // 6. Real-Time Menu Availability Verification
+  if (typeof validateCartProductsAvailable === 'function') {
+    const availCheck = validateCartProductsAvailable(cart);
+    if (!availCheck.valid) {
+      if (generalError) {
+        generalError.textContent = availCheck.error || 'One or more items in your cart are no longer available.';
+        generalError.classList.remove('hidden');
+      }
+      return;
+    }
+  }
+
   if (submitBtn) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = `<span>Creating Order...</span>`;
@@ -365,7 +377,7 @@ async function handlePlaceOrder(event) {
   };
 
   try {
-    // 6. Create and persist authenticated order into Supabase
+    // 7. Create and persist authenticated order into Supabase
     let completedOrder = null;
     if (typeof createAndSaveOrderInSupabase === 'function') {
       completedOrder = await createAndSaveOrderInSupabase(cart, customerData, currentUser);
@@ -379,17 +391,17 @@ async function handlePlaceOrder(event) {
       return;
     }
 
-    // 7. Clear Active Cart, LocalStorage, and Badge
+    // 8. Clear Active Cart, LocalStorage, and Badge only on confirmed success
     if (typeof clearCart === 'function') {
       clearCart();
     }
 
-    // 8. Render Confirmation Receipt View
+    // 9. Render Confirmation Receipt View
     renderOrderSuccess(completedOrder);
   } catch (err) {
     console.error("Order submission error:", err);
     if (generalError) {
-      generalError.textContent = 'Unable to place your order right now. Please try again.';
+      generalError.textContent = err.message || 'Unable to place your order right now. Your cart has been saved.';
       generalError.classList.remove('hidden');
     }
   } finally {
@@ -407,7 +419,7 @@ function renderOrderSuccess(order) {
 
   const itemsReceiptHTML = order.items.map(item => {
     return `
-      <div class="flex items-center justify-between text-xs py-1">
+      <div class="flex items-center justify-between text-xs py-1 border-b border-outline-variant/10">
         <span class="text-on-surface">${item.name} × ${item.quantity}</span>
         <span class="font-label-bold text-primary">$${item.lineTotal.toFixed(2)}</span>
       </div>
@@ -416,7 +428,7 @@ function renderOrderSuccess(order) {
 
   checkoutContent.innerHTML = `
     <div class="flex flex-col items-center justify-center text-center py-6 px-3 sm:px-4 max-w-lg mx-auto">
-      <div class="w-16 h-16 bg-tertiary-fixed text-primary rounded-full flex items-center justify-center mb-4 shadow-lg pink-glow animate-bounce">
+      <div class="w-16 h-16 bg-secondary-container/30 text-primary rounded-full flex items-center justify-center mb-4 shadow-lg pink-glow animate-bounce">
         <span class="material-symbols-outlined text-3xl text-primary font-bold">task_alt</span>
       </div>
       
@@ -431,7 +443,7 @@ function renderOrderSuccess(order) {
       <div class="w-full bg-surface border border-outline-variant/30 rounded-2xl p-4 sm:p-5 mb-6 text-left shadow-xs flex flex-col gap-2.5">
         <div class="flex items-center justify-between border-b border-outline-variant/20 pb-2 text-xs text-on-surface-variant font-label-bold">
           <span>REFERENCE: <strong class="text-primary">${order.orderId}</strong></span>
-          <span class="uppercase text-secondary">${order.customer.orderType}</span>
+          <span class="uppercase text-secondary font-bold">${order.customer.orderType}</span>
         </div>
         
         <div class="flex flex-col gap-1 max-h-[140px] overflow-y-auto">
@@ -456,11 +468,30 @@ function renderOrderSuccess(order) {
         ` : ''}
       </div>
 
-      <button id="success-back-to-menu-btn" class="bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-sm py-3 px-8 rounded-full transition-all duration-200 shadow-md flex items-center gap-2 cursor-pointer active:scale-95">
-        <span>← Back to Menu</span>
-      </button>
+      <div class="flex items-center gap-3 flex-wrap justify-center">
+        <button id="success-track-order-btn" class="bg-tertiary text-on-tertiary hover:bg-primary font-label-bold text-xs sm:text-sm py-3 px-6 rounded-full transition-all duration-200 shadow-md pink-glow flex items-center gap-2 cursor-pointer active:scale-95">
+          <span>Track Order Status</span>
+          <span class="material-symbols-outlined text-base">near_me</span>
+        </button>
+        <button id="success-back-to-menu-btn" class="bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs sm:text-sm py-3 px-6 rounded-full transition-all duration-200 shadow-sm flex items-center gap-2 cursor-pointer active:scale-95">
+          <span>← Back to Menu</span>
+        </button>
+      </div>
     </div>
   `;
+
+  const trackBtn = document.getElementById('success-track-order-btn');
+  if (trackBtn) {
+    trackBtn.addEventListener('click', () => {
+      closeCheckout();
+      if (typeof openProfile === 'function') {
+        openProfile();
+      }
+      if (typeof openOrderDetail === 'function') {
+        openOrderDetail(order.orderId);
+      }
+    });
+  }
 
   const successBackBtn = document.getElementById('success-back-to-menu-btn');
   if (successBackBtn) {
