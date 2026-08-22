@@ -180,10 +180,32 @@ function renderCheckout() {
           </div>
 
           <!-- Conditional Delivery Address -->
-          <div id="address-group" class="hidden">
-            <label for="cust-address" class="block font-label-bold text-xs text-primary mb-1 uppercase tracking-wider">Delivery Address *</label>
-            <input type="text" id="cust-address" name="address" placeholder="Street, apartment, suite, city" class="w-full px-4 py-2.5 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-sm text-on-surface" />
-            <p id="error-cust-address" class="hidden text-xs text-red-600 font-medium mt-1"></p>
+          <div id="address-group" class="hidden flex flex-col gap-2.5">
+            ${(typeof getUserAddresses === 'function' && getUserAddresses().length > 0) ? `
+              <div>
+                <label class="block font-label-bold text-xs text-primary mb-1.5 uppercase tracking-wider">Choose Saved Address</label>
+                <div class="flex flex-col gap-1.5 max-h-[140px] overflow-y-auto">
+                  ${getUserAddresses().map((addr, idx) => `
+                    <label class="saved-address-option flex items-start gap-2.5 p-2.5 rounded-xl bg-surface border ${addr.is_default || idx === 0 ? 'border-tertiary bg-secondary-container/10' : 'border-outline-variant/30'} cursor-pointer hover:border-tertiary transition-all">
+                      <input type="radio" name="selectedSavedAddress" value="${addr.id}" ${addr.is_default || idx === 0 ? 'checked' : ''} class="mt-0.5 text-tertiary" />
+                      <div class="flex flex-col text-xs leading-tight">
+                        <div class="flex items-center gap-2">
+                          <span class="font-bold text-primary">${addr.full_name}</span>
+                          ${addr.is_default ? `<span class="bg-tertiary text-on-tertiary text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase">Default</span>` : ''}
+                        </div>
+                        <span class="text-[11px] text-on-surface-variant mt-0.5">${addr.address_line_1}${addr.address_line_2 ? ', ' + addr.address_line_2 : ''}, ${addr.city}, ${addr.postal_code}</span>
+                      </div>
+                    </label>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+
+            <div>
+              <label for="cust-address" class="block font-label-bold text-xs text-primary mb-1 uppercase tracking-wider">Delivery Address *</label>
+              <input type="text" id="cust-address" name="address" value="${(typeof getDefaultAddress === 'function' && getDefaultAddress()) ? `${getDefaultAddress().address_line_1}${getDefaultAddress().address_line_2 ? ', ' + getDefaultAddress().address_line_2 : ''}, ${getDefaultAddress().city}, ${getDefaultAddress().postal_code}` : ''}" placeholder="Street, apartment, suite, city" class="w-full px-4 py-2.5 rounded-2xl bg-surface border border-outline-variant/40 focus:border-tertiary focus:ring-2 focus:ring-tertiary/20 outline-none transition-all text-sm text-on-surface" />
+              <p id="error-cust-address" class="hidden text-xs text-red-600 font-medium mt-1"></p>
+            </div>
           </div>
 
           <!-- Order Notes -->
@@ -313,6 +335,35 @@ function renderCheckout() {
       }
     });
   }
+
+  // Attach Saved Address Selection Handler
+  const savedAddrRadios = document.querySelectorAll('input[name="selectedSavedAddress"]');
+  const custAddrInput = document.getElementById('cust-address');
+  const custPhoneInput = document.getElementById('cust-phone');
+  const custNameInput = document.getElementById('cust-name');
+
+  savedAddrRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      document.querySelectorAll('.saved-address-option').forEach(opt => {
+        opt.classList.remove('border-tertiary', 'bg-secondary-container/10');
+        opt.classList.add('border-outline-variant/30');
+      });
+
+      const parentLabel = radio.closest('.saved-address-option');
+      if (parentLabel) {
+        parentLabel.classList.remove('border-outline-variant/30');
+        parentLabel.classList.add('border-tertiary', 'bg-secondary-container/10');
+      }
+
+      const allAddrs = (typeof getUserAddresses === 'function') ? getUserAddresses() : [];
+      const chosen = allAddrs.find(a => a.id === radio.value);
+      if (chosen) {
+        if (custAddrInput) custAddrInput.value = `${chosen.address_line_1}${chosen.address_line_2 ? ', ' + chosen.address_line_2 : ''}, ${chosen.city}, ${chosen.postal_code}`;
+        if (custPhoneInput && !custPhoneInput.value) custPhoneInput.value = chosen.phone;
+        if (custNameInput && !custNameInput.value) custNameInput.value = chosen.full_name;
+      }
+    });
+  });
 
   // Payment Method Selection Toggle Handler
   const paymentRadios = document.querySelectorAll('input[name="paymentMethod"]');

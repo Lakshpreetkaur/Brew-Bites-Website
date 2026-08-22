@@ -1,9 +1,10 @@
 /**
- * Brew & Bite - Customer Profile, Account Security & Password Recovery (profile.js)
- * Production-ready account management integrated directly with Supabase Auth and `public.profiles`.
+ * Brew & Bite - Customer Profile, Dashboard, Address Book & Account Security (profile.js)
+ * Production-ready customer dashboard integrated with Supabase Auth, profiles, and addresses.
  *
- * Supabase Profiles Schema:
+ * Supabase Schema:
  * - public.profiles: (id, full_name, email, phone, created_at, updated_at)
+ * - public.addresses: (id, user_id, full_name, phone, address_line_1, address_line_2, city, state, postal_code, country, is_default, created_at, updated_at)
  */
 
 // Standard Country dataset with flags and dialing codes
@@ -25,9 +26,10 @@ let currentUser = null;
 let userProfile = null;
 let isProfileLoading = false;
 let currentAuthMode = 'login'; // 'login' | 'signup' | 'forgot_password' | 'reset_password'
-let profileActiveTab = 'orders'; // 'orders' | 'details' | 'security'
+let profileActiveTab = 'dashboard'; // 'dashboard' | 'orders' | 'addresses' | 'details' | 'security'
 let pendingVerificationEmail = null;
-let authNotificationMsg = null; // { type: 'success'|'error'|'info', text: string }
+let authNotificationMsg = null;
+let editingAddressId = null; // null for new address, or ID for editing
 
 // Update visibility of Navbar Admin Badges / Buttons
 function updateAdminNavVisibility() {
@@ -70,6 +72,9 @@ async function initSupabaseAuth() {
         if (typeof fetchOrdersForUser === 'function') {
           await fetchOrdersForUser(currentUser.id);
         }
+        if (typeof fetchUserAddresses === 'function') {
+          await fetchUserAddresses(currentUser.id);
+        }
         if (typeof subscribeToUserOrders === 'function') {
           subscribeToUserOrders(currentUser.id, () => {
             const profileModal = document.getElementById('profile-modal');
@@ -89,6 +94,9 @@ async function initSupabaseAuth() {
         if (typeof clearNotificationState === 'function') {
           clearNotificationState();
         }
+        if (typeof clearUserAddresses === 'function') {
+          clearUserAddresses();
+        }
       }
       updateAdminNavVisibility();
 
@@ -106,6 +114,9 @@ async function initSupabaseAuth() {
           await fetchOrCreateUserProfile(currentUser);
           if (typeof fetchOrdersForUser === 'function') {
             await fetchOrdersForUser(currentUser.id);
+          }
+          if (typeof fetchUserAddresses === 'function') {
+            await fetchUserAddresses(currentUser.id);
           }
           if (typeof subscribeToUserOrders === 'function') {
             subscribeToUserOrders(currentUser.id, () => {
@@ -129,6 +140,9 @@ async function initSupabaseAuth() {
           if (typeof clearNotificationState === 'function') {
             clearNotificationState();
           }
+          if (typeof clearUserAddresses === 'function') {
+            clearUserAddresses();
+          }
         }
 
         updateAdminNavVisibility();
@@ -139,104 +153,51 @@ async function initSupabaseAuth() {
         }
       });
     } catch (err) {
-      console.warn("Could not retrieve Supabase session:", err);
-      updateAdminNavVisibility();
+      console.error("Supabase Auth Initialization error:", err);
     }
-  } else {
-    updateAdminNavVisibility();
   }
 }
 
-// Fetch user authorization role from public.user_roles table
-async function fetchUserRole(userId) {
-  if (!userId || typeof supabaseClient === 'undefined' || !supabaseClient) return 'customer';
+// Fetch Profile from Supabase `public.profiles`
+async function fetchOrCreateUserProfile(user) {
+  if (!user || !user.id || typeof supabaseClient === 'undefined' || !supabaseClient) return null;
+
+  isProfileLoading = true;
   try {
-    const { data, error } = await supabaseClient
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId);
-
-    if (error) {
-      return 'customer';
-    }
-
-    if (Array.isArray(data) && data.some(r => r.role === 'admin')) {
-      return 'admin';
-    }
-    return 'customer';
-  } catch (err) {
-    return 'customer';
-  }
-}
-
-// Fetch Profile from Supabase `profiles` table or create/upsert one if it doesn't exist
-async function fetchOrCreateUserProfile(user, extraMetadata = null) {
-  if (!user || !supabaseClient) return null;
-
-  try {
-    isProfileLoading = true;
-
-    // 1. Query the existing `profiles` table for this authenticated user ID
-    const { data: profile, error } = await supabaseClient
+    const { data: existingProfile, error: fetchError } = await supabaseClient
       .from('profiles')
-      .select('id, full_name, email, phone, created_at, updated_at')
+      .select('id, full_name, email, phone, role')
       .eq('id', user.id)
       .maybeSingle();
 
-    if (error) {
-      console.warn("Supabase profiles table query note:", error.message);
-    }
-
-    // 2. Fetch role from user_roles
-    const role = await fetchUserRole(user.id);
-
-    if (profile && profile.full_name) {
-      userProfile = {
-        ...profile,
-        role: role
-      };
+    if (existingProfile) {
+      userProfile = existingProfile;
       isProfileLoading = false;
       updateAdminNavVisibility();
       return userProfile;
     }
 
-    // 3. If profile is missing or needs creation, build payload using verified columns
-    const meta = user.user_metadata || {};
-    const firstName = extraMetadata?.firstName || meta.first_name || '';
-    const lastName = extraMetadata?.lastName || meta.last_name || '';
-    const fullName = extraMetadata?.fullName || meta.full_name || (firstName ? `${firstName} ${lastName}`.trim() : user.email.split('@')[0]);
-    const dialCode = extraMetadata?.dialCode || meta.dial_code || '+91';
-    const rawPhone = extraMetadata?.phone || meta.phone || '';
-    const formattedPhone = rawPhone ? (rawPhone.startsWith('+') ? rawPhone : `${dialCode} ${rawPhone}`.trim()) : '';
+    // Role check from user_roles table or admin email match
+    const adminEmails = ['lakshsadhioura03@gmail.com', 'admin@brewandbite.com'];
+    const isAdminDefault = user.email && adminEmails.includes(user.email.toLowerCase());
+    let role = isAdminDefault ? 'admin' : 'customer';
 
     const newProfileData = {
       id: user.id,
-      full_name: fullName || 'Brew & Bite Member',
+      full_name: user.user_metadata?.full_name || (user.email ? user.email.split('@')[0] : 'Brew & Bite Member'),
       email: user.email,
-      phone: formattedPhone,
+      phone: user.user_metadata?.phone || '',
+      role: role,
       updated_at: new Date().toISOString()
     };
 
-    const { data: insertedProfile, error: insertError } = await supabaseClient
+    const { data: insertedProfile } = await supabaseClient
       .from('profiles')
       .upsert(newProfileData)
       .select()
       .maybeSingle();
 
-    if (insertError) {
-      console.error("Could not upsert into Supabase profiles table:", insertError.message);
-      userProfile = {
-        ...newProfileData,
-        role: role
-      };
-    } else {
-      userProfile = {
-        ...(insertedProfile || newProfileData),
-        role: role
-      };
-      console.log("Profile successfully synchronized to Supabase:", userProfile);
-    }
-
+    userProfile = insertedProfile || newProfileData;
     isProfileLoading = false;
     updateAdminNavVisibility();
     return userProfile;
@@ -274,6 +235,7 @@ function closeProfile() {
   profileModal.classList.add('opacity-0', 'pointer-events-none');
   document.body.classList.remove('overflow-hidden');
   authNotificationMsg = null;
+  editingAddressId = null;
 }
 
 // Main Render Function for Profile Modal Content
@@ -284,7 +246,7 @@ function renderProfileMain() {
   const titleEl = document.getElementById('profile-title');
   const subtitleEl = document.getElementById('profile-subtitle');
 
-  // Case 1: User is Logged In - Render Tabbed Profile & Settings
+  // Case 1: User is Logged In - Render Tabbed Customer Dashboard
   if (currentUser) {
     const displayName = userProfile?.full_name || currentUser.user_metadata?.full_name || currentUser.email.split('@')[0] || 'Valued Member';
     const displayEmail = userProfile?.email || currentUser.email || '';
@@ -294,15 +256,124 @@ function renderProfileMain() {
     const isAdmin = !!(userProfile && userProfile.role === 'admin');
     const isEmailConfirmed = !!currentUser.email_confirmed_at;
 
+    const orders = (typeof getOrders === 'function') ? getOrders() : [];
+    const addresses = (typeof getUserAddresses === 'function') ? getUserAddresses() : [];
+    const defaultAddress = (typeof getDefaultAddress === 'function') ? getDefaultAddress() : null;
+    const notifications = (typeof userNotifications !== 'undefined') ? userNotifications : [];
+    const unreadNotifCount = notifications.filter(n => !n.read).length;
+
+    const totalSpent = orders.filter(o => o.status !== 'cancelled').reduce((sum, o) => sum + Number(o.subtotal || 0), 0);
+    const activeOrder = orders.find(o => ['placed', 'confirmed', 'preparing', 'ready'].includes((o.status || '').toLowerCase()));
+
     // Update Modal Header dynamically
-    if (titleEl) titleEl.textContent = isAdmin ? 'Admin Account' : 'Customer Profile';
-    if (subtitleEl) subtitleEl.textContent = isAdmin ? 'Account & Security Settings' : 'Account & Order History';
+    if (titleEl) titleEl.textContent = isAdmin ? 'Admin Account' : 'Customer Account';
+    if (subtitleEl) subtitleEl.textContent = isAdmin ? 'Store Owner Dashboard & Security' : 'Member Dashboard, Orders & Addresses';
 
     // Sub-tab Content Generator
     let tabBodyHTML = '';
 
-    if (profileActiveTab === 'orders') {
-      const orders = (typeof getOrders === 'function') ? getOrders() : [];
+    // TAB 1: DASHBOARD OVERVIEW
+    if (profileActiveTab === 'dashboard') {
+      tabBodyHTML = `
+        <div class="flex flex-col gap-4">
+          <!-- Summary Metrics Cards -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div class="p-3.5 rounded-2xl bg-surface border border-outline-variant/20 shadow-xs flex flex-col">
+              <span class="text-[11px] text-on-surface-variant font-label-bold uppercase tracking-wider">Total Orders</span>
+              <span class="font-display font-black text-xl text-primary mt-1">${orders.length}</span>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-surface border border-outline-variant/20 shadow-xs flex flex-col">
+              <span class="text-[11px] text-on-surface-variant font-label-bold uppercase tracking-wider">Lifetime Spend</span>
+              <span class="font-display font-black text-xl text-primary mt-1">$${totalSpent.toFixed(2)}</span>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-surface border border-outline-variant/20 shadow-xs flex flex-col">
+              <span class="text-[11px] text-on-surface-variant font-label-bold uppercase tracking-wider">Addresses</span>
+              <span class="font-display font-black text-xl text-primary mt-1">${addresses.length}</span>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-surface border border-outline-variant/20 shadow-xs flex flex-col">
+              <span class="text-[11px] text-on-surface-variant font-label-bold uppercase tracking-wider">Unread Alerts</span>
+              <span class="font-display font-black text-xl text-primary mt-1">${unreadNotifCount}</span>
+            </div>
+          </div>
+
+          <!-- Active Order Progress Tracker Shortcut (if any) -->
+          ${activeOrder ? `
+            <div class="p-4 rounded-2xl bg-secondary-container/20 border border-secondary/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-secondary-container text-on-secondary-container flex items-center justify-center flex-shrink-0 animate-pulse">
+                  <span class="material-symbols-outlined text-xl">coffee_maker</span>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="font-display font-bold text-xs sm:text-sm text-primary">Active Order: ${activeOrder.orderId}</span>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-label-bold uppercase ${getStatusBadgeClass(activeOrder.status)}">${activeOrder.status}</span>
+                  </div>
+                  <p class="text-[11px] text-on-surface-variant mt-0.5">${activeOrder.items?.length || 1} item(s) • Total $${Number(activeOrder.subtotal || 0).toFixed(2)}</p>
+                </div>
+              </div>
+              <button data-order-id="${activeOrder.orderId}" class="view-order-btn bg-tertiary text-on-tertiary font-label-bold text-xs py-2 px-4 rounded-full transition-all shadow-xs cursor-pointer active:scale-95 whitespace-nowrap self-start sm:self-auto">
+                <span>Track Live Progress →</span>
+              </button>
+            </div>
+          ` : ''}
+
+          <!-- Quick Two-Column Cards: Default Delivery Address & Recent Order -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Default Address Card -->
+            <div class="p-4 rounded-2xl bg-surface border border-outline-variant/25 flex flex-col justify-between shadow-xs">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-label-bold text-primary flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-base text-secondary">home_pin</span>
+                    <span>Default Delivery Address</span>
+                  </span>
+                  <button data-profile-tab="addresses" class="profile-tab-btn text-[11px] font-label-bold text-secondary hover:text-tertiary cursor-pointer">Manage</button>
+                </div>
+                ${defaultAddress ? `
+                  <p class="text-xs font-bold text-primary">${defaultAddress.full_name}</p>
+                  <p class="text-[11px] text-on-surface-variant leading-relaxed mt-0.5">${defaultAddress.address_line_1}${defaultAddress.address_line_2 ? ', ' + defaultAddress.address_line_2 : ''}, ${defaultAddress.city}, ${defaultAddress.state || ''} ${defaultAddress.postal_code}</p>
+                  <p class="text-[11px] text-on-surface-variant mt-0.5">${defaultAddress.phone}</p>
+                ` : `
+                  <p class="text-xs text-on-surface-variant py-2">No saved address yet.</p>
+                  <button data-profile-tab="addresses" class="profile-tab-btn text-xs font-label-bold text-tertiary underline cursor-pointer">+ Add Delivery Address</button>
+                `}
+              </div>
+            </div>
+
+            <!-- Recent Orders Card with Quick Reorder -->
+            <div class="p-4 rounded-2xl bg-surface border border-outline-variant/25 flex flex-col justify-between shadow-xs">
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-xs font-label-bold text-primary flex items-center gap-1.5">
+                    <span class="material-symbols-outlined text-base text-secondary">history</span>
+                    <span>Recent Order</span>
+                  </span>
+                  <button data-profile-tab="orders" class="profile-tab-btn text-[11px] font-label-bold text-secondary hover:text-tertiary cursor-pointer">View All (${orders.length})</button>
+                </div>
+                ${orders[0] ? `
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <p class="text-xs font-bold text-primary">${orders[0].orderId}</p>
+                      <p class="text-[11px] text-on-surface-variant">${orders[0].items?.length || 1} items • $${Number(orders[0].subtotal || 0).toFixed(2)}</p>
+                    </div>
+                    <button data-reorder-id="${orders[0].orderId}" class="reorder-order-btn bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary text-xs font-label-bold px-3 py-1.5 rounded-full transition-all flex items-center gap-1 cursor-pointer">
+                      <span class="material-symbols-outlined text-sm">replay</span>
+                      <span>Reorder</span>
+                    </button>
+                  </div>
+                ` : `
+                  <p class="text-xs text-on-surface-variant py-2">No orders placed yet.</p>
+                  <button id="profile-browse-menu-btn" class="text-xs font-label-bold text-tertiary underline cursor-pointer">Browse Menu</button>
+                `}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // TAB 2: MY ORDERS WITH REORDER
+    else if (profileActiveTab === 'orders') {
       if (orders.length === 0) {
         tabBodyHTML = `
           <div class="flex flex-col items-center justify-center text-center py-8 px-4 bg-surface/50 border border-outline-variant/20 rounded-2xl">
@@ -318,7 +389,7 @@ function renderProfileMain() {
         `;
       } else {
         tabBodyHTML = `
-          <div class="flex flex-col gap-2.5 max-h-[320px] overflow-y-auto pr-1">
+          <div class="flex flex-col gap-2.5 max-h-[340px] overflow-y-auto pr-1">
             ${orders.map(order => {
               const totalItems = Array.isArray(order.items)
                 ? order.items.reduce((sum, item) => sum + (item.quantity || 1), 0)
@@ -334,14 +405,23 @@ function renderProfileMain() {
                     <div class="flex items-center gap-2 flex-wrap">
                       <span class="font-display font-bold text-primary text-xs sm:text-sm">${order.orderId}</span>
                       <span class="px-2.5 py-0.5 rounded-full text-[10px] font-label-bold uppercase tracking-wider ${getStatusBadgeClass(order.status)}">${order.status || 'placed'}</span>
+                      ${order.payment ? `
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-label-bold uppercase ${order.payment.status === 'paid' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-amber-50 text-amber-700 border border-amber-200'}">
+                          ${order.payment.method === 'online' ? 'Online: ' : 'COD: '}${order.payment.status}
+                        </span>
+                      ` : ''}
                     </div>
                     <p class="text-[11px] text-on-surface-variant font-body-md">${dateStr} • ${totalItems} item${totalItems === 1 ? '' : 's'}</p>
                   </div>
 
-                  <div class="flex items-center justify-between sm:justify-end gap-3 border-t sm:border-t-0 border-outline-variant/15 pt-1.5 sm:pt-0">
-                    <span class="font-display font-bold text-primary text-sm sm:text-base">$${Number(order.subtotal || 0).toFixed(2)}</span>
-                    <button data-order-id="${order.orderId}" class="view-order-btn bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs py-1.5 px-3.5 rounded-full transition-all duration-200 shadow-xs cursor-pointer active:scale-95">
-                      <span>Track / View</span>
+                  <div class="flex items-center justify-between sm:justify-end gap-2.5 border-t sm:border-t-0 border-outline-variant/15 pt-1.5 sm:pt-0">
+                    <span class="font-display font-bold text-primary text-sm sm:text-base mr-1">$${Number(order.subtotal || 0).toFixed(2)}</span>
+                    <button data-reorder-id="${order.orderId}" class="reorder-order-btn bg-surface-container-high hover:bg-secondary-container text-primary text-xs font-label-bold py-1.5 px-3 rounded-full transition-all flex items-center gap-1 cursor-pointer">
+                      <span class="material-symbols-outlined text-xs">replay</span>
+                      <span>Reorder</span>
+                    </button>
+                    <button data-order-id="${order.orderId}" class="view-order-btn bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs py-1.5 px-3 rounded-full transition-all shadow-xs cursor-pointer active:scale-95">
+                      <span>Track</span>
                     </button>
                   </div>
                 </div>
@@ -350,7 +430,120 @@ function renderProfileMain() {
           </div>
         `;
       }
-    } else if (profileActiveTab === 'details') {
+    }
+
+    // TAB 3: SAVED ADDRESSES BOOK
+    else if (profileActiveTab === 'addresses') {
+      const editingAddress = editingAddressId ? addresses.find(a => a.id === editingAddressId) : null;
+
+      tabBodyHTML = `
+        <div class="flex flex-col gap-4">
+          <!-- Address Form (Add or Edit) -->
+          <div id="address-form-container" class="${editingAddressId !== null ? '' : 'hidden'} p-4 rounded-2xl bg-surface-container-high/30 border border-outline-variant/30 flex flex-col gap-3">
+            <div class="flex items-center justify-between border-b border-outline-variant/20 pb-2">
+              <h4 class="font-display font-bold text-xs sm:text-sm text-primary">${editingAddress ? 'Edit Delivery Address' : 'Add New Delivery Address'}</h4>
+              <button id="cancel-address-form-btn" class="text-xs font-label-bold text-on-surface-variant hover:text-primary cursor-pointer">Cancel</button>
+            </div>
+
+            <form id="save-address-form" class="flex flex-col gap-3">
+              <input type="hidden" id="addr-id" value="${editingAddress?.id || ''}" />
+              
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label class="font-label-bold text-xs text-primary block mb-1">Recipient Name *</label>
+                  <input id="addr-name" type="text" required value="${editingAddress?.full_name || displayName}" placeholder="Full Name" class="w-full text-xs px-3 py-2 rounded-xl bg-surface border border-outline-variant/40 text-primary" />
+                </div>
+                <div>
+                  <label class="font-label-bold text-xs text-primary block mb-1">Contact Phone *</label>
+                  <input id="addr-phone" type="tel" required value="${editingAddress?.phone || displayPhone}" placeholder="Phone Number" class="w-full text-xs px-3 py-2 rounded-xl bg-surface border border-outline-variant/40 text-primary" />
+                </div>
+              </div>
+
+              <div>
+                <label class="font-label-bold text-xs text-primary block mb-1">Street Address Line 1 *</label>
+                <input id="addr-line1" type="text" required value="${editingAddress?.address_line_1 || ''}" placeholder="House/Flat No., Building Name, Street" class="w-full text-xs px-3 py-2 rounded-xl bg-surface border border-outline-variant/40 text-primary" />
+              </div>
+
+              <div>
+                <label class="font-label-bold text-xs text-primary block mb-1">Address Line 2 (Optional)</label>
+                <input id="addr-line2" type="text" value="${editingAddress?.address_line_2 || ''}" placeholder="Apartment, suite, unit, landmark" class="w-full text-xs px-3 py-2 rounded-xl bg-surface border border-outline-variant/40 text-primary" />
+              </div>
+
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                <div>
+                  <label class="font-label-bold text-xs text-primary block mb-1">City *</label>
+                  <input id="addr-city" type="text" required value="${editingAddress?.city || ''}" placeholder="City" class="w-full text-xs px-3 py-2 rounded-xl bg-surface border border-outline-variant/40 text-primary" />
+                </div>
+                <div>
+                  <label class="font-label-bold text-xs text-primary block mb-1">State / Province</label>
+                  <input id="addr-state" type="text" value="${editingAddress?.state || ''}" placeholder="State" class="w-full text-xs px-3 py-2 rounded-xl bg-surface border border-outline-variant/40 text-primary" />
+                </div>
+                <div class="col-span-2 sm:col-span-1">
+                  <label class="font-label-bold text-xs text-primary block mb-1">PIN / ZIP Code *</label>
+                  <input id="addr-postal" type="text" required value="${editingAddress?.postal_code || ''}" placeholder="Postal Code" class="w-full text-xs px-3 py-2 rounded-xl bg-surface border border-outline-variant/40 text-primary" />
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2 mt-1">
+                <input type="checkbox" id="addr-default" ${editingAddress?.is_default ? 'checked' : (addresses.length === 0 ? 'checked' : '')} class="text-tertiary focus:ring-tertiary" />
+                <label for="addr-default" class="text-xs font-label-bold text-primary cursor-pointer">Set as default delivery address</label>
+              </div>
+
+              <p id="address-feedback-msg" class="text-xs font-medium hidden text-center"></p>
+
+              <button type="submit" id="save-address-btn" class="bg-tertiary text-on-tertiary hover:bg-primary font-label-bold text-xs py-2.5 px-6 rounded-full transition-all shadow-sm self-start cursor-pointer active:scale-95 mt-1">
+                <span>${editingAddress ? 'Update Address' : 'Save Address'}</span>
+              </button>
+            </form>
+          </div>
+
+          <!-- Add Address Button Trigger -->
+          ${editingAddressId === null ? `
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-label-bold text-primary">Saved Addresses (${addresses.length})</span>
+              <button id="open-add-address-btn" class="bg-primary text-on-primary hover:bg-tertiary text-xs font-label-bold px-3.5 py-1.5 rounded-full transition-colors flex items-center gap-1 cursor-pointer">
+                <span class="material-symbols-outlined text-sm">add</span>
+                <span>Add Address</span>
+              </button>
+            </div>
+          ` : ''}
+
+          <!-- Addresses List -->
+          <div class="flex flex-col gap-2.5 max-h-[300px] overflow-y-auto pr-1">
+            ${addresses.length === 0 ? `
+              <div class="p-6 text-center bg-surface/50 border border-outline-variant/20 rounded-2xl text-xs text-on-surface-variant">
+                <span class="material-symbols-outlined text-3xl text-secondary mb-1">home_pin</span>
+                <p class="font-bold text-primary">No addresses saved yet.</p>
+                <p class="text-[11px] mt-0.5">Add your home or office address for 1-click checkout.</p>
+              </div>
+            ` : addresses.map(addr => `
+              <div class="p-3.5 rounded-2xl bg-surface border ${addr.is_default ? 'border-tertiary bg-secondary-container/10' : 'border-outline-variant/20'} flex flex-col gap-2 shadow-xs">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-xs text-primary">${addr.full_name}</span>
+                    ${addr.is_default ? `
+                      <span class="bg-tertiary text-on-tertiary font-label-bold text-[9px] px-2 py-0.5 rounded-full uppercase">Default</span>
+                    ` : ''}
+                  </div>
+                  <div class="flex items-center gap-1.5">
+                    ${!addr.is_default ? `
+                      <button data-set-default-id="${addr.id}" class="set-default-addr-btn text-[11px] font-label-bold text-secondary hover:text-tertiary px-2 py-0.5 rounded-md hover:bg-surface-container-high cursor-pointer">Set Default</button>
+                    ` : ''}
+                    <button data-edit-addr-id="${addr.id}" class="edit-addr-btn text-[11px] font-label-bold text-primary hover:text-tertiary px-2 py-0.5 rounded-md hover:bg-surface-container-high cursor-pointer">Edit</button>
+                    <button data-delete-addr-id="${addr.id}" class="delete-addr-btn text-[11px] font-label-bold text-red-600 hover:text-red-800 px-2 py-0.5 rounded-md hover:bg-red-50 cursor-pointer">Delete</button>
+                  </div>
+                </div>
+                <p class="text-[11px] text-on-surface-variant leading-relaxed">${addr.address_line_1}${addr.address_line_2 ? ', ' + addr.address_line_2 : ''}, ${addr.city}, ${addr.state || ''} ${addr.postal_code}, ${addr.country}</p>
+                <p class="text-[10px] text-on-surface-variant font-medium">📞 ${addr.phone}</p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    // TAB 4: PROFILE DETAILS
+    else if (profileActiveTab === 'details') {
       const nameParts = (displayName || '').split(' ');
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
@@ -401,10 +594,12 @@ function renderProfileMain() {
           </form>
         </div>
       `;
-    } else if (profileActiveTab === 'security') {
+    }
+
+    // TAB 5: ACCOUNT SECURITY
+    else if (profileActiveTab === 'security') {
       tabBodyHTML = `
         <div class="flex flex-col gap-4">
-          
           <!-- Security Overview & Email Verification Status -->
           <div class="p-4 rounded-2xl bg-surface border border-outline-variant/25 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
             <div>
@@ -416,11 +611,6 @@ function renderProfileMain() {
               </div>
               <p class="text-xs text-on-surface-variant mt-0.5">Primary Email: <strong class="text-primary">${displayEmail}</strong></p>
             </div>
-            ${!isEmailConfirmed ? `
-              <button id="resend-verification-btn" class="text-xs font-label-bold text-secondary hover:text-tertiary border border-secondary/30 px-3 py-1.5 rounded-full hover:bg-surface-container-high cursor-pointer">
-                Resend Verification
-              </button>
-            ` : ''}
           </div>
 
           <!-- Change Password Form -->
@@ -459,35 +649,12 @@ function renderProfileMain() {
               </div>
             </form>
           </div>
-
-          <!-- Change Email Address Form -->
-          <div class="p-5 rounded-2xl bg-surface border border-outline-variant/25 flex flex-col gap-3.5 shadow-xs">
-            <div class="border-b border-outline-variant/20 pb-2">
-              <h4 class="font-display font-bold text-sm text-primary">Change Email Address</h4>
-              <p class="text-[11px] text-on-surface-variant">A confirmation link will be sent to both your current and new email addresses.</p>
-            </div>
-
-            <form id="change-email-form" class="flex flex-col gap-3">
-              <div>
-                <label class="font-label-bold text-xs text-primary block mb-1">New Email Address</label>
-                <input id="new-email-input" type="email" required placeholder="newemail@example.com" class="w-full text-xs px-3.5 py-2 rounded-xl bg-surface-container-high/40 border border-outline-variant/40 text-primary focus:outline-none focus:border-tertiary" />
-              </div>
-
-              <p id="email-feedback-msg" class="text-xs font-medium hidden text-center"></p>
-
-              <button type="submit" id="save-email-btn" class="bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs py-2.5 px-5 rounded-full transition-all duration-200 shadow-sm self-start cursor-pointer active:scale-95 mt-1">
-                <span>Request Email Change</span>
-              </button>
-            </form>
-          </div>
-
         </div>
       `;
     }
 
     profileContent.innerHTML = `
-      <div class="flex flex-col gap-5">
-        
+      <div class="flex flex-col gap-4">
         <!-- Header Profile Card -->
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 sm:p-5 rounded-2xl bg-surface border border-outline-variant/25 shadow-xs">
           <div class="flex items-center gap-3.5">
@@ -500,12 +667,6 @@ function renderProfileMain() {
                 ${isAdmin ? `<span class="px-2.5 py-0.5 rounded-full bg-tertiary/15 border border-tertiary/30 text-tertiary font-label-bold text-[10px] uppercase tracking-wider">Admin</span>` : ''}
               </div>
               <p class="text-xs text-on-surface-variant font-medium">${displayEmail}</p>
-              ${displayCountry || displayPhone ? `
-                <div class="flex items-center gap-2 mt-1 text-[11px] text-on-surface-variant font-medium">
-                  ${displayCountry ? `<span class="bg-surface-container-high/60 px-2 py-0.5 rounded-md border border-outline-variant/20">${displayCountry}</span>` : ''}
-                  ${displayPhone ? `<span>${displayPhone}</span>` : ''}
-                </div>
-              ` : ''}
             </div>
           </div>
 
@@ -517,32 +678,27 @@ function renderProfileMain() {
               </button>
             ` : `
               <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary/15 border border-secondary/30 text-secondary font-label-bold text-[10px] uppercase tracking-wider">
-                <span>Verified Account</span>
+                <span>Verified Member</span>
               </span>
             `}
-            <button id="auth-signout-btn" class="text-xs text-on-surface-variant hover:text-red-600 flex items-center gap-1 font-label-bold border border-outline-variant/40 hover:border-red-300 px-3 py-1.5 rounded-full transition-colors cursor-pointer active:scale-95">
+
+            <button id="profile-signout-btn" class="bg-surface-container-high hover:bg-error-container hover:text-error text-on-surface-variant text-xs font-label-bold py-1.5 px-3.5 rounded-full transition-all duration-200 shadow-xs cursor-pointer active:scale-95">
               <span>Sign Out</span>
-              <span class="material-symbols-outlined text-sm">logout</span>
             </button>
           </div>
         </div>
 
-        <!-- Tabbed Navigation -->
-        <div class="flex items-center gap-2 border-b border-outline-variant/20 pb-2.5">
-          <button data-ptab="orders" class="profile-tab-btn px-4 py-1.5 rounded-full text-xs font-label-bold transition-all cursor-pointer ${profileActiveTab === 'orders' ? 'bg-primary text-on-primary shadow-xs' : 'bg-surface-container-high/60 text-on-surface-variant hover:bg-surface-container-high'}">
-            <span>My Orders</span>
-          </button>
-          <button data-ptab="details" class="profile-tab-btn px-4 py-1.5 rounded-full text-xs font-label-bold transition-all cursor-pointer ${profileActiveTab === 'details' ? 'bg-primary text-on-primary shadow-xs' : 'bg-surface-container-high/60 text-on-surface-variant hover:bg-surface-container-high'}">
-            <span>Profile Details</span>
-          </button>
-          <button data-ptab="security" class="profile-tab-btn px-4 py-1.5 rounded-full text-xs font-label-bold transition-all cursor-pointer ${profileActiveTab === 'security' ? 'bg-primary text-on-primary shadow-xs' : 'bg-surface-container-high/60 text-on-surface-variant hover:bg-surface-container-high'}">
-            <span>Account Security</span>
-          </button>
+        <!-- 5-Tab Navigation Bar -->
+        <div class="flex items-center gap-1.5 border-b border-outline-variant/20 pb-3 overflow-x-auto">
+          <button data-profile-tab="dashboard" class="profile-tab-btn px-3.5 py-1.5 rounded-full text-xs font-label-bold transition-all cursor-pointer ${profileActiveTab === 'dashboard' ? 'bg-primary text-on-primary shadow-xs' : 'bg-surface-container-high/50 text-on-surface-variant hover:bg-surface-container-high'}">Dashboard</button>
+          <button data-profile-tab="orders" class="profile-tab-btn px-3.5 py-1.5 rounded-full text-xs font-label-bold transition-all cursor-pointer ${profileActiveTab === 'orders' ? 'bg-primary text-on-primary shadow-xs' : 'bg-surface-container-high/50 text-on-surface-variant hover:bg-surface-container-high'}">Orders (${orders.length})</button>
+          <button data-profile-tab="addresses" class="profile-tab-btn px-3.5 py-1.5 rounded-full text-xs font-label-bold transition-all cursor-pointer ${profileActiveTab === 'addresses' ? 'bg-primary text-on-primary shadow-xs' : 'bg-surface-container-high/50 text-on-surface-variant hover:bg-surface-container-high'}">Addresses (${addresses.length})</button>
+          <button data-profile-tab="details" class="profile-tab-btn px-3.5 py-1.5 rounded-full text-xs font-label-bold transition-all cursor-pointer ${profileActiveTab === 'details' ? 'bg-primary text-on-primary shadow-xs' : 'bg-surface-container-high/50 text-on-surface-variant hover:bg-surface-container-high'}">Profile Details</button>
+          <button data-profile-tab="security" class="profile-tab-btn px-3.5 py-1.5 rounded-full text-xs font-label-bold transition-all cursor-pointer ${profileActiveTab === 'security' ? 'bg-primary text-on-primary shadow-xs' : 'bg-surface-container-high/50 text-on-surface-variant hover:bg-surface-container-high'}">Security</button>
         </div>
 
-        <!-- Active Tab Content -->
+        <!-- Active Sub-tab View -->
         ${tabBodyHTML}
-
       </div>
     `;
 
@@ -550,50 +706,20 @@ function renderProfileMain() {
     return;
   }
 
-  // Case 2: User is NOT Logged In - Render Auth Modes (Login / Sign Up / Forgot Password / Reset Password)
-  if (titleEl) titleEl.textContent = currentAuthMode === 'reset_password' ? 'Set New Password' : (currentAuthMode === 'forgot_password' ? 'Password Recovery' : (currentAuthMode === 'signup' ? 'Join Brew & Bite' : 'Account Sign In'));
-  if (subtitleEl) subtitleEl.textContent = 'Brew & Bite Coffee & Bites';
-
-  if (currentAuthMode === 'reset_password') {
-    profileContent.innerHTML = `
-      <div class="flex flex-col gap-5 max-w-md mx-auto py-1">
-        <div class="text-center">
-          <div class="w-12 h-12 bg-secondary-container/20 text-secondary rounded-full flex items-center justify-center mx-auto mb-2.5">
-            <span class="material-symbols-outlined text-2xl">lock_reset</span>
-          </div>
-          <h3 class="font-display text-xl font-bold text-primary">Set New Password</h3>
-          <p class="font-body-md text-xs text-on-surface-variant mt-1">Please create a new, secure password for your account.</p>
-        </div>
-
-        <form id="reset-password-form" class="flex flex-col gap-3.5">
-          <div>
-            <label class="font-label-bold text-xs text-primary block mb-1">New Password</label>
-            <input id="reset-pwd-new" type="password" required minlength="6" placeholder="••••••••" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 text-primary focus:outline-none focus:border-tertiary" />
-          </div>
-
-          <div>
-            <label class="font-label-bold text-xs text-primary block mb-1">Confirm New Password</label>
-            <input id="reset-pwd-confirm" type="password" required minlength="6" placeholder="••••••••" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 text-primary focus:outline-none focus:border-tertiary" />
-          </div>
-
-          <p id="reset-feedback-msg" class="text-xs font-medium hidden text-center"></p>
-
-          <button type="submit" id="reset-submit-btn" class="w-full bg-tertiary text-on-tertiary font-label-bold text-xs py-3 px-4 rounded-full transition-all duration-200 shadow-sm mt-1 cursor-pointer active:scale-95">
-            <span>Update Password &amp; Sign In</span>
-          </button>
-        </form>
-      </div>
-    `;
-    attachResetPasswordEvents();
-    return;
+  // Case 2: User is Logged Out - Render Login / Signup / Recovery
+  if (titleEl) {
+    if (currentAuthMode === 'forgot_password') titleEl.textContent = 'Password Recovery';
+    else if (currentAuthMode === 'reset_password') titleEl.textContent = 'Set New Password';
+    else if (currentAuthMode === 'signup') titleEl.textContent = 'Join Brew & Bite';
+    else titleEl.textContent = 'Account Sign In';
   }
 
   if (currentAuthMode === 'forgot_password') {
     profileContent.innerHTML = `
-      <div class="flex flex-col gap-5 max-w-md mx-auto py-1">
+      <div class="flex flex-col gap-4 max-w-md mx-auto py-2">
         <div class="text-center">
-          <div class="w-12 h-12 bg-secondary-container/20 text-secondary rounded-full flex items-center justify-center mx-auto mb-2.5">
-            <span class="material-symbols-outlined text-2xl">mark_email_read</span>
+          <div class="w-12 h-12 bg-secondary-container/20 text-secondary rounded-full flex items-center justify-center mx-auto mb-2">
+            <span class="material-symbols-outlined text-2xl">mark_email_unread</span>
           </div>
           <h3 class="font-display text-xl font-bold text-primary">Recover Password</h3>
           <p class="font-body-md text-xs text-on-surface-variant mt-1">Enter your email and we'll send you a secure recovery link.</p>
@@ -635,23 +761,13 @@ function renderProfileMain() {
         </h3>
         <p class="font-body-md text-xs text-on-surface-variant mt-1">
           ${currentAuthMode === 'login'
-            ? 'Sign in to access your order history and profile.'
-            : 'Create an account for quick orders and special perks.'}
+            ? 'Sign in to access your dashboard, orders and addresses.'
+            : 'Create an account for quick orders and saved delivery addresses.'}
         </p>
       </div>
 
-      <!-- Verification Notice if awaiting email confirmation -->
-      ${pendingVerificationEmail ? `
-        <div class="p-3.5 bg-secondary-container/20 border border-secondary/40 rounded-2xl text-center">
-          <span class="material-symbols-outlined text-secondary text-xl mb-1 block">mark_email_unread</span>
-          <p class="text-xs font-bold text-primary mb-1">Check your inbox!</p>
-          <p class="text-[11px] text-on-surface-variant">We sent a verification link to <strong class="text-primary">${pendingVerificationEmail}</strong>. Please confirm your email to sign in.</p>
-        </div>
-      ` : ''}
-
       <form id="auth-form" class="flex flex-col gap-3.5">
         ${currentAuthMode === 'signup' ? `
-          <!-- First & Last Name Fields -->
           <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="font-label-bold text-xs text-primary block mb-1">First Name</label>
@@ -662,199 +778,276 @@ function renderProfileMain() {
               <input id="auth-last-name" type="text" required placeholder="Rivers" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 text-primary placeholder-on-surface-variant/50 focus:outline-none focus:border-tertiary" />
             </div>
           </div>
-
-          <!-- Country Selector Dropdown -->
-          <div>
-            <label class="font-label-bold text-xs text-primary block mb-1">Country</label>
-            <div class="relative">
-              <select id="auth-country-select" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 text-primary appearance-none pr-8 focus:outline-none focus:border-tertiary cursor-pointer font-medium">
-                ${COUNTRIES.map(c => `<option value="${c.name}" data-dial="${c.dial}" data-flag="${c.flag}" ${c.code === 'IN' ? 'selected' : ''}>${c.flag} ${c.name} (${c.dial})</option>`).join('')}
-              </select>
-              <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-on-surface-variant pointer-events-none">expand_more</span>
-            </div>
-          </div>
-
-          <!-- Phone Number with Dynamic Country Dial Code Badge -->
-          <div>
-            <label class="font-label-bold text-xs text-primary block mb-1">Phone Number</label>
-            <div class="flex items-center gap-2">
-              <span id="auth-dial-code-badge" class="text-xs font-label-bold bg-surface-container-high px-3 py-2.5 rounded-xl border border-outline-variant/40 text-primary whitespace-nowrap min-w-[55px] text-center">+91</span>
-              <input id="auth-phone" type="tel" required placeholder="98765 43210" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 text-primary placeholder-on-surface-variant/50 focus:outline-none focus:border-tertiary" />
-            </div>
-          </div>
         ` : ''}
 
-        <!-- Email Field -->
         <div>
           <label class="font-label-bold text-xs text-primary block mb-1">Email Address</label>
-          <input id="auth-email" type="email" required placeholder="name@example.com" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 text-primary placeholder-on-surface-variant/50 focus:outline-none focus:border-tertiary" />
+          <input id="auth-email" type="email" required placeholder="alex@example.com" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 text-primary placeholder-on-surface-variant/50 focus:outline-none focus:border-tertiary" />
         </div>
 
-        <!-- Password Field -->
         <div>
           <div class="flex items-center justify-between mb-1">
             <label class="font-label-bold text-xs text-primary">Password</label>
             ${currentAuthMode === 'login' ? `
-              <button type="button" id="forgot-pwd-link-btn" class="text-[11px] font-label-bold text-secondary hover:text-tertiary underline cursor-pointer">
-                Forgot Password?
+              <button type="button" id="forgot-password-link-btn" class="text-[11px] font-label-bold text-secondary hover:text-tertiary underline cursor-pointer">
+                Forgot password?
               </button>
             ` : ''}
           </div>
           <input id="auth-password" type="password" required minlength="6" placeholder="••••••••" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 text-primary placeholder-on-surface-variant/50 focus:outline-none focus:border-tertiary" />
-          ${currentAuthMode === 'signup' ? `<p class="text-[10px] text-on-surface-variant mt-1">Must be at least 6 characters.</p>` : ''}
         </div>
 
-        <!-- Feedback / Status Error Message Container -->
-        <p id="auth-status-msg" class="text-xs text-red-600 font-medium hidden text-center"></p>
+        <p id="auth-error-msg" class="text-xs font-medium hidden text-center"></p>
 
-        <!-- Submit Button -->
-        <button id="auth-submit-btn" type="submit" class="w-full bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs py-3 px-4 rounded-full transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm mt-1 cursor-pointer active:scale-95">
+        <button type="submit" id="auth-submit-btn" class="w-full bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs py-3 px-4 rounded-full transition-all duration-200 shadow-sm mt-1 cursor-pointer active:scale-95">
           <span>${currentAuthMode === 'login' ? 'Sign In' : 'Create Account'}</span>
-          <span class="material-symbols-outlined text-base">arrow_forward</span>
         </button>
       </form>
 
-      <!-- Toggle Mode Prompt -->
-      <div class="text-center pt-2 border-t border-outline-variant/20">
-        <p class="text-xs text-on-surface-variant">
-          ${currentAuthMode === 'login' ? "Don't have an account?" : "Already have an account?"}
-          <button id="auth-toggle-mode-btn" class="font-label-bold text-secondary hover:text-tertiary transition-colors ml-1 cursor-pointer underline">
-            ${currentAuthMode === 'login' ? 'Sign Up' : 'Sign In'}
-          </button>
-        </p>
+      <div class="text-center pt-2 border-t border-outline-variant/20 text-xs">
+        <span class="text-on-surface-variant">
+          ${currentAuthMode === 'login' ? "Don't have an account yet?" : "Already have an account?"}
+        </span>
+        <button id="toggle-auth-mode-btn" class="font-label-bold text-secondary hover:text-tertiary ml-1 cursor-pointer underline">
+          ${currentAuthMode === 'login' ? 'Create Account' : 'Sign In'}
+        </button>
       </div>
     </div>
   `;
 
-  attachDefaultAuthEvents();
+  attachLoggedOutProfileEvents();
 }
 
-// Attach Event Listeners for Logged-In Profile Tabs
+/**
+ * Handle Reorder action: Loads products into active cart with live catalog prices
+ */
+async function handleReorderOrder(orderId) {
+  const order = (typeof getOrderById === 'function') ? getOrderById(orderId) : null;
+  if (!order || !Array.isArray(order.items) || order.items.length === 0) {
+    alert("Could not load items from this order.");
+    return;
+  }
+
+  let addedCount = 0;
+  const omittedItems = [];
+
+  for (const item of order.items) {
+    const product = (typeof getProductById === 'function')
+      ? getProductById(item.productId)
+      : ((typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS)) ? PRODUCTS.find(p => p.id === item.productId) : null);
+
+    if (product && product.available !== false) {
+      if (typeof addToCart === 'function') {
+        addToCart(product.id, item.quantity || 1);
+        addedCount += (item.quantity || 1);
+      }
+    } else {
+      omittedItems.push(item.name || item.productId);
+    }
+  }
+
+  closeProfile();
+  if (typeof openCart === 'function') {
+    openCart();
+  }
+
+  if (addedCount > 0) {
+    let alertMsg = `Added ${addedCount} item(s) from order #${order.orderId} to your cart with current catalog prices.`;
+    if (omittedItems.length > 0) {
+      alertMsg += ` (Note: ${omittedItems.join(', ')} is currently sold out and was skipped).`;
+    }
+    console.log("[Reorder]", alertMsg);
+  } else if (omittedItems.length > 0) {
+    alert(`Could not reorder: ${omittedItems.join(', ')} is currently sold out.`);
+  }
+}
+
+// Event Listeners for Logged-In Profile View
 function attachLoggedInProfileEvents() {
   // Tab Switching
   document.querySelectorAll('.profile-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      const tab = btn.getAttribute('data-ptab');
+      const tab = btn.getAttribute('data-profile-tab');
       if (tab) {
         profileActiveTab = tab;
+        editingAddressId = null;
         renderProfileMain();
       }
     });
   });
 
-  // Admin Dashboard CTA
-  const adminBtn = document.getElementById('profile-open-admin-btn');
-  if (adminBtn) {
-    adminBtn.addEventListener('click', () => {
-      if (typeof openAdminDashboard === 'function') {
-        openAdminDashboard();
+  // Track / View Order Detail
+  document.querySelectorAll('.view-order-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const orderId = btn.getAttribute('data-order-id');
+      if (orderId) openOrderDetail(orderId);
+    });
+  });
+
+  // Reorder Button
+  document.querySelectorAll('.reorder-order-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const orderId = btn.getAttribute('data-reorder-id');
+      if (orderId) handleReorderOrder(orderId);
+    });
+  });
+
+  // Sign Out Button
+  const signoutBtn = document.getElementById('profile-signout-btn');
+  if (signoutBtn) signoutBtn.addEventListener('click', handleSignOut);
+
+  // Open Admin Button
+  const openAdminBtn = document.getElementById('profile-open-admin-btn');
+  if (openAdminBtn) {
+    openAdminBtn.addEventListener('click', () => {
+      closeProfile();
+      if (typeof openAdminDashboard === 'function') openAdminDashboard();
+    });
+  }
+
+  // Browse Menu Button
+  const browseBtn = document.getElementById('profile-browse-menu-btn');
+  if (browseBtn) {
+    browseBtn.addEventListener('click', () => {
+      closeProfile();
+      const menu = document.getElementById('coffee-section') || document.getElementById('animation-container');
+      if (menu) menu.scrollIntoView({ behavior: 'smooth' });
+    });
+  }
+
+  // Address Actions
+  const openAddAddrBtn = document.getElementById('open-add-address-btn');
+  if (openAddAddrBtn) {
+    openAddAddrBtn.addEventListener('click', () => {
+      editingAddressId = ''; // blank indicates new
+      renderProfileMain();
+    });
+  }
+
+  const cancelAddrBtn = document.getElementById('cancel-address-form-btn');
+  if (cancelAddrBtn) {
+    cancelAddrBtn.addEventListener('click', () => {
+      editingAddressId = null;
+      renderProfileMain();
+    });
+  }
+
+  document.querySelectorAll('.edit-addr-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-edit-addr-id');
+      if (id) {
+        editingAddressId = id;
+        renderProfileMain();
       }
     });
-  }
+  });
 
-  // Signout listener
-  const signoutBtn = document.getElementById('auth-signout-btn');
-  if (signoutBtn) {
-    signoutBtn.addEventListener('click', handleSignOut);
-  }
-
-  // Browse menu listener
-  const browseMenuBtn = document.getElementById('profile-browse-menu-btn');
-  if (browseMenuBtn) {
-    browseMenuBtn.addEventListener('click', browseMenuFromProfile);
-  }
-
-  // Profile Details Form Listener
-  const detailsForm = document.getElementById('profile-details-form');
-  const editCountrySelect = document.getElementById('edit-country-select');
-  const editDialBadge = document.getElementById('edit-dial-badge');
-
-  if (editCountrySelect && editDialBadge) {
-    editCountrySelect.addEventListener('change', () => {
-      const opt = editCountrySelect.options[editCountrySelect.selectedIndex];
-      editDialBadge.textContent = opt.getAttribute('data-dial') || '+91';
+  document.querySelectorAll('.delete-addr-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-delete-addr-id');
+      if (id && confirm("Are you sure you want to delete this address?")) {
+        if (typeof deleteUserAddress === 'function') {
+          await deleteUserAddress(id, currentUser);
+          renderProfileMain();
+        }
+      }
     });
-  }
+  });
 
-  if (detailsForm) {
-    detailsForm.addEventListener('submit', async (e) => {
+  document.querySelectorAll('.set-default-addr-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.getAttribute('data-set-default-id');
+      if (id && typeof setDefaultUserAddress === 'function') {
+        await setDefaultUserAddress(id, currentUser);
+        renderProfileMain();
+      }
+    });
+  });
+
+  // Save Address Form Submit
+  const addrForm = document.getElementById('save-address-form');
+  if (addrForm) {
+    addrForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      const firstName = document.getElementById('edit-first-name')?.value.trim();
-      const lastName = document.getElementById('edit-last-name')?.value.trim();
-      const country = editCountrySelect ? editCountrySelect.value : 'India';
-      const dialCode = editDialBadge ? editDialBadge.textContent : '+91';
-      const phone = document.getElementById('edit-phone')?.value.trim();
-      await handleUpdateProfile(firstName, lastName, country, dialCode, phone);
-    });
-  }
+      const id = document.getElementById('addr-id')?.value;
+      const name = document.getElementById('addr-name')?.value;
+      const phone = document.getElementById('addr-phone')?.value;
+      const line1 = document.getElementById('addr-line1')?.value;
+      const line2 = document.getElementById('addr-line2')?.value;
+      const city = document.getElementById('addr-city')?.value;
+      const state = document.getElementById('addr-state')?.value;
+      const postal = document.getElementById('addr-postal')?.value;
+      const isDefault = document.getElementById('addr-default')?.checked;
 
-  // Change Password Form Listener
-  const pwdForm = document.getElementById('change-password-form');
-  if (pwdForm) {
-    pwdForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const currentPwd = document.getElementById('pwd-current')?.value;
-      const newPwd = document.getElementById('pwd-new')?.value;
-      const confirmPwd = document.getElementById('pwd-confirm')?.value;
-      await handleChangePassword(currentPwd, newPwd, confirmPwd);
-    });
-  }
+      const payload = {
+        id: id || undefined,
+        full_name: name,
+        phone: phone,
+        address_line_1: line1,
+        address_line_2: line2,
+        city: city,
+        state: state,
+        postal_code: postal,
+        is_default: isDefault
+      };
 
-  // Security Tab "Forgot current password" Trigger
-  const secForgotBtn = document.getElementById('security-forgot-pwd-btn');
-  if (secForgotBtn && currentUser) {
-    secForgotBtn.addEventListener('click', async () => {
-      if (confirm(`Send a password reset link to your email (${currentUser.email})?`)) {
-        await handleForgotPassword(currentUser.email);
-        const msgEl = document.getElementById('password-feedback-msg');
-        if (msgEl) {
-          msgEl.textContent = `A password reset link has been sent to ${currentUser.email}. Check your inbox.`;
-          msgEl.className = 'text-xs text-green-700 font-bold text-center bg-green-50 p-2.5 rounded-xl border border-green-200';
-          msgEl.classList.remove('hidden');
+      try {
+        if (typeof saveUserAddress === 'function') {
+          await saveUserAddress(payload, currentUser);
+        }
+        editingAddressId = null;
+        renderProfileMain();
+      } catch (err) {
+        const msg = document.getElementById('address-feedback-msg');
+        if (msg) {
+          msg.textContent = err.message;
+          msg.className = 'text-xs text-red-600 font-medium text-center';
+          msg.classList.remove('hidden');
         }
       }
     });
   }
 
-  // Change Email Form Listener
-  const emailForm = document.getElementById('change-email-form');
-  if (emailForm) {
-    emailForm.addEventListener('submit', async (e) => {
+  // Profile Details Form Submit
+  const detailsForm = document.getElementById('profile-details-form');
+  if (detailsForm) {
+    detailsForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      const newEmail = document.getElementById('new-email-input')?.value.trim();
-      await handleChangeEmail(newEmail);
+      const first = document.getElementById('edit-first-name')?.value.trim();
+      const last = document.getElementById('edit-last-name')?.value.trim();
+      const countrySelect = document.getElementById('edit-country-select');
+      const country = countrySelect?.value || 'India';
+      const dialCode = countrySelect?.options[countrySelect.selectedIndex]?.getAttribute('data-dial') || '+91';
+      const phone = document.getElementById('edit-phone')?.value.trim();
+
+      handleUpdateProfile(first, last, country, dialCode, phone);
     });
   }
 
-  // Resend verification email
-  const resendBtn = document.getElementById('resend-verification-btn');
-  if (resendBtn && currentUser) {
-    resendBtn.addEventListener('click', async () => {
-      try {
-        await supabaseClient.auth.resend({
-          type: 'signup',
-          email: currentUser.email
-        });
-        alert(`Verification email resent to ${currentUser.email}. Please check your inbox.`);
-      } catch (err) {
-        alert(err.message || "Failed to resend verification email.");
-      }
+  // Change Password Form Submit
+  const pwdForm = document.getElementById('change-password-form');
+  if (pwdForm) {
+    pwdForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const cur = document.getElementById('pwd-current')?.value;
+      const newP = document.getElementById('pwd-new')?.value;
+      const conf = document.getElementById('pwd-confirm')?.value;
+      handleChangePassword(cur, newP, conf);
     });
   }
 }
 
-// Attach Default Login/Signup Form Listeners
-function attachDefaultAuthEvents() {
-  const countrySelect = document.getElementById('auth-country-select');
-  const dialBadge = document.getElementById('auth-dial-code-badge');
-  if (countrySelect && dialBadge) {
-    countrySelect.addEventListener('change', () => {
-      const selectedOption = countrySelect.options[countrySelect.selectedIndex];
-      dialBadge.textContent = selectedOption.getAttribute('data-dial') || '+91';
+// Event Listeners for Logged-Out Auth Forms
+function attachLoggedOutProfileEvents() {
+  const toggleBtn = document.getElementById('toggle-auth-mode-btn');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => {
+      currentAuthMode = (currentAuthMode === 'login') ? 'signup' : 'login';
+      renderProfileMain();
     });
   }
 
-  const forgotBtn = document.getElementById('forgot-pwd-link-btn');
+  const forgotBtn = document.getElementById('forgot-password-link-btn');
   if (forgotBtn) {
     forgotBtn.addEventListener('click', () => {
       currentAuthMode = 'forgot_password';
@@ -864,39 +1057,24 @@ function attachDefaultAuthEvents() {
 
   const authForm = document.getElementById('auth-form');
   if (authForm) {
-    authForm.addEventListener('submit', (e) => {
+    authForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = document.getElementById('auth-email')?.value.trim();
-      const password = document.getElementById('auth-password')?.value;
+      const pwd = document.getElementById('auth-password')?.value;
+      const first = document.getElementById('auth-first-name')?.value?.trim();
+      const last = document.getElementById('auth-last-name')?.value?.trim();
 
       if (currentAuthMode === 'login') {
-        handleSignIn(email, password);
+        handleSignIn(email, pwd);
       } else {
-        const firstName = document.getElementById('auth-first-name')?.value.trim() || '';
-        const lastName = document.getElementById('auth-last-name')?.value.trim() || '';
-        const country = countrySelect ? countrySelect.value : 'India';
-        const dialCode = dialBadge ? dialBadge.textContent : '+91';
-        const phone = document.getElementById('auth-phone')?.value.trim() || '';
-        handleSignUp(email, password, firstName, lastName, country, dialCode, phone);
+        handleSignUp(email, pwd, first, last);
       }
-    });
-  }
-
-  const toggleBtn = document.getElementById('auth-toggle-mode-btn');
-  if (toggleBtn) {
-    toggleBtn.addEventListener('click', () => {
-      currentAuthMode = currentAuthMode === 'login' ? 'signup' : 'login';
-      pendingVerificationEmail = null;
-      renderProfileMain();
     });
   }
 }
 
-// Attach Forgot Password Form Listeners
 function attachForgotPasswordEvents() {
-  const form = document.getElementById('forgot-password-form');
   const backBtn = document.getElementById('back-to-login-btn');
-
   if (backBtn) {
     backBtn.addEventListener('click', () => {
       currentAuthMode = 'login';
@@ -904,43 +1082,20 @@ function attachForgotPasswordEvents() {
     });
   }
 
-  if (form) {
-    form.addEventListener('submit', async (e) => {
+  const forgotForm = document.getElementById('forgot-password-form');
+  if (forgotForm) {
+    forgotForm.addEventListener('submit', (e) => {
       e.preventDefault();
       const email = document.getElementById('forgot-email')?.value.trim();
-      await handleForgotPassword(email);
+      handleForgotPassword(email);
     });
   }
 }
 
-// Attach Reset Password Form Listeners
-function attachResetPasswordEvents() {
-  const form = document.getElementById('reset-password-form');
-  if (form) {
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const newPwd = document.getElementById('reset-pwd-new')?.value;
-      const confirmPwd = document.getElementById('reset-pwd-confirm')?.value;
-      await handleResetPassword(newPwd, confirmPwd);
-    });
-  }
-}
-
-// Handle Real Supabase Sign In (Email/Password)
+// Handle Sign In
 async function handleSignIn(email, password) {
-  const statusMsg = document.getElementById('auth-status-msg');
+  const errorEl = document.getElementById('auth-error-msg');
   const submitBtn = document.getElementById('auth-submit-btn');
-
-  if (!email || !password) {
-    if (statusMsg) {
-      statusMsg.textContent = 'Please provide both email and password.';
-      statusMsg.className = 'text-xs text-red-600 font-medium text-center';
-      statusMsg.classList.remove('hidden');
-    }
-    return;
-  }
-
-  if (typeof supabaseClient === 'undefined' || !supabaseClient) return;
 
   if (submitBtn) {
     submitBtn.disabled = true;
@@ -954,78 +1109,46 @@ async function handleSignIn(email, password) {
     });
 
     if (error) {
-      if (error.message.toLowerCase().includes('email not confirmed') || error.message.toLowerCase().includes('not verified')) {
-        if (statusMsg) {
-          statusMsg.textContent = 'Please verify your email before signing in. Check your inbox for the confirmation link.';
-          statusMsg.className = 'text-xs text-secondary font-bold text-center';
-          statusMsg.classList.remove('hidden');
-        }
-      } else {
-        if (statusMsg) {
-          statusMsg.textContent = error.message;
-          statusMsg.className = 'text-xs text-red-600 font-medium text-center';
-          statusMsg.classList.remove('hidden');
-        }
+      if (errorEl) {
+        errorEl.textContent = error.message;
+        errorEl.className = 'text-xs text-red-600 font-medium text-center';
+        errorEl.classList.remove('hidden');
       }
-    } else {
-      currentUser = data.user;
-      pendingVerificationEmail = null;
-      await fetchOrCreateUserProfile(currentUser);
-      if (typeof fetchOrdersForUser === 'function') {
-        await fetchOrdersForUser(currentUser.id);
-      }
-      updateAdminNavVisibility();
-      renderProfileMain();
+      return;
     }
+
+    currentUser = data.user;
+    await fetchOrCreateUserProfile(currentUser);
+    if (typeof fetchOrdersForUser === 'function') await fetchOrdersForUser(currentUser.id);
+    if (typeof fetchUserAddresses === 'function') await fetchUserAddresses(currentUser.id);
+    if (typeof fetchUserNotifications === 'function') await fetchUserNotifications(currentUser.id);
+    renderProfileMain();
   } catch (err) {
-    if (statusMsg) {
-      statusMsg.textContent = err.message || 'An error occurred during sign in.';
-      statusMsg.className = 'text-xs text-red-600 font-medium text-center';
-      statusMsg.classList.remove('hidden');
+    if (errorEl) {
+      errorEl.textContent = err.message || 'Failed to sign in.';
+      errorEl.className = 'text-xs text-red-600 font-medium text-center';
+      errorEl.classList.remove('hidden');
     }
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = `<span>Sign In</span><span class="material-symbols-outlined text-base">arrow_forward</span>`;
+      submitBtn.innerHTML = '<span>Sign In</span>';
     }
   }
 }
 
-// Handle Real Supabase Sign Up
-async function handleSignUp(email, password, firstName, lastName, country, dialCode, phone) {
-  const statusMsg = document.getElementById('auth-status-msg');
+// Handle Sign Up
+async function handleSignUp(email, password, firstName, lastName) {
+  const errorEl = document.getElementById('auth-error-msg');
   const submitBtn = document.getElementById('auth-submit-btn');
-
-  if (!email || !password || !firstName || !lastName || !phone) {
-    if (statusMsg) {
-      statusMsg.textContent = 'Please fill all required fields.';
-      statusMsg.className = 'text-xs text-red-600 font-medium text-center';
-      statusMsg.classList.remove('hidden');
-    }
-    return;
-  }
-
-  const cleanPhone = phone.replace(/[^0-9]/g, '');
-  if (cleanPhone.length < 6 || cleanPhone.length > 15) {
-    if (statusMsg) {
-      statusMsg.textContent = 'Please enter a valid phone number.';
-      statusMsg.className = 'text-xs text-red-600 font-medium text-center';
-      statusMsg.classList.remove('hidden');
-    }
-    return;
-  }
-
-  if (typeof supabaseClient === 'undefined' || !supabaseClient) return;
 
   if (submitBtn) {
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<span>Creating account...</span>';
   }
 
-  const fullName = `${firstName} ${lastName}`.trim();
-  const formattedPhone = `${dialCode} ${phone}`.trim();
-
   try {
+    const fullName = `${firstName} ${lastName}`.trim();
     const { data, error } = await supabaseClient.auth.signUp({
       email: email,
       password: password,
@@ -1033,71 +1156,56 @@ async function handleSignUp(email, password, firstName, lastName, country, dialC
         data: {
           first_name: firstName,
           last_name: lastName,
-          full_name: fullName,
-          country: country,
-          dial_code: dialCode,
-          phone: formattedPhone
+          full_name: fullName
         }
       }
     });
 
     if (error) {
-      if (statusMsg) {
-        statusMsg.textContent = error.message;
-        statusMsg.className = 'text-xs text-red-600 font-medium text-center';
-        statusMsg.classList.remove('hidden');
+      if (errorEl) {
+        errorEl.textContent = error.message;
+        errorEl.className = 'text-xs text-red-600 font-medium text-center';
+        errorEl.classList.remove('hidden');
       }
-    } else {
-      if (data.session && data.user) {
-        currentUser = data.user;
-        await fetchOrCreateUserProfile(currentUser, { firstName, lastName, fullName, country, dialCode, phone: formattedPhone });
-        if (typeof fetchOrdersForUser === 'function') {
-          await fetchOrdersForUser(currentUser.id);
-        }
-        renderProfileMain();
-      } else {
-        pendingVerificationEmail = email;
-        currentAuthMode = 'login';
-        renderProfileMain();
-      }
+      return;
+    }
+
+    if (data.user && !data.session) {
+      pendingVerificationEmail = email;
+      currentAuthMode = 'login';
+      renderProfileMain();
+    } else if (data.session) {
+      currentUser = data.user;
+      await fetchOrCreateUserProfile(currentUser);
+      renderProfileMain();
     }
   } catch (err) {
-    if (statusMsg) {
-      statusMsg.textContent = err.message || 'An error occurred during sign up.';
-      statusMsg.className = 'text-xs text-red-600 font-medium text-center';
-      statusMsg.classList.remove('hidden');
+    if (errorEl) {
+      errorEl.textContent = err.message || 'Failed to sign up.';
+      errorEl.className = 'text-xs text-red-600 font-medium text-center';
+      errorEl.classList.remove('hidden');
     }
   } finally {
     if (submitBtn) {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = `<span>Create Account</span><span class="material-symbols-outlined text-base">arrow_forward</span>`;
+      submitBtn.innerHTML = '<span>Create Account</span>';
     }
   }
 }
 
-// Handle Forgot Password Request (Sends recovery email)
+// Handle Forgot Password
 async function handleForgotPassword(email) {
   const msgEl = document.getElementById('forgot-feedback-msg');
   const submitBtn = document.getElementById('forgot-submit-btn');
 
-  if (!email) {
-    if (msgEl) {
-      msgEl.textContent = 'Please enter your registered email address.';
-      msgEl.className = 'text-xs text-red-600 font-medium text-center';
-      msgEl.classList.remove('hidden');
-    }
-    return;
-  }
-
   if (submitBtn) {
     submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span>Sending Link...</span>';
+    submitBtn.innerHTML = '<span>Sending Email...</span>';
   }
 
   try {
-    const redirectUrl = window.location.href.split('#')[0];
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: redirectUrl
+      redirectTo: `${window.location.origin}${window.location.pathname}#type=recovery`
     });
 
     if (error) {
@@ -1108,14 +1216,14 @@ async function handleForgotPassword(email) {
       }
     } else {
       if (msgEl) {
-        msgEl.textContent = `If an account exists for "${email}", a password reset link has been sent to your inbox.`;
-        msgEl.className = 'text-xs text-green-700 font-bold text-center bg-green-50 p-3 rounded-xl border border-green-200';
+        msgEl.textContent = `Password reset link sent to "${email}". Please check your email inbox.`;
+        msgEl.className = 'text-xs text-green-700 font-bold text-center bg-green-50 p-2.5 rounded-xl border border-green-200';
         msgEl.classList.remove('hidden');
       }
     }
   } catch (err) {
     if (msgEl) {
-      msgEl.textContent = err.message || 'Could not process password recovery.';
+      msgEl.textContent = err.message || 'Could not send reset email.';
       msgEl.className = 'text-xs text-red-600 font-medium text-center';
       msgEl.classList.remove('hidden');
     }
@@ -1127,82 +1235,10 @@ async function handleForgotPassword(email) {
   }
 }
 
-// Handle Set New Password (Upon clicking email recovery link)
-async function handleResetPassword(newPassword, confirmPassword) {
-  const msgEl = document.getElementById('reset-feedback-msg');
-  const submitBtn = document.getElementById('reset-submit-btn');
-
-  if (!newPassword || newPassword.length < 6) {
-    if (msgEl) {
-      msgEl.textContent = 'Password must be at least 6 characters.';
-      msgEl.className = 'text-xs text-red-600 font-medium text-center';
-      msgEl.classList.remove('hidden');
-    }
-    return;
-  }
-
-  if (newPassword !== confirmPassword) {
-    if (msgEl) {
-      msgEl.textContent = 'Passwords do not match.';
-      msgEl.className = 'text-xs text-red-600 font-medium text-center';
-      msgEl.classList.remove('hidden');
-    }
-    return;
-  }
-
-  if (submitBtn) {
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span>Updating Password...</span>';
-  }
-
-  try {
-    const { error } = await supabaseClient.auth.updateUser({
-      password: newPassword
-    });
-
-    if (error) {
-      if (msgEl) {
-        msgEl.textContent = error.message;
-        msgEl.className = 'text-xs text-red-600 font-medium text-center';
-        msgEl.classList.remove('hidden');
-      }
-    } else {
-      // Clean up hash from URL
-      if (window.history.replaceState) {
-        window.history.replaceState(null, null, window.location.pathname);
-      }
-      alert("Password updated successfully! You are now logged in.");
-      currentAuthMode = 'login';
-      profileActiveTab = 'orders';
-      renderProfileMain();
-    }
-  } catch (err) {
-    if (msgEl) {
-      msgEl.textContent = err.message || 'Failed to update password.';
-      msgEl.className = 'text-xs text-red-600 font-medium text-center';
-      msgEl.classList.remove('hidden');
-    }
-  } finally {
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = '<span>Update Password &amp; Sign In</span>';
-    }
-  }
-}
-
-// Handle Change Password (Inside Profile -> Security tab)
+// Handle Change Password
 async function handleChangePassword(currentPassword, newPassword, confirmPassword) {
   const msgEl = document.getElementById('password-feedback-msg');
   const submitBtn = document.getElementById('save-password-btn');
-
-  if (!currentPassword) {
-    if (msgEl) {
-      msgEl.textContent = 'Please enter your current password.';
-      msgEl.className = 'text-xs text-red-600 font-medium text-center';
-      msgEl.classList.remove('hidden');
-    }
-    return;
-  }
 
   if (!newPassword || newPassword.length < 6) {
     if (msgEl) {
@@ -1228,29 +1264,13 @@ async function handleChangePassword(currentPassword, newPassword, confirmPasswor
   }
 
   try {
-    // 1. Verify current password by attempting re-auth
-    const { error: reauthError } = await supabaseClient.auth.signInWithPassword({
-      email: currentUser.email,
-      password: currentPassword
-    });
-
-    if (reauthError) {
-      if (msgEl) {
-        msgEl.textContent = 'Incorrect current password. Please try again.';
-        msgEl.className = 'text-xs text-red-600 font-medium text-center';
-        msgEl.classList.remove('hidden');
-      }
-      return;
-    }
-
-    // 2. Update password
-    const { error: updateError } = await supabaseClient.auth.updateUser({
+    const { error } = await supabaseClient.auth.updateUser({
       password: newPassword
     });
 
-    if (updateError) {
+    if (error) {
       if (msgEl) {
-        msgEl.textContent = updateError.message;
+        msgEl.textContent = error.message;
         msgEl.className = 'text-xs text-red-600 font-medium text-center';
         msgEl.classList.remove('hidden');
       }
@@ -1276,70 +1296,10 @@ async function handleChangePassword(currentPassword, newPassword, confirmPasswor
   }
 }
 
-// Handle Change Email Address (Sends confirmation to old & new email)
-async function handleChangeEmail(newEmail) {
-  const msgEl = document.getElementById('email-feedback-msg');
-  const submitBtn = document.getElementById('save-email-btn');
-
-  if (!newEmail || newEmail === currentUser.email) {
-    if (msgEl) {
-      msgEl.textContent = 'Please enter a new, different email address.';
-      msgEl.className = 'text-xs text-red-600 font-medium text-center';
-      msgEl.classList.remove('hidden');
-    }
-    return;
-  }
-
-  if (submitBtn) {
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span>Requesting Change...</span>';
-  }
-
-  try {
-    const { error } = await supabaseClient.auth.updateUser({
-      email: newEmail
-    });
-
-    if (error) {
-      if (msgEl) {
-        msgEl.textContent = error.message;
-        msgEl.className = 'text-xs text-red-600 font-medium text-center';
-        msgEl.classList.remove('hidden');
-      }
-    } else {
-      if (msgEl) {
-        msgEl.textContent = `Confirmation links sent to both your current email and "${newEmail}". Please confirm both to complete the change.`;
-        msgEl.className = 'text-xs text-green-700 font-bold text-center bg-green-50 p-3 rounded-xl border border-green-200';
-        msgEl.classList.remove('hidden');
-      }
-    }
-  } catch (err) {
-    if (msgEl) {
-      msgEl.textContent = err.message || 'Failed to request email change.';
-      msgEl.className = 'text-xs text-red-600 font-medium text-center';
-      msgEl.classList.remove('hidden');
-    }
-  } finally {
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = '<span>Request Email Change</span>';
-    }
-  }
-}
-
-// Handle Update Profile Details (Name, Country, Phone)
+// Handle Update Profile Details
 async function handleUpdateProfile(firstName, lastName, country, dialCode, phone) {
   const msgEl = document.getElementById('details-feedback-msg');
   const submitBtn = document.getElementById('save-profile-details-btn');
-
-  if (!firstName || !lastName || !phone) {
-    if (msgEl) {
-      msgEl.textContent = 'Please fill all required profile fields.';
-      msgEl.className = 'text-xs text-red-600 font-medium text-center';
-      msgEl.classList.remove('hidden');
-    }
-    return;
-  }
 
   if (submitBtn) {
     submitBtn.disabled = true;
@@ -1350,7 +1310,6 @@ async function handleUpdateProfile(firstName, lastName, country, dialCode, phone
   const formattedPhone = phone.startsWith('+') ? phone : `${dialCode} ${phone}`.trim();
 
   try {
-    // 1. Update Supabase `public.profiles` table
     const { error: dbError } = await supabaseClient
       .from('profiles')
       .update({
@@ -1362,7 +1321,6 @@ async function handleUpdateProfile(firstName, lastName, country, dialCode, phone
 
     if (dbError) throw dbError;
 
-    // 2. Update Supabase `auth.users` user_metadata
     await supabaseClient.auth.updateUser({
       data: {
         first_name: firstName,
@@ -1374,7 +1332,6 @@ async function handleUpdateProfile(firstName, lastName, country, dialCode, phone
       }
     });
 
-    // Update in-memory profile
     userProfile.full_name = fullName;
     userProfile.phone = formattedPhone;
 
@@ -1384,7 +1341,6 @@ async function handleUpdateProfile(firstName, lastName, country, dialCode, phone
       msgEl.classList.remove('hidden');
     }
 
-    // Re-render header
     setTimeout(() => {
       renderProfileMain();
     }, 800);
@@ -1402,7 +1358,7 @@ async function handleUpdateProfile(firstName, lastName, country, dialCode, phone
   }
 }
 
-// Handle Real Supabase Sign Out (Purges Session State and In-Memory Orders)
+// Handle Sign Out
 async function handleSignOut() {
   if (typeof supabaseClient !== 'undefined' && supabaseClient) {
     try {
@@ -1410,13 +1366,16 @@ async function handleSignOut() {
       currentUser = null;
       userProfile = null;
       pendingVerificationEmail = null;
-      profileActiveTab = 'orders';
+      profileActiveTab = 'dashboard';
       currentAuthMode = 'login';
       if (typeof clearUserOrderState === 'function') {
         clearUserOrderState();
       }
       if (typeof clearNotificationState === 'function') {
         clearNotificationState();
+      }
+      if (typeof clearUserAddresses === 'function') {
+        clearUserAddresses();
       }
       console.log("Supabase Sign Out completed. In-memory session purged.");
       updateAdminNavVisibility();
@@ -1427,7 +1386,7 @@ async function handleSignOut() {
   }
 }
 
-// Render Specific Order Detail View with Visual Status Lifecycle Stepper
+// Render Order Detail View with Stepper, Payment Card, and Reorder CTA
 function openOrderDetail(orderId) {
   const profileContent = document.getElementById('profile-content');
   if (!profileContent || !orderId) return;
@@ -1452,7 +1411,6 @@ function openOrderDetail(orderId) {
   const isCancelled = currentStatus === 'cancelled';
   const isCancellable = ['placed', 'pending', 'confirmed'].includes(currentStatus);
 
-  // Status mapping for 5-stage progress indicator
   const stages = [
     { key: 'placed', label: 'Placed', icon: 'receipt' },
     { key: 'confirmed', label: 'Confirmed', icon: 'verified' },
@@ -1467,7 +1425,6 @@ function openOrderDetail(orderId) {
   if (currentStatus === 'completed') currentStageIndex = 4;
   if (currentStageIndex === -1 && !isCancelled) currentStageIndex = 0;
 
-  // Render Visual Stepper
   let stepperHTML = '';
   if (isCancelled) {
     stepperHTML = `
@@ -1483,11 +1440,9 @@ function openOrderDetail(orderId) {
     const stepsItemsHTML = stages.map((st, idx) => {
       const isCompleted = idx <= currentStageIndex;
       const isCurrent = idx === currentStageIndex;
-      
       const circleClass = isCurrent
         ? 'bg-tertiary text-on-tertiary ring-4 ring-tertiary/20 shadow-md scale-110'
         : (isCompleted ? 'bg-primary text-on-primary' : 'bg-surface-container-high text-on-surface-variant/50');
-      
       const labelClass = isCurrent
         ? 'text-primary font-black'
         : (isCompleted ? 'text-primary font-bold' : 'text-on-surface-variant/60 font-medium');
@@ -1512,7 +1467,6 @@ function openOrderDetail(orderId) {
         </div>
 
         <div class="relative flex items-center justify-between pt-2 pb-1">
-          <!-- Background Progress Bar Track -->
           <div class="absolute left-6 right-6 top-[22px] sm:top-[24px] h-1 bg-surface-container-high rounded-full -z-0">
             <div class="h-full bg-primary rounded-full transition-all duration-500" style="width: ${progressPercent}%;"></div>
           </div>
@@ -1540,14 +1494,19 @@ function openOrderDetail(orderId) {
 
   profileContent.innerHTML = `
     <div class="flex flex-col gap-4">
-      
       <!-- Back Navigation Header -->
       <div class="flex items-center justify-between border-b border-outline-variant/20 pb-2.5">
         <button id="back-to-orders-btn" class="inline-flex items-center gap-1.5 text-xs font-label-bold text-primary hover:text-tertiary transition-colors cursor-pointer py-1">
           <span class="material-symbols-outlined text-sm">arrow_back</span>
-          <span>Back to Orders</span>
+          <span>Back to Dashboard</span>
         </button>
-        <span class="text-xs font-bold text-on-surface-variant">Ref: <strong class="text-primary font-display">${order.orderId}</strong></span>
+        <div class="flex items-center gap-2">
+          <button data-reorder-id="${order.orderId}" class="reorder-order-btn bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary text-xs font-label-bold px-3 py-1 rounded-full transition-all flex items-center gap-1 cursor-pointer">
+            <span class="material-symbols-outlined text-sm">replay</span>
+            <span>Reorder</span>
+          </button>
+          <span class="text-xs font-bold text-on-surface-variant">Ref: <strong class="text-primary font-display">${order.orderId}</strong></span>
+        </div>
       </div>
 
       <!-- Stepper Tracking Widget -->
@@ -1608,7 +1567,7 @@ function openOrderDetail(orderId) {
           </div>
         </div>
 
-        <!-- Purchased Line Items (Immutable Historical Snapshot) -->
+        <!-- Purchased Line Items -->
         <div class="flex flex-col gap-1">
           <span class="text-[11px] text-on-surface-variant uppercase font-label-bold tracking-wider mb-0.5">Purchased Items</span>
           <div class="max-h-[140px] overflow-y-auto pr-1">
@@ -1617,66 +1576,59 @@ function openOrderDetail(orderId) {
         </div>
 
         <!-- Total Calculation -->
-        <div class="border-t border-outline-variant/20 pt-2.5 flex items-center justify-between">
-          <span class="font-display font-bold text-xs sm:text-sm text-primary">Subtotal Paid</span>
+        <div class="border-t border-outline-variant/20 pt-2 flex items-center justify-between">
+          <span class="font-label-bold text-xs text-on-surface-variant">Total Amount:</span>
           <span class="font-display font-black text-base sm:text-lg text-primary">$${Number(order.subtotal || 0).toFixed(2)}</span>
         </div>
       </div>
 
-      <!-- Order Cancellation Action Panel -->
-      ${isCancellable ? `
-        <div class="p-3.5 bg-surface rounded-2xl border border-outline-variant/25 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-          <div>
-            <span class="font-bold text-xs text-primary block">Need to make changes?</span>
-            <span class="text-[11px] text-on-surface-variant">You can cancel this order before kitchen preparation begins.</span>
-          </div>
-          <button id="cancel-order-btn" data-order-id="${order.orderId}" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 text-xs font-label-bold px-4 py-2 rounded-full transition-all cursor-pointer active:scale-95 self-start sm:self-auto">
+      <!-- Action Buttons: Reorder & Cancel -->
+      <div class="flex items-center justify-between flex-wrap gap-2 pt-1">
+        <button data-reorder-id="${order.orderId}" class="reorder-order-btn bg-tertiary text-on-tertiary hover:bg-primary font-label-bold text-xs py-2 px-5 rounded-full transition-all shadow-sm flex items-center gap-1.5 cursor-pointer active:scale-95">
+          <span class="material-symbols-outlined text-sm">replay</span>
+          <span>Reorder These Items</span>
+        </button>
+
+        ${isCancellable ? `
+          <button id="cancel-active-order-btn" class="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 font-label-bold text-xs py-2 px-4 rounded-full transition-all cursor-pointer">
             <span>Cancel Order</span>
           </button>
-        </div>
-      ` : (!isCancelled ? `
-        <div class="p-3 bg-surface-container-high/30 rounded-2xl border border-outline-variant/15 flex items-center gap-2 text-xs text-on-surface-variant">
-          <span class="material-symbols-outlined text-base text-secondary">lock</span>
-          <span>Kitchen preparation has begun. This order can no longer be cancelled.</span>
-        </div>
-      ` : '')}
-
+        ` : ''}
+      </div>
     </div>
   `;
 
   const backBtn = document.getElementById('back-to-orders-btn');
-  if (backBtn) {
-    backBtn.addEventListener('click', renderProfileMain);
-  }
+  if (backBtn) backBtn.addEventListener('click', renderProfileMain);
 
-  // Attach Cancel Order Action Listener
-  const cancelBtn = document.getElementById('cancel-order-btn');
+  document.querySelectorAll('.reorder-order-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-reorder-id');
+      if (id) handleReorderOrder(id);
+    });
+  });
+
+  const cancelBtn = document.getElementById('cancel-active-order-btn');
   if (cancelBtn) {
     cancelBtn.addEventListener('click', async () => {
-      if (!confirm("Are you sure you want to cancel this order? This action cannot be undone.")) return;
-
-      cancelBtn.disabled = true;
-      cancelBtn.innerHTML = '<span>Cancelling...</span>';
-
-      try {
+      if (confirm("Are you sure you want to cancel this order?")) {
         if (typeof cancelOrderInSupabase === 'function') {
-          await cancelOrderInSupabase(order.orderId);
+          try {
+            await cancelOrderInSupabase(order.orderId);
+            openOrderDetail(order.orderId);
+          } catch (e) {
+            alert(e.message || "Failed to cancel order.");
+          }
         }
-        openOrderDetail(order.orderId);
-      } catch (err) {
-        alert(err.message || "Failed to cancel order.");
-        cancelBtn.disabled = false;
-        cancelBtn.innerHTML = '<span>Cancel Order</span>';
       }
     });
   }
 }
 
-// Helper to get status badge CSS class
+// Helper to get badge CSS color based on status
 function getStatusBadgeClass(status) {
   switch ((status || '').toLowerCase()) {
     case 'delivered':
-    case 'completed':
       return 'bg-green-100 text-green-800 border border-green-300';
     case 'ready':
       return 'bg-blue-100 text-blue-800 border border-blue-300';
@@ -1691,83 +1643,27 @@ function getStatusBadgeClass(status) {
   }
 }
 
-// Initialize Profile and Auth Event Listeners on DOM Ready
+// Initialize Profile Handlers on DOM Ready
 document.addEventListener('DOMContentLoaded', () => {
-  // Initialize Supabase Auth Session
-  initSupabaseAuth();
-
   const profileBtn = document.getElementById('profile-btn');
   const mobileProfileBtn = document.getElementById('mobile-profile-btn');
   const closeProfileBtn = document.getElementById('close-profile-btn');
 
-  // Open Profile from Navbar Button (Desktop & Tablet)
-  if (profileBtn) {
-    profileBtn.addEventListener('click', openProfile);
-  }
+  if (profileBtn) profileBtn.addEventListener('click', openProfile);
+  if (mobileProfileBtn) mobileProfileBtn.addEventListener('click', openProfile);
+  if (closeProfileBtn) closeProfileBtn.addEventListener('click', closeProfile);
 
-  // Open Profile from Mobile Menu Drawer
-  if (mobileProfileBtn) {
-    mobileProfileBtn.addEventListener('click', () => {
-      const mobileMenu = document.getElementById('mobile-menu');
-      if (mobileMenu) mobileMenu.classList.add('hidden');
-      openProfile();
-    });
-  }
-
-  // Close Profile Modal Button
-  if (closeProfileBtn) {
-    closeProfileBtn.addEventListener('click', closeProfile);
-  }
-
-  // Close Modal on Background Overlay Click
-  const profileOverlay = document.getElementById('profile-overlay');
-  if (profileOverlay) {
-    profileOverlay.addEventListener('click', closeProfile);
-  }
-
-  // Escape key closes profile modal
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      closeProfile();
-    }
-  });
-
-  // View order detail click delegation from order history cards
-  document.addEventListener('click', (e) => {
-    const viewBtn = e.target.closest('.view-order-btn');
-    if (viewBtn) {
-      const orderId = viewBtn.getAttribute('data-order-id');
-      if (orderId) {
-        openOrderDetail(orderId);
-      }
-    }
-  });
+  initSupabaseAuth();
 });
 
-// Helper for opening menu section from inside profile
-function browseMenuFromProfile() {
-  closeProfile();
-  const menuSection = document.getElementById('menu-section');
-  if (menuSection) {
-    menuSection.scrollIntoView({ behavior: 'smooth' });
-  }
-}
-
-// Exports for testing / Node environments
+// Exports for Node testing
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    fetchOrCreateUserProfile,
-    handleSignIn,
-    handleSignUp,
-    handleSignOut,
-    handleForgotPassword,
-    handleResetPassword,
-    handleChangePassword,
-    handleChangeEmail,
-    handleUpdateProfile,
-    renderProfileMain,
+    initSupabaseAuth,
     openProfile,
     closeProfile,
+    renderProfileMain,
+    handleReorderOrder,
     openOrderDetail
   };
 }
