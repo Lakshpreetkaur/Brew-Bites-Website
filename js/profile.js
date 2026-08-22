@@ -20,6 +20,29 @@ const COUNTRIES = [
   { name: "New Zealand", code: "NZ", dial: "+64", flag: "🇳🇿" }
 ];
 
+// Update visibility of Navbar Admin Badges / Buttons
+function updateAdminNavVisibility() {
+  const isAdmin = !!(userProfile && userProfile.role === 'admin');
+  const navAdminBtn = document.getElementById('nav-admin-btn');
+  const mobileNavAdminBtn = document.getElementById('mobile-nav-admin-btn');
+
+  if (navAdminBtn) {
+    if (isAdmin) {
+      navAdminBtn.style.setProperty('display', 'inline-flex', 'important');
+    } else {
+      navAdminBtn.style.setProperty('display', 'none', 'important');
+    }
+  }
+
+  if (mobileNavAdminBtn) {
+    if (isAdmin) {
+      mobileNavAdminBtn.style.setProperty('display', 'flex', 'important');
+    } else {
+      mobileNavAdminBtn.style.setProperty('display', 'none', 'important');
+    }
+  }
+}
+
 // Global Auth & Profile State
 let currentUser = null;
 let userProfile = null;
@@ -39,7 +62,10 @@ async function initSupabaseAuth() {
         if (typeof fetchOrdersForUser === 'function') {
           await fetchOrdersForUser(currentUser.id);
         }
+      } else {
+        userProfile = null;
       }
+      updateAdminNavVisibility();
 
       supabaseClient.auth.onAuthStateChange(async (_event, session) => {
         currentUser = session?.user || null;
@@ -55,6 +81,8 @@ async function initSupabaseAuth() {
           }
         }
 
+        updateAdminNavVisibility();
+
         const profileModal = document.getElementById('profile-modal');
         if (profileModal && profileModal.classList.contains('opacity-100')) {
           renderProfileMain();
@@ -62,7 +90,32 @@ async function initSupabaseAuth() {
       });
     } catch (err) {
       console.warn("Could not retrieve Supabase session:", err);
+      updateAdminNavVisibility();
     }
+  } else {
+    updateAdminNavVisibility();
+  }
+}
+
+// Fetch user authorization role from public.user_roles table
+async function fetchUserRole(userId) {
+  if (!userId || typeof supabaseClient === 'undefined' || !supabaseClient) return 'customer';
+  try {
+    const { data, error } = await supabaseClient
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId);
+
+    if (error) {
+      return 'customer';
+    }
+
+    if (Array.isArray(data) && data.some(r => r.role === 'admin')) {
+      return 'admin';
+    }
+    return 'customer';
+  } catch (err) {
+    return 'customer';
   }
 }
 
@@ -73,7 +126,7 @@ async function fetchOrCreateUserProfile(user, extraMetadata = null) {
   try {
     isProfileLoading = true;
 
-    // 1. Query the existing `profiles` table for this authenticated user ID
+    // 1. Query the existing `profiles` table for this authenticated user ID (id, full_name, email, phone, created_at, updated_at)
     const { data: profile, error } = await supabaseClient
       .from('profiles')
       .select('id, full_name, email, phone, created_at, updated_at')
@@ -84,13 +137,20 @@ async function fetchOrCreateUserProfile(user, extraMetadata = null) {
       console.warn("Supabase profiles table query note:", error.message);
     }
 
+    // 2. Fetch role from user_roles
+    const role = await fetchUserRole(user.id);
+
     if (profile && profile.full_name) {
-      userProfile = profile;
+      userProfile = {
+        ...profile,
+        role: role
+      };
       isProfileLoading = false;
-      return profile;
+      updateAdminNavVisibility();
+      return userProfile;
     }
 
-    // 2. If profile is missing or needs creation, build payload using verified columns
+    // 3. If profile is missing or needs creation, build payload using verified columns
     const meta = user.user_metadata || {};
     const firstName = extraMetadata?.firstName || meta.first_name || '';
     const lastName = extraMetadata?.lastName || meta.last_name || '';
@@ -115,22 +175,31 @@ async function fetchOrCreateUserProfile(user, extraMetadata = null) {
 
     if (insertError) {
       console.error("Could not upsert into Supabase profiles table:", insertError.message);
-      userProfile = newProfileData;
+      userProfile = {
+        ...newProfileData,
+        role: role
+      };
     } else {
-      userProfile = insertedProfile || newProfileData;
+      userProfile = {
+        ...(insertedProfile || newProfileData),
+        role: role
+      };
       console.log("Profile successfully synchronized to Supabase:", userProfile);
     }
 
     isProfileLoading = false;
+    updateAdminNavVisibility();
     return userProfile;
   } catch (err) {
     console.warn("Error handling Supabase profile:", err);
     userProfile = {
       id: user.id,
       full_name: user.user_metadata?.full_name || user.email.split('@')[0] || 'Brew & Bite Member',
-      email: user.email
+      email: user.email,
+      role: 'customer'
     };
     isProfileLoading = false;
+    updateAdminNavVisibility();
     return userProfile;
   }
 }
@@ -261,6 +330,8 @@ function renderProfileMain() {
       `;
     }
 
+    const isAdmin = userProfile?.role === 'admin';
+
     profileContent.innerHTML = `
       <div class="flex flex-col gap-5">
         
@@ -271,7 +342,10 @@ function renderProfileMain() {
               ${initial}
             </div>
             <div>
-              <h3 class="font-display text-base sm:text-lg font-bold text-primary">${displayName}</h3>
+              <div class="flex items-center gap-2">
+                <h3 class="font-display text-base sm:text-lg font-bold text-primary">${displayName}</h3>
+                ${isAdmin ? `<span class="px-2.5 py-0.5 rounded-full bg-tertiary/15 border border-tertiary/30 text-tertiary font-label-bold text-[10px] uppercase tracking-wider">Admin</span>` : ''}
+              </div>
               <p class="text-xs text-on-surface-variant font-medium">${displayEmail}</p>
               ${displayCountry || displayPhone ? `
                 <div class="flex items-center gap-2 mt-1 text-[11px] text-on-surface-variant font-medium">
@@ -282,10 +356,17 @@ function renderProfileMain() {
             </div>
           </div>
 
-          <div class="flex items-center gap-2.5">
-            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary/15 border border-secondary/30 text-secondary font-label-bold text-[10px] uppercase tracking-wider">
-              <span>Verified Account</span>
-            </span>
+          <div class="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+            ${isAdmin ? `
+              <button id="profile-open-admin-btn" class="bg-primary text-on-primary hover:bg-tertiary font-label-bold text-xs py-1.5 px-3.5 rounded-full transition-all duration-200 shadow-sm flex items-center gap-1.5 cursor-pointer active:scale-95">
+                <span class="material-symbols-outlined text-sm">dashboard</span>
+                <span>Admin Dashboard</span>
+              </button>
+            ` : `
+              <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary/15 border border-secondary/30 text-secondary font-label-bold text-[10px] uppercase tracking-wider">
+                <span>Verified Account</span>
+              </span>
+            `}
             <button id="auth-signout-btn" class="text-xs text-on-surface-variant hover:text-red-600 flex items-center gap-1 font-label-bold border border-outline-variant/40 hover:border-red-300 px-3 py-1.5 rounded-full transition-colors cursor-pointer active:scale-95">
               <span>Sign Out</span>
               <span class="material-symbols-outlined text-sm">logout</span>
@@ -305,6 +386,16 @@ function renderProfileMain() {
 
       </div>
     `;
+
+    // Admin Dashboard Button Listener
+    const adminBtn = document.getElementById('profile-open-admin-btn');
+    if (adminBtn) {
+      adminBtn.addEventListener('click', () => {
+        if (typeof openAdminDashboard === 'function') {
+          openAdminDashboard();
+        }
+      });
+    }
 
     // Signout listener
     const signoutBtn = document.getElementById('auth-signout-btn');
@@ -507,6 +598,7 @@ async function handleSignIn(email, password) {
       if (typeof fetchOrdersForUser === 'function') {
         await fetchOrdersForUser(currentUser.id);
       }
+      updateAdminNavVisibility();
       renderProfileMain();
     }
   } catch (err) {
@@ -629,6 +721,7 @@ async function handleSignOut() {
         clearUserOrderState();
       }
       console.log("Supabase Sign Out completed. In-memory session purged.");
+      updateAdminNavVisibility();
       renderProfileMain();
     } catch (err) {
       console.warn("Sign Out error:", err);

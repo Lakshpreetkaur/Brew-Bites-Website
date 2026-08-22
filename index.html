@@ -123,6 +123,12 @@
 
     <!-- Right: Profile Button, Cart Button, Order Now Button & Mobile Hamburger -->
     <div class="flex items-center gap-2 sm:gap-3">
+      <!-- Admin Dashboard Quick Button (Hidden unless admin logged in) -->
+      <button id="nav-admin-btn" style="display: none;" onclick="if(typeof openAdminDashboard==='function') openAdminDashboard()" aria-label="Open Admin Dashboard" class="items-center gap-1.5 px-3.5 py-2 rounded-full bg-tertiary text-on-tertiary font-label-bold text-xs shadow-sm hover:scale-105 transition-all cursor-pointer">
+        <span class="material-symbols-outlined text-sm">dashboard</span>
+        <span>Admin</span>
+      </button>
+
       <!-- Profile Button -->
       <button id="profile-btn" aria-label="Customer Profile & Order History" class="flex items-center justify-center p-2.5 rounded-full bg-white/20 hover:bg-white/40 border border-white/30 text-primary transition-all duration-200 cursor-pointer shadow-xs active:scale-95">
         <span class="material-symbols-outlined text-xl">person</span>
@@ -159,6 +165,10 @@
       <button id="mobile-profile-btn" class="font-label-bold text-base text-primary/90 hover:text-tertiary py-1 text-left flex items-center gap-2 cursor-pointer">
         <span class="material-symbols-outlined text-lg">person</span>
         <span>My Profile &amp; Orders</span>
+      </button>
+      <button id="mobile-nav-admin-btn" style="display: none;" onclick="if(typeof openAdminDashboard==='function') openAdminDashboard()" class="font-label-bold text-base text-tertiary hover:text-primary py-1 text-left items-center gap-2 cursor-pointer">
+        <span class="material-symbols-outlined text-lg">dashboard</span>
+        <span>Admin Dashboard</span>
       </button>
     </div>
     <div class="pt-2 px-2 pb-1">
@@ -516,21 +526,54 @@
   </div>
 </div>
 
+<!-- Full-Page Admin Dashboard Modal -->
+<div id="admin-modal" role="dialog" aria-labelledby="admin-title" aria-modal="true" class="fixed inset-0 z-50 bg-black/65 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto">
+  <div id="admin-overlay" class="absolute inset-0 -z-10"></div>
+  <div id="admin-modal-card" class="w-full max-w-5xl max-h-[94vh] overflow-y-auto bg-surface-container-lowest text-on-surface rounded-3xl shadow-2xl border border-outline-variant/30 flex flex-col transform scale-95 transition-transform duration-300 my-auto">
+    
+    <!-- Admin Modal Header -->
+    <div class="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-outline-variant/20 bg-surface/80 backdrop-blur-sm sticky top-0 z-20">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-tertiary/15 text-tertiary flex items-center justify-center font-bold shadow-xs">
+          <span class="material-symbols-outlined text-2xl">admin_panel_settings</span>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 id="admin-title" class="font-display text-xl sm:text-2xl font-black text-primary tracking-tight">Admin Dashboard</h2>
+            <span class="px-2 py-0.5 rounded-full bg-tertiary text-on-tertiary font-label-bold text-[10px] uppercase tracking-wider">Store Owner</span>
+          </div>
+          <p class="text-xs text-on-surface-variant">Live Management of Customers, Orders, &amp; Products</p>
+        </div>
+      </div>
+      <button id="close-admin-btn" aria-label="Close Admin Dashboard" class="p-2 rounded-full text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors cursor-pointer flex items-center justify-center">
+        <span class="material-symbols-outlined text-2xl">close</span>
+      </button>
+    </div>
+
+    <!-- Admin Dynamic Dashboard Content -->
+    <div id="admin-dashboard-content" class="p-4 sm:p-6 md:p-8">
+      <!-- Injected via js/admin.js -->
+    </div>
+  </div>
+</div>
+
 <!-- Supabase Official CDN Client Library -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Supabase Client Initialization -->
-<script src="js/supabase.js?v=1.3" defer></script>
+<script src="js/supabase.js?v=2.1" defer></script>
 <!-- Product Catalog Data -->
-<script src="js/products.js?v=1.3" defer></script>
+<script src="js/products.js?v=2.1" defer></script>
 <!-- Shopping Cart Module -->
-<script src="js/cart.js?v=1.3" defer></script>
+<script src="js/cart.js?v=2.1" defer></script>
 <!-- Order Management Data Layer -->
-<script src="js/orders.js?v=1.3" defer></script>
+<script src="js/orders.js?v=2.1" defer></script>
 <!-- Checkout Module -->
-<script src="js/checkout.js?v=1.3" defer></script>
+<script src="js/checkout.js?v=2.1" defer></script>
 <!-- Customer Profile & Order History Module -->
-<script src="js/profile.js?v=1.3" defer></script>
+<script src="js/profile.js?v=2.1" defer></script>
+<!-- Admin Dashboard Module -->
+<script src="js/admin.js?v=2.1" defer></script>
 <!-- Main Application JavaScript -->
-<script src="js/main.js?v=1.3" defer></script>
+<script src="js/main.js?v=2.1" defer></script>
 </body>
 </html>

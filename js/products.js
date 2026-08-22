@@ -225,6 +225,107 @@ async function fetchProductsFromSupabase(retryCount = 0) {
   return PRODUCTS;
 }
 
+/**
+ * Admin: Update an existing product in Supabase.
+ */
+async function updateProductInSupabase(productId, updates) {
+  if (!productId || typeof supabaseClient === 'undefined' || !supabaseClient) {
+    throw new Error("Supabase client not available or invalid product ID.");
+  }
+
+  const payload = {
+    ...updates,
+    updated_at: new Date().toISOString()
+  };
+
+  if (payload.category) {
+    payload.category = normalizeCategory(payload.category);
+  }
+  if (payload.price !== undefined) {
+    payload.price = Number(payload.price);
+  }
+  if (payload.available !== undefined) {
+    payload.available = normalizeProductAvailable(payload.available);
+  }
+
+  const { data, error } = await supabaseClient
+    .from('products')
+    .update(payload)
+    .eq('id', productId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error updating product in Supabase:", error.message);
+    throw error;
+  }
+
+  // Refresh local product catalog and notify listeners
+  await fetchProductsFromSupabase();
+  return data;
+}
+
+/**
+ * Admin: Create a new product in Supabase.
+ */
+async function createProductInSupabase(productData) {
+  if (!productData || !productData.id || !productData.name || typeof supabaseClient === 'undefined' || !supabaseClient) {
+    throw new Error("Invalid product payload or Supabase client disconnected.");
+  }
+
+  const category = normalizeCategory(productData.category);
+  const payload = {
+    id: String(productData.id).trim().toLowerCase().replace(/[^a-z0-9-_]/g, '-'),
+    name: String(productData.name).trim(),
+    category: category,
+    description: String(productData.description || '').trim(),
+    price: Number(productData.price) || 0,
+    image: String(productData.image || '').trim() || (category === 'bites' ? DEFAULT_BITE_IMAGE : DEFAULT_COFFEE_IMAGE),
+    accent_color: String(productData.accentColor || productData.accent_color || 'bg-secondary-container').trim(),
+    available: normalizeProductAvailable(productData.available),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+
+  const { data, error } = await supabaseClient
+    .from('products')
+    .insert([payload])
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Error creating product in Supabase:", error.message);
+    throw error;
+  }
+
+  // Refresh local product catalog and notify listeners
+  await fetchProductsFromSupabase();
+  return data;
+}
+
+/**
+ * Admin: Delete a product from Supabase.
+ */
+async function deleteProductInSupabase(productId) {
+  if (!productId || typeof supabaseClient === 'undefined' || !supabaseClient) {
+    throw new Error("Invalid product ID or Supabase client disconnected.");
+  }
+
+  const { error } = await supabaseClient
+    .from('products')
+    .delete()
+    .eq('id', productId);
+
+  if (error) {
+    console.error("Error deleting product from Supabase:", error.message);
+    throw error;
+  }
+
+  // Refresh local product catalog and notify listeners
+  await fetchProductsFromSupabase();
+  return true;
+}
+
 // Automatically trigger product fetch immediately and on DOMContentLoaded
 if (typeof document !== 'undefined') {
   // Trigger immediate fetch
@@ -239,5 +340,16 @@ if (typeof document !== 'undefined') {
 
 // If running in a Node environment (testing/build), export the catalog & helpers
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { PRODUCTS, STATIC_PRODUCTS, getProductById, fetchProductsFromSupabase, onProductsUpdated, normalizeProductAvailable, normalizeCategory };
+  module.exports = {
+    PRODUCTS,
+    STATIC_PRODUCTS,
+    getProductById,
+    fetchProductsFromSupabase,
+    onProductsUpdated,
+    normalizeProductAvailable,
+    normalizeCategory,
+    updateProductInSupabase,
+    createProductInSupabase,
+    deleteProductInSupabase
+  };
 }
