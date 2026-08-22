@@ -127,7 +127,16 @@ async function updateAdminOrderStatus(orderId, newStatus) {
     }
 
     const found = adminOrders.find(o => o.id === orderId);
-    if (found) found.status = newStatus;
+    if (found) {
+      found.status = newStatus;
+
+      // Dispatch in-app notification to customer (Non-blocking)
+      if (typeof notifyOrderStatusChanged === 'function' && found.user_id) {
+        notifyOrderStatusChanged(found, newStatus, found.user_id).catch(err => {
+          console.warn("Notice: status notification dispatch note:", err);
+        });
+      }
+    }
 
     renderAdminDashboard();
   } catch (err) {

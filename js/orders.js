@@ -443,11 +443,6 @@ async function cancelOrderInSupabase(orderId) {
     .update({ status: 'cancelled' })
     .eq('id', targetId);
 
-  if (error) {
-    console.error("Failed to cancel order in Supabase:", error);
-    throw new Error(error.message || "Failed to cancel order.");
-  }
-
   // Update in-memory state
   order.status = 'cancelled';
 
@@ -461,6 +456,13 @@ async function cancelOrderInSupabase(orderId) {
         console.warn("Could not update local cache after cancellation:", e);
       }
     }
+  }
+
+  // Dispatch In-App Cancellation Notifications (Non-blocking)
+  if (typeof notifyOrderCancelled === 'function' && typeof currentUser !== 'undefined' && currentUser) {
+    notifyOrderCancelled(order, currentUser).catch(err => {
+      console.warn("Notice: cancellation notification note:", err);
+    });
   }
 
   return order;

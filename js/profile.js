@@ -78,8 +78,17 @@ async function initSupabaseAuth() {
             }
           });
         }
+        if (typeof fetchUserNotifications === 'function') {
+          fetchUserNotifications(currentUser.id);
+        }
+        if (typeof subscribeToUserNotifications === 'function') {
+          subscribeToUserNotifications(currentUser.id);
+        }
       } else {
         userProfile = null;
+        if (typeof clearNotificationState === 'function') {
+          clearNotificationState();
+        }
       }
       updateAdminNavVisibility();
 
@@ -106,10 +115,19 @@ async function initSupabaseAuth() {
               }
             });
           }
+          if (typeof fetchUserNotifications === 'function') {
+            fetchUserNotifications(currentUser.id);
+          }
+          if (typeof subscribeToUserNotifications === 'function') {
+            subscribeToUserNotifications(currentUser.id);
+          }
         } else {
           userProfile = null;
           if (typeof clearUserOrderState === 'function') {
             clearUserOrderState();
+          }
+          if (typeof clearNotificationState === 'function') {
+            clearNotificationState();
           }
         }
 
@@ -1396,6 +1414,9 @@ async function handleSignOut() {
       currentAuthMode = 'login';
       if (typeof clearUserOrderState === 'function') {
         clearUserOrderState();
+      }
+      if (typeof clearNotificationState === 'function') {
+        clearNotificationState();
       }
       console.log("Supabase Sign Out completed. In-memory session purged.");
       updateAdminNavVisibility();

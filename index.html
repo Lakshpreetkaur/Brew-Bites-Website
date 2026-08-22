@@ -121,12 +121,19 @@
       <a href="#reviews-section" class="font-label-bold text-sm text-primary/80 hover:text-tertiary hover:scale-105 transition-all">Reviews</a>
     </nav>
 
-    <!-- Right: Profile Button, Cart Button, Order Now Button & Mobile Hamburger -->
+    <!-- Right: Notifications, Profile, Cart, Order Now & Mobile Hamburger -->
     <div class="flex items-center gap-2 sm:gap-3">
       <!-- Admin Dashboard Quick Button (Hidden unless admin logged in) -->
       <button id="nav-admin-btn" style="display: none;" onclick="if(typeof openAdminDashboard==='function') openAdminDashboard()" aria-label="Open Admin Dashboard" class="items-center gap-1.5 px-3.5 py-2 rounded-full bg-tertiary text-on-tertiary font-label-bold text-xs shadow-sm hover:scale-105 transition-all cursor-pointer">
         <span class="material-symbols-outlined text-sm">dashboard</span>
         <span>Admin</span>
+      </button>
+
+      <!-- Notification Bell Button -->
+      <button id="notification-btn" aria-label="View Notifications" class="relative flex items-center justify-center p-2.5 rounded-full bg-white/20 hover:bg-white/40 border border-white/30 text-primary transition-all duration-200 cursor-pointer shadow-xs active:scale-95">
+        <span class="material-symbols-outlined text-xl">notifications</span>
+        <!-- Notification Badge Counter -->
+        <span id="notification-badge" class="hidden absolute -top-1 -right-1 bg-tertiary text-on-tertiary font-label-bold text-[10px] leading-none min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center shadow-sm">0</span>
       </button>
 
       <!-- Profile Button -->
@@ -162,6 +169,13 @@
       <a href="#bites-section" class="mobile-nav-link font-label-bold text-base text-primary/90 hover:text-tertiary py-1">Bites</a>
       <a href="#story-section" class="mobile-nav-link font-label-bold text-base text-primary/90 hover:text-tertiary py-1">Our Story</a>
       <a href="#reviews-section" class="mobile-nav-link font-label-bold text-base text-primary/90 hover:text-tertiary py-1">Reviews</a>
+      <button id="mobile-notification-btn" class="font-label-bold text-base text-primary/90 hover:text-tertiary py-1 text-left flex items-center justify-between cursor-pointer">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-lg">notifications</span>
+          <span>Notifications</span>
+        </div>
+        <span id="mobile-notification-badge" class="hidden bg-tertiary text-on-tertiary font-label-bold text-[10px] px-2 py-0.5 rounded-full">0</span>
+      </button>
       <button id="mobile-profile-btn" class="font-label-bold text-base text-primary/90 hover:text-tertiary py-1 text-left flex items-center gap-2 cursor-pointer">
         <span class="material-symbols-outlined text-lg">person</span>
         <span>My Profile &amp; Orders</span>
@@ -179,6 +193,31 @@
     </div>
   </div>
 </header>
+
+<!-- Floating Notification Center Panel -->
+<div id="notification-panel" class="fixed top-20 sm:top-24 right-4 sm:right-12 md:right-24 w-[92vw] sm:w-[380px] max-w-[420px] bg-surface-container-lowest text-on-surface z-50 rounded-3xl shadow-2xl border border-outline-variant/30 opacity-0 pointer-events-none scale-95 transition-all duration-200 ease-out flex flex-col max-h-[75vh]">
+  <!-- Panel Header -->
+  <div class="flex items-center justify-between px-5 py-4 border-b border-outline-variant/20 bg-surface/60 backdrop-blur-xs rounded-t-3xl">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary text-xl">notifications</span>
+      <h3 class="font-display text-sm font-bold text-primary">Notifications</h3>
+      <span id="notification-unread-header-count" class="text-[10px] font-bold text-secondary"></span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button id="mark-all-read-btn" class="text-[11px] font-label-bold text-secondary hover:text-tertiary transition-colors cursor-pointer">
+        <span>Mark all read</span>
+      </button>
+      <button id="close-notification-panel-btn" class="p-1 rounded-full text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
+        <span class="material-symbols-outlined text-lg">close</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Scrollable Notifications List -->
+  <div id="notification-list" class="flex-1 overflow-y-auto p-3.5 flex flex-col gap-2">
+    <!-- Populated via js/notifications.js -->
+  </div>
+</div>
 
 <!-- Scroll Animation Section (Hero) -->
 <section id="animation-container" class="relative w-full h-[300vh] bg-surface-container-low overflow-clip">
@@ -560,20 +599,22 @@
 <!-- Supabase Official CDN Client Library -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- Supabase Client Initialization -->
-<script src="js/supabase.js?v=2.4" defer></script>
+<script src="js/supabase.js?v=2.5" defer></script>
 <!-- Product Catalog Data -->
-<script src="js/products.js?v=2.4" defer></script>
+<script src="js/products.js?v=2.5" defer></script>
 <!-- Shopping Cart Module -->
-<script src="js/cart.js?v=2.4" defer></script>
+<script src="js/cart.js?v=2.5" defer></script>
 <!-- Order Management Data Layer -->
-<script src="js/orders.js?v=2.4" defer></script>
+<script src="js/orders.js?v=2.5" defer></script>
+<!-- Notifications Module -->
+<script src="js/notifications.js?v=2.5" defer></script>
 <!-- Checkout Module -->
-<script src="js/checkout.js?v=2.4" defer></script>
+<script src="js/checkout.js?v=2.5" defer></script>
 <!-- Customer Profile & Order History Module -->
-<script src="js/profile.js?v=2.4" defer></script>
+<script src="js/profile.js?v=2.5" defer></script>
 <!-- Admin Dashboard Module -->
-<script src="js/admin.js?v=2.4" defer></script>
+<script src="js/admin.js?v=2.5" defer></script>
 <!-- Main Application JavaScript -->
-<script src="js/main.js?v=2.4" defer></script>
+<script src="js/main.js?v=2.5" defer></script>
 </body>
 </html>

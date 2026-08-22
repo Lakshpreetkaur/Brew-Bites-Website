@@ -499,6 +499,13 @@ async function handlePlaceOrder(event) {
       clearCart();
     }
 
+    // 8.1 Dispatch Customer and Admin In-App Notifications (Non-blocking)
+    if (typeof notifyOrderPlaced === 'function') {
+      notifyOrderPlaced(completedOrder, currentUser).catch(err => {
+        console.warn("Notice: notification dispatch note:", err);
+      });
+    }
+
     // 9. Render Confirmation Receipt View
     renderOrderSuccess(completedOrder);
   } catch (err) {
