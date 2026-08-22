@@ -107,7 +107,7 @@ function renderProducts() {
         return `
           <div class="bg-surface-container-lowest rounded-3xl p-5 shadow-md hover:shadow-lg hover:-translate-y-1.5 transition-all duration-300 border border-outline-variant/30 flex flex-col items-center text-center group ${!isAvailable ? 'opacity-70' : ''}">
             <div class="w-36 h-36 sm:w-40 sm:h-40 ${item.accentColor || 'bg-secondary-container'} rounded-full mb-4 overflow-hidden flex items-center justify-center p-3 group-hover:scale-105 transition-transform relative">
-              <img alt="${item.name}" class="w-full h-full object-cover rounded-full" src="${imgSrc}" />
+              <img alt="${item.name}" onerror="this.onerror=null; this.src='assets/frames/ezgif-frame-001.jpg'" class="w-full h-full object-cover rounded-full" src="${imgSrc}" />
               ${!isAvailable ? `<span class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center text-white text-[11px] font-label-bold uppercase">Sold Out</span>` : ''}
             </div>
             
@@ -153,7 +153,7 @@ function renderProducts() {
         return `
           <div class="bg-surface-container-lowest rounded-3xl p-5 shadow-md hover:shadow-lg hover:-translate-y-1.5 transition-all duration-300 border border-outline-variant/30 flex flex-row items-center gap-5 group ${!isAvailable ? 'opacity-70' : ''}">
             <div class="w-28 h-28 sm:w-32 sm:h-32 ${item.accentColor || 'bg-secondary-container'} rounded-2xl overflow-hidden flex-shrink-0 relative">
-              <img alt="${item.name}" class="w-full h-full object-cover group-hover:scale-110 transition-transform" src="${imgSrc}" />
+              <img alt="${item.name}" onerror="this.onerror=null; this.src='assets/frames/ezgif-frame-001.jpg'" class="w-full h-full object-cover group-hover:scale-110 transition-transform" src="${imgSrc}" />
               ${!isAvailable ? `<span class="absolute inset-0 bg-black/50 rounded-2xl flex items-center justify-center text-white text-[10px] font-label-bold uppercase">Sold Out</span>` : ''}
             </div>
             <div class="flex flex-col items-start justify-between flex-1 h-full py-0.5">
@@ -213,12 +213,34 @@ document.addEventListener('DOMContentLoaded', () => {
     imgElement.src = initialFrameSrc;
   }
 
-  // 1. Image Sequence Scroll-Driven Animation
+  // 1. Image Sequence Scroll-Driven Animation (Performance Optimized)
   let currentFrame = 1;
   let isTicking = false;
+  const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Frame preloader cache for smooth buttery scrolling
+  const frameCache = {};
+  function preloadNearbyFrames(centerFrame) {
+    if (prefersReducedMotion) return;
+    const range = 5;
+    for (let i = Math.max(1, centerFrame - range); i <= Math.min(FRAME_COUNT, centerFrame + range); i++) {
+      if (!frameCache[i]) {
+        const img = new Image();
+        img.src = `assets/frames/ezgif-frame-${padFrame(i)}.jpg`;
+        frameCache[i] = img;
+      }
+    }
+  }
 
   function updateFrame() {
     if (!heroSection || !imgElement) return;
+
+    // Respect reduced motion preference
+    if (prefersReducedMotion) {
+      if (imgElement.src !== initialFrameSrc) imgElement.src = initialFrameSrc;
+      isTicking = false;
+      return;
+    }
 
     const scrollY = window.scrollY || window.pageYOffset;
     const heroHeight = heroSection.offsetHeight;
@@ -234,6 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (targetFrame !== currentFrame) {
       currentFrame = targetFrame;
       imgElement.src = `assets/frames/ezgif-frame-${padFrame(currentFrame)}.jpg`;
+      preloadNearbyFrames(currentFrame);
     }
 
     // 2. Hide scroll hint once user starts scrolling
