@@ -30,6 +30,25 @@ let profileActiveTab = 'dashboard'; // 'dashboard' | 'orders' | 'addresses' | 'd
 let pendingVerificationEmail = null;
 let authNotificationMsg = null;
 let editingAddressId = null; // null for new address, or ID for editing
+let isPasswordRecoveryMode = false;
+
+// Immediate Detection of Recovery Token at Script Load Time (checks early bootstrap and live URL)
+const initLocationHash = window.location.hash || '';
+const initLocationSearch = window.location.search || '';
+const isInitialRecoveryDetected = (
+  window.__bb_recovery_detected ||
+  initLocationHash.includes('type=recovery') ||
+  initLocationSearch.includes('type=recovery') ||
+  (initLocationHash.includes('access_token=') && initLocationHash.includes('type=recovery'))
+);
+
+if (isInitialRecoveryDetected) {
+  isPasswordRecoveryMode = true;
+  currentAuthMode = 'reset_password';
+  console.log("[Auth Recovery Stage 2: URL/Token] Recovery tokens detected at page load.");
+  console.log("[Auth Recovery Stage 4: currentAuthMode] currentAuthMode set to:", currentAuthMode);
+  console.log("[Auth Recovery Stage 5: isPasswordRecoveryMode] isPasswordRecoveryMode set to:", isPasswordRecoveryMode);
+}
 
 // Update visibility of Navbar Admin Badges / Buttons
 function updateAdminNavVisibility() {
@@ -58,53 +77,38 @@ function updateAdminNavVisibility() {
 async function initSupabaseAuth() {
   if (typeof supabaseClient !== 'undefined' && supabaseClient) {
     try {
-      // Check for password recovery hash in URL
-      if (window.location.hash && (window.location.hash.includes('type=recovery') || window.location.hash.includes('access_token='))) {
+      const currentHash = window.location.hash || '';
+      const currentSearch = window.location.search || '';
+      if (
+        window.__bb_recovery_detected ||
+        currentHash.includes('type=recovery') ||
+        currentSearch.includes('type=recovery') ||
+        (currentHash.includes('access_token=') && currentHash.includes('type=recovery'))
+      ) {
+        isPasswordRecoveryMode = true;
         currentAuthMode = 'reset_password';
-        openProfile();
+        console.log("[Auth Recovery Stage 2: URL/Token] Recovery state verified during auth initialization.");
       }
 
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      currentUser = session?.user || null;
-
-      if (currentUser) {
-        await fetchOrCreateUserProfile(currentUser);
-        if (typeof fetchOrdersForUser === 'function') {
-          await fetchOrdersForUser(currentUser.id);
-        }
-        if (typeof fetchUserAddresses === 'function') {
-          await fetchUserAddresses(currentUser.id);
-        }
-        if (typeof subscribeToUserOrders === 'function') {
-          subscribeToUserOrders(currentUser.id, () => {
-            const profileModal = document.getElementById('profile-modal');
-            if (profileModal && profileModal.classList.contains('opacity-100')) {
-              renderProfileMain();
-            }
-          });
-        }
-        if (typeof fetchUserNotifications === 'function') {
-          fetchUserNotifications(currentUser.id);
-        }
-        if (typeof subscribeToUserNotifications === 'function') {
-          subscribeToUserNotifications(currentUser.id);
-        }
-      } else {
-        userProfile = null;
-        if (typeof clearNotificationState === 'function') {
-          clearNotificationState();
-        }
-        if (typeof clearUserAddresses === 'function') {
-          clearUserAddresses();
-        }
-      }
-      updateAdminNavVisibility();
-
+      // Register onAuthStateChange immediately
       supabaseClient.auth.onAuthStateChange(async (event, session) => {
         console.log(`[Supabase Auth Event] ${event}`);
 
         if (event === 'PASSWORD_RECOVERY') {
+          console.log("[Auth Recovery Stage 3: PASSWORD_RECOVERY event] Event received:", event, "User:", session?.user?.email);
+          isPasswordRecoveryMode = true;
           currentAuthMode = 'reset_password';
+          currentUser = session?.user || null;
+          console.log("[Auth Recovery Stage 4: currentAuthMode] currentAuthMode:", currentAuthMode);
+          console.log("[Auth Recovery Stage 5: isPasswordRecoveryMode] isPasswordRecoveryMode:", isPasswordRecoveryMode);
+          console.log("[Auth Recovery Stage 6: renderProfileMain] Triggering openProfile() from PASSWORD_RECOVERY event.");
+          openProfile();
+          return;
+        }
+
+        if (isPasswordRecoveryMode || currentAuthMode === 'reset_password') {
+          console.log("[Auth Recovery Stage 3: PASSWORD_RECOVERY event] Recovery mode active; retaining reset view during event:", event);
+          currentUser = session?.user || null;
           openProfile();
           return;
         }
@@ -152,6 +156,40 @@ async function initSupabaseAuth() {
           renderProfileMain();
         }
       });
+
+      // Get initial session
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      
+      if (isPasswordRecoveryMode || currentAuthMode === 'reset_password') {
+        console.log("[Auth Recovery] Recovery session established");
+        currentUser = session?.user || null;
+        console.log("[Auth Recovery] Showing password reset form");
+        openProfile();
+        return;
+      }
+
+      currentUser = session?.user || null;
+      if (currentUser) {
+        await fetchOrCreateUserProfile(currentUser);
+        if (typeof fetchOrdersForUser === 'function') {
+          await fetchOrdersForUser(currentUser.id);
+        }
+        if (typeof fetchUserAddresses === 'function') {
+          await fetchUserAddresses(currentUser.id);
+        }
+        if (typeof fetchUserNotifications === 'function') {
+          fetchUserNotifications(currentUser.id);
+        }
+      } else {
+        userProfile = null;
+        if (typeof clearNotificationState === 'function') {
+          clearNotificationState();
+        }
+        if (typeof clearUserAddresses === 'function') {
+          clearUserAddresses();
+        }
+      }
+      updateAdminNavVisibility();
     } catch (err) {
       console.error("Supabase Auth Initialization error:", err);
     }
@@ -246,8 +284,94 @@ function renderProfileMain() {
   const titleEl = document.getElementById('profile-title');
   const subtitleEl = document.getElementById('profile-subtitle');
 
-  // Case 1: User is Logged In - Render Tabbed Customer Dashboard
-  if (currentUser) {
+  console.log("[Auth Recovery Stage 6: renderProfileMain] renderProfileMain called. Mode:", currentAuthMode, "isPasswordRecoveryMode:", isPasswordRecoveryMode, "User:", currentUser ? currentUser.email : null);
+
+  // Priority 1: Password Recovery Mode (Always display Set New Password view regardless of temporary recovery session)
+  if (isPasswordRecoveryMode || currentAuthMode === 'reset_password') {
+    console.log("[Auth Recovery Stage 7: Form Render] Rendering Set New Password form into DOM.");
+    if (titleEl) titleEl.textContent = 'Set New Password';
+    if (subtitleEl) subtitleEl.textContent = 'Enter and confirm your new account password';
+
+    profileContent.innerHTML = `
+      <div class="flex flex-col gap-4 max-w-md mx-auto py-2">
+        <div class="text-center">
+          <div class="w-12 h-12 bg-secondary-container/20 text-secondary rounded-full flex items-center justify-center mx-auto mb-2 shadow-xs">
+            <span class="material-symbols-outlined text-2xl text-secondary">lock_reset</span>
+          </div>
+          <h3 class="font-display text-xl font-bold text-primary">Set New Password</h3>
+          <p class="font-body-md text-xs text-on-surface-variant mt-1">Please enter your new account password below.</p>
+        </div>
+
+        <form id="reset-password-form" class="flex flex-col gap-3.5">
+          <div>
+            <label class="font-label-bold text-xs text-primary block mb-1">New Password (min 6 characters) *</label>
+            <input id="reset-pwd-new" type="password" required minlength="6" placeholder="••••••••" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 text-primary focus:outline-none focus:border-tertiary shadow-xs" />
+          </div>
+
+          <div>
+            <label class="font-label-bold text-xs text-primary block mb-1">Confirm New Password *</label>
+            <input id="reset-pwd-confirm" type="password" required minlength="6" placeholder="••••••••" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 text-primary focus:outline-none focus:border-tertiary shadow-xs" />
+          </div>
+
+          <p id="reset-pwd-feedback-msg" class="text-xs font-medium hidden text-center"></p>
+
+          <button type="submit" id="reset-pwd-submit-btn" class="w-full bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs py-3 px-4 rounded-full transition-all duration-200 shadow-sm mt-1 cursor-pointer active:scale-95">
+            <span>Save New Password</span>
+          </button>
+        </form>
+
+        <div class="text-center pt-2 border-t border-outline-variant/20">
+          <button id="reset-back-to-login-btn" class="font-label-bold text-xs text-secondary hover:text-tertiary transition-colors cursor-pointer underline">
+            ← Back to Sign In
+          </button>
+        </div>
+      </div>
+    `;
+    attachResetPasswordEvents();
+    return;
+  }
+
+  // Priority 2: Forgot Password Email Request Mode
+  if (currentAuthMode === 'forgot_password') {
+    if (titleEl) titleEl.textContent = 'Password Recovery';
+    if (subtitleEl) subtitleEl.textContent = 'Send a password recovery link to your email';
+
+    profileContent.innerHTML = `
+      <div class="flex flex-col gap-4 max-w-md mx-auto py-2">
+        <div class="text-center">
+          <div class="w-12 h-12 bg-secondary-container/20 text-secondary rounded-full flex items-center justify-center mx-auto mb-2">
+            <span class="material-symbols-outlined text-2xl">mark_email_unread</span>
+          </div>
+          <h3 class="font-display text-xl font-bold text-primary">Recover Password</h3>
+          <p class="font-body-md text-xs text-on-surface-variant mt-1">Enter your email and we'll send you a secure recovery link.</p>
+        </div>
+
+        <form id="forgot-password-form" class="flex flex-col gap-3.5">
+          <div>
+            <label class="font-label-bold text-xs text-primary block mb-1">Email Address</label>
+            <input id="forgot-email" type="email" required placeholder="name@example.com" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 text-primary focus:outline-none focus:border-tertiary shadow-xs" />
+          </div>
+
+          <p id="forgot-feedback-msg" class="text-xs font-medium hidden text-center"></p>
+
+          <button type="submit" id="forgot-submit-btn" class="w-full bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs py-3 px-4 rounded-full transition-all duration-200 shadow-sm mt-1 cursor-pointer active:scale-95">
+            <span>Send Recovery Email</span>
+          </button>
+        </form>
+
+        <div class="text-center pt-2 border-t border-outline-variant/20">
+          <button id="back-to-login-btn" class="font-label-bold text-xs text-secondary hover:text-tertiary transition-colors cursor-pointer underline">
+            ← Back to Sign In
+          </button>
+        </div>
+      </div>
+    `;
+    attachForgotPasswordEvents();
+    return;
+  }
+
+  // Case 1: User is Logged In - Render Tabbed Customer Dashboard (unless in reset password recovery mode)
+  if (currentUser && currentAuthMode !== 'reset_password') {
     const displayName = userProfile?.full_name || currentUser.user_metadata?.full_name || currentUser.email.split('@')[0] || 'Valued Member';
     const displayEmail = userProfile?.email || currentUser.email || '';
     const displayCountry = currentUser.user_metadata?.country || 'India';
@@ -706,50 +830,11 @@ function renderProfileMain() {
     return;
   }
 
-  // Case 2: User is Logged Out - Render Login / Signup / Recovery
-  if (titleEl) {
-    if (currentAuthMode === 'forgot_password') titleEl.textContent = 'Password Recovery';
-    else if (currentAuthMode === 'reset_password') titleEl.textContent = 'Set New Password';
-    else if (currentAuthMode === 'signup') titleEl.textContent = 'Join Brew & Bite';
-    else titleEl.textContent = 'Account Sign In';
-  }
-
-  if (currentAuthMode === 'forgot_password') {
-    profileContent.innerHTML = `
-      <div class="flex flex-col gap-4 max-w-md mx-auto py-2">
-        <div class="text-center">
-          <div class="w-12 h-12 bg-secondary-container/20 text-secondary rounded-full flex items-center justify-center mx-auto mb-2">
-            <span class="material-symbols-outlined text-2xl">mark_email_unread</span>
-          </div>
-          <h3 class="font-display text-xl font-bold text-primary">Recover Password</h3>
-          <p class="font-body-md text-xs text-on-surface-variant mt-1">Enter your email and we'll send you a secure recovery link.</p>
-        </div>
-
-        <form id="forgot-password-form" class="flex flex-col gap-3.5">
-          <div>
-            <label class="font-label-bold text-xs text-primary block mb-1">Email Address</label>
-            <input id="forgot-email" type="email" required placeholder="name@example.com" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 text-primary focus:outline-none focus:border-tertiary" />
-          </div>
-
-          <p id="forgot-feedback-msg" class="text-xs font-medium hidden text-center"></p>
-
-          <button type="submit" id="forgot-submit-btn" class="w-full bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary font-label-bold text-xs py-3 px-4 rounded-full transition-all duration-200 shadow-sm mt-1 cursor-pointer active:scale-95">
-            <span>Send Recovery Email</span>
-          </button>
-        </form>
-
-        <div class="text-center pt-2 border-t border-outline-variant/20">
-          <button id="back-to-login-btn" class="font-label-bold text-xs text-secondary hover:text-tertiary transition-colors cursor-pointer underline">
-            ← Back to Sign In
-          </button>
-        </div>
-      </div>
-    `;
-    attachForgotPasswordEvents();
-    return;
-  }
-
   // Default Auth Mode: Login or Sign Up
+  const isSignUp = currentAuthMode === 'signup';
+  if (titleEl) titleEl.textContent = isSignUp ? 'Join Brew & Bite' : 'Account Sign In';
+  if (subtitleEl) subtitleEl.textContent = isSignUp ? 'Create an account for quick orders and saved delivery addresses.' : 'Sign in to access your dashboard, orders and addresses.';
+
   profileContent.innerHTML = `
     <div class="flex flex-col gap-5 max-w-md mx-auto py-1">
       <div class="text-center">
@@ -757,7 +842,7 @@ function renderProfileMain() {
           <span class="material-symbols-outlined text-2xl">account_circle</span>
         </div>
         <h3 class="font-display text-xl font-bold text-primary">
-          ${currentAuthMode === 'login' ? 'Welcome Back' : 'Join Brew & Bite'}
+          ${isSignUp ? 'Join Brew & Bite' : 'Welcome Back'}
         </h3>
         <p class="font-body-md text-xs text-on-surface-variant mt-1">
           ${currentAuthMode === 'login'
@@ -1092,6 +1177,109 @@ function attachForgotPasswordEvents() {
   }
 }
 
+function attachResetPasswordEvents() {
+  const backBtn = document.getElementById('reset-back-to-login-btn');
+  if (backBtn) {
+    backBtn.addEventListener('click', () => {
+      isPasswordRecoveryMode = false;
+      currentAuthMode = 'login';
+      renderProfileMain();
+    });
+  }
+
+  const resetForm = document.getElementById('reset-password-form');
+  if (resetForm) {
+    resetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const newPwd = document.getElementById('reset-pwd-new')?.value;
+      const confirmPwd = document.getElementById('reset-pwd-confirm')?.value;
+      const msgEl = document.getElementById('reset-pwd-feedback-msg');
+      const submitBtn = document.getElementById('reset-pwd-submit-btn');
+
+      if (!newPwd || newPwd.length < 6) {
+        if (msgEl) {
+          msgEl.textContent = 'Password must be at least 6 characters.';
+          msgEl.className = 'text-xs text-red-600 font-medium text-center';
+          msgEl.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (newPwd !== confirmPwd) {
+        if (msgEl) {
+          msgEl.textContent = 'Passwords do not match.';
+          msgEl.className = 'text-xs text-red-600 font-medium text-center';
+          msgEl.classList.remove('hidden');
+        }
+        return;
+      }
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span>Saving New Password...</span>';
+      }
+
+      try {
+        console.log("[Auth Recovery Stage 8: updateUser] Calling supabaseClient.auth.updateUser with new password...");
+        const { error } = await supabaseClient.auth.updateUser({
+          password: newPwd
+        });
+
+        if (error) {
+          console.error("[Auth Recovery Stage 8: updateUser] updateUser failed:", error);
+          if (msgEl) {
+            msgEl.textContent = error.message;
+            msgEl.className = 'text-xs text-red-600 font-medium text-center';
+            msgEl.classList.remove('hidden');
+          }
+        } else {
+          console.log("[Auth Recovery Stage 8: updateUser] Success! Password updated successfully in Supabase.");
+          isPasswordRecoveryMode = false;
+          if (msgEl) {
+            msgEl.textContent = 'Password updated successfully! Redirecting to sign in...';
+            msgEl.className = 'text-xs text-green-700 font-bold text-center bg-green-50 p-2.5 rounded-xl border border-green-200';
+            msgEl.classList.remove('hidden');
+          }
+          if (window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+          setTimeout(async () => {
+            try {
+              await supabaseClient.auth.signOut();
+            } catch (e) {}
+            currentAuthMode = 'login';
+            currentUser = null;
+            userProfile = null;
+            renderProfileMain();
+          }, 1800);
+        }
+      } catch (err) {
+        if (msgEl) {
+          msgEl.textContent = err.message || 'Could not update password.';
+          msgEl.className = 'text-xs text-red-600 font-medium text-center';
+          msgEl.classList.remove('hidden');
+        }
+      } finally {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<span>Save New Password</span>';
+        }
+      }
+    });
+  }
+}
+
+// Compute dynamic, environment-aware Auth Redirect URL
+function getAuthRedirectUrl() {
+  let origin = window.location.origin;
+  let pathname = window.location.pathname || '/';
+  pathname = pathname.replace(/\/index\.html$/, '');
+  if (!pathname.endsWith('/')) {
+    pathname += '/';
+  }
+  return `${origin}${pathname}`;
+}
+
 // Handle Sign In
 async function handleSignIn(email, password) {
   const errorEl = document.getElementById('auth-error-msg');
@@ -1204,8 +1392,10 @@ async function handleForgotPassword(email) {
   }
 
   try {
+    const redirectUrl = getAuthRedirectUrl();
+    console.log("[Auth Recovery Stage 1: resetPasswordForEmail] Requesting reset link for email:", email, "with redirectTo:", redirectUrl);
     const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}${window.location.pathname}#type=recovery`
+      redirectTo: redirectUrl
     });
 
     if (error) {
@@ -1216,7 +1406,7 @@ async function handleForgotPassword(email) {
       }
     } else {
       if (msgEl) {
-        msgEl.textContent = `Password reset link sent to "${email}". Please check your email inbox.`;
+        msgEl.textContent = `Password reset link sent to "${email}". Please check your email inbox on your phone or computer.`;
         msgEl.className = 'text-xs text-green-700 font-bold text-center bg-green-50 p-2.5 rounded-xl border border-green-200';
         msgEl.classList.remove('hidden');
       }
