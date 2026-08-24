@@ -710,9 +710,9 @@ async function handlePlaceOrder(event) {
       submitBtn.disabled = false;
       const subtotalVal = (typeof cart !== 'undefined' && Array.isArray(cart))
         ? cart.reduce((sum, item) => {
-            const p = (typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS)) ? PRODUCTS.find(prod => prod.id === item.productId) : null;
-            return sum + ((p ? p.price : 0) * item.quantity);
-          }, 0)
+          const p = (typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS)) ? PRODUCTS.find(prod => prod.id === item.productId) : null;
+          return sum + ((p ? p.price : 0) * item.quantity);
+        }, 0)
         : 0;
 
       submitBtn.innerHTML = `

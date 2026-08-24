@@ -33,9 +33,11 @@
     0% {
         background-position: 0% 50%;
     }
+
     50% {
         background-position: 100% 50%;
     }
+
     100% {
         background-position: 0% 50%;
     }
@@ -54,12 +56,15 @@
     0% {
         transform: translate(0, 0) scale(1);
     }
+
     33% {
         transform: translate(30px, -50px) scale(1.1);
     }
+
     66% {
         transform: translate(-20px, 20px) scale(0.9);
     }
+
     100% {
         transform: translate(0, 0) scale(1);
     }
@@ -71,11 +76,11 @@
     -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
 }
 
-/* Hero Text Animation & Styling */
+/* Hero Text Animation & Styling (Fast & Responsive) */
 @keyframes heroTextEnter {
     0% {
         opacity: 0;
-        transform: translateY(28px) scale(0.97);
+        transform: translateY(20px) scale(0.98);
     }
     100% {
         opacity: 1;
@@ -84,10 +89,61 @@
 }
 
 .hero-text-overlay {
-    animation: heroTextEnter 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    animation: heroTextEnter 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     will-change: opacity, transform;
 }
 
 .text-shadow-subtle {
     text-shadow: 0 2px 24px rgba(251, 251, 226, 0.9), 0 4px 12px rgba(255, 255, 255, 0.85);
+}
+
+/* ==========================================================================
+   Solid Non-Glass Mobile Navigation Panel & Viewport Containment
+   ========================================================================== */
+
+/* Solid Opaque Side Navigation Drawer (Matches Reference Layout) */
+#nav-drawer {
+    background-color: #fbfbe2 !important; /* Theme warm cream surface background */
+    background: #fbfbe2 !important;
+    box-shadow: -10px 0 50px rgba(62, 24, 33, 0.25) !important;
+    border-left: 1.5px solid rgba(128, 117, 108, 0.3) !important;
+}
+
+/* Solid Opaque Mobile Navigation Card (NOT Glass / NOT Transparent) */
+.mobile-nav-panel {
+    background-color: #fbfbe2 !important; /* Theme cream surface background */
+    background: #fbfbe2 !important;
+    border-radius: 1.25rem !important;
+    border: 1.5px solid rgba(128, 117, 108, 0.3) !important;
+    box-shadow: 0 15px 45px rgba(62, 24, 33, 0.22) !important;
+    max-height: 85vh;
+    overflow-y: auto;
+    z-index: 100 !important;
+}
+
+/* Text Wrapping & Container Containment */
+.break-anywhere {
+    overflow-wrap: anywhere !important;
+    word-break: break-word !important;
+}
+
+.min-w-0 {
+    min-width: 0 !important;
+}
+
+.modal-scrollable-body {
+    max-height: calc(85vh - 120px);
+    overflow-y: auto;
+}
+
+.table-responsive-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Prevent Horizontal Viewport Overflow */
+html, body {
+    max-width: 100vw;
+    overflow-x: hidden;
 }

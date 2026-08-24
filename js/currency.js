@@ -43,6 +43,9 @@ function setActiveCurrency(code) {
   const sel = document.getElementById('currency-selector');
   if (sel && sel.value !== code) sel.value = code;
 
+  const mobSel = document.getElementById('mobile-currency-selector');
+  if (mobSel && mobSel.value !== code) mobSel.value = code;
+
   // Notify listeners
   currencyChangeListeners.forEach(cb => {
     try { cb(activeCurrency); } catch (err) { console.error(err); }
@@ -121,6 +124,14 @@ function initCurrency() {
   if (sel) {
     sel.value = activeCurrency;
     sel.addEventListener('change', (e) => {
+      setActiveCurrency(e.target.value);
+    });
+  }
+
+  const mobSel = document.getElementById('mobile-currency-selector');
+  if (mobSel) {
+    mobSel.value = activeCurrency;
+    mobSel.addEventListener('change', (e) => {
       setActiveCurrency(e.target.value);
     });
   }

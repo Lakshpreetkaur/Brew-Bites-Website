@@ -159,7 +159,7 @@ async function initSupabaseAuth() {
 
       // Get initial session
       const { data: { session } } = await supabaseClient.auth.getSession();
-      
+
       if (isPasswordRecoveryMode || currentAuthMode === 'reset_password') {
         console.log("[Auth Recovery] Recovery session established");
         currentUser = session?.user || null;
@@ -515,15 +515,15 @@ function renderProfileMain() {
         tabBodyHTML = `
           <div class="flex flex-col gap-2.5 max-h-[340px] overflow-y-auto pr-1">
             ${orders.map(order => {
-              const totalItems = Array.isArray(order.items)
-                ? order.items.reduce((sum, item) => sum + (item.quantity || 1), 0)
-                : 0;
+          const totalItems = Array.isArray(order.items)
+            ? order.items.reduce((sum, item) => sum + (item.quantity || 1), 0)
+            : 0;
 
-              const dateStr = order.createdAt
-                ? new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                : 'Recent Order';
+          const dateStr = order.createdAt
+            ? new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+            : 'Recent Order';
 
-              return `
+          return `
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-surface border border-outline-variant/20 shadow-xs hover:border-outline-variant/40 transition-colors">
                   <div class="flex flex-col gap-0.5">
                     <div class="flex items-center gap-2 flex-wrap">
@@ -550,7 +550,7 @@ function renderProfileMain() {
                   </div>
                 </div>
               `;
-            }).join('')}
+        }).join('')}
           </div>
         `;
       }
@@ -846,8 +846,8 @@ function renderProfileMain() {
         </h3>
         <p class="font-body-md text-xs text-on-surface-variant mt-1">
           ${currentAuthMode === 'login'
-            ? 'Sign in to access your dashboard, orders and addresses.'
-            : 'Create an account for quick orders and saved delivery addresses.'}
+      ? 'Sign in to access your dashboard, orders and addresses.'
+      : 'Create an account for quick orders and saved delivery addresses.'}
         </p>
       </div>
 
@@ -1246,7 +1246,7 @@ function attachResetPasswordEvents() {
           setTimeout(async () => {
             try {
               await supabaseClient.auth.signOut();
-            } catch (e) {}
+            } catch (e) { }
             currentAuthMode = 'login';
             currentUser = null;
             userProfile = null;
@@ -1716,44 +1716,44 @@ function openOrderDetail(orderId) {
         </div>
 
         <!-- Customer & Delivery Info -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs bg-surface-container-high/30 p-3 rounded-xl border border-outline-variant/15">
-          <div>
-            <span class="text-on-surface-variant font-bold block mb-0.5">Customer Name:</span>
-            <span class="text-primary font-medium">${order.customer.name || 'Brew & Bite Customer'}</span>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-surface-container-high/40 p-4 sm:p-5 rounded-2xl border border-outline-variant/20 break-anywhere min-w-0">
+          <div class="min-w-0">
+            <span class="text-on-surface-variant font-bold text-xs block mb-1">Customer Name:</span>
+            <span class="text-primary font-medium text-sm break-anywhere block leading-relaxed">${order.customer.name || 'Brew & Bite Customer'}</span>
           </div>
-          <div>
-            <span class="text-on-surface-variant font-bold block mb-0.5">Order Type:</span>
-            <span class="text-secondary font-bold uppercase">${order.customer.orderType || 'Pickup'}</span>
+          <div class="min-w-0">
+            <span class="text-on-surface-variant font-bold text-xs block mb-1">Order Type:</span>
+            <span class="text-secondary font-bold uppercase text-sm block leading-relaxed">${order.customer.orderType || 'Pickup'}</span>
           </div>
           ${order.customer.address ? `
-            <div class="sm:col-span-2">
-              <span class="text-on-surface-variant font-bold block mb-0.5">Delivery Address:</span>
-              <span class="text-primary font-medium">${order.customer.address}</span>
+            <div class="sm:col-span-2 min-w-0 pt-2 border-t border-outline-variant/15">
+              <span class="text-on-surface-variant font-bold text-xs block mb-1">Delivery Address:</span>
+              <span class="text-primary font-medium text-sm break-anywhere block leading-relaxed">${order.customer.address}</span>
             </div>
           ` : ''}
           ${order.customer.notes ? `
-            <div class="sm:col-span-2">
-              <span class="text-on-surface-variant font-bold block mb-0.5">Order Notes:</span>
-              <span class="text-primary font-medium">${order.customer.notes}</span>
+            <div class="sm:col-span-2 min-w-0 pt-2 border-t border-outline-variant/15">
+              <span class="text-on-surface-variant font-bold text-xs block mb-1">Order Notes:</span>
+              <span class="text-primary font-medium text-sm break-anywhere block leading-relaxed">${order.customer.notes}</span>
             </div>
           ` : ''}
         </div>
 
         <!-- Payment Information Card -->
-        <div class="p-3 rounded-xl bg-surface-container-high/30 border border-outline-variant/15 grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-          <div>
-            <span class="text-on-surface-variant font-bold block mb-0.5">Payment Method:</span>
-            <span class="text-primary font-medium">${order.payment?.method === 'online' ? 'Online Payment (Card/UPI)' : 'Cash on Delivery'}</span>
+        <div class="p-4 sm:p-5 rounded-2xl bg-surface-container-high/40 border border-outline-variant/20 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs break-anywhere min-w-0">
+          <div class="min-w-0">
+            <span class="text-on-surface-variant font-bold text-xs block mb-1">Payment Method:</span>
+            <span class="text-primary font-medium text-xs break-anywhere block leading-relaxed">${order.payment?.method === 'online' ? 'Online Payment (Card/UPI)' : 'Cash on Delivery'}</span>
           </div>
-          <div>
-            <span class="text-on-surface-variant font-bold block mb-0.5">Payment Status:</span>
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-label-bold uppercase ${order.payment?.status === 'paid' ? 'bg-green-100 text-green-800 border border-green-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
+          <div class="min-w-0">
+            <span class="text-on-surface-variant font-bold text-xs block mb-1">Payment Status:</span>
+            <span class="inline-block px-2.5 py-1 rounded-full text-[10px] font-label-bold uppercase ${order.payment?.status === 'paid' ? 'bg-green-100 text-green-800 border border-green-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
               ${order.payment?.status === 'paid' ? 'Paid' : 'Pending (COD)'}
             </span>
           </div>
-          <div>
-            <span class="text-on-surface-variant font-bold block mb-0.5">Transaction Ref:</span>
-            <span class="font-mono text-[11px] text-primary">${order.payment?.transactionRef || 'COD-' + order.orderId}</span>
+          <div class="min-w-0">
+            <span class="text-on-surface-variant font-bold text-xs block mb-1">Transaction Ref:</span>
+            <span class="font-mono text-xs text-primary break-anywhere block leading-relaxed">${order.payment?.transactionRef || 'COD-' + order.orderId}</span>
           </div>
         </div>
 

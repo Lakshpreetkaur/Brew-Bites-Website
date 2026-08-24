@@ -285,32 +285,94 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // 5. Mobile Menu Drawer Handler
+  // 5. Side Navigation Drawer Controller (Matches Reference Layout)
+  function openNavDrawer() {
+    const navDrawer = document.getElementById('nav-drawer');
+    const navDrawerOverlay = document.getElementById('nav-drawer-overlay');
+    if (!navDrawer || !navDrawerOverlay) return;
+    navDrawerOverlay.classList.remove('opacity-0', 'pointer-events-none');
+    navDrawerOverlay.classList.add('opacity-100', 'pointer-events-auto');
+    navDrawer.classList.remove('translate-x-full');
+    navDrawer.classList.add('translate-x-0');
+    document.body.classList.add('overflow-hidden');
+  }
+
+  function closeNavDrawer() {
+    const navDrawer = document.getElementById('nav-drawer');
+    const navDrawerOverlay = document.getElementById('nav-drawer-overlay');
+    if (!navDrawer || !navDrawerOverlay) return;
+    navDrawerOverlay.classList.remove('opacity-100', 'pointer-events-auto');
+    navDrawerOverlay.classList.add('opacity-0', 'pointer-events-none');
+    navDrawer.classList.remove('translate-x-0');
+    navDrawer.classList.add('translate-x-full');
+    document.body.classList.remove('overflow-hidden');
+  }
+
+  window.openNavDrawer = openNavDrawer;
+  window.closeNavDrawer = closeNavDrawer;
+
   const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-  const mobileMenu = document.getElementById('mobile-menu');
-  const menuIcon = document.getElementById('menu-icon');
-  const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
+  const closeNavDrawerBtn = document.getElementById('close-nav-drawer-btn');
+  const navDrawerOverlay = document.getElementById('nav-drawer-overlay');
+  const navDrawer = document.getElementById('nav-drawer');
+  const navDrawerLinks = document.querySelectorAll('.nav-drawer-link');
+  const drawerCartBtn = document.getElementById('drawer-cart-btn');
+  const mobileNotificationBtn = document.getElementById('mobile-notification-btn');
+  const mobileProfileBtn = document.getElementById('mobile-profile-btn');
 
-  if (mobileMenuBtn && mobileMenu) {
-    mobileMenuBtn.addEventListener('click', () => {
-      const isHidden = mobileMenu.classList.contains('hidden');
-      if (isHidden) {
-        mobileMenu.classList.remove('hidden');
-        if (menuIcon) menuIcon.textContent = 'close';
-      } else {
-        mobileMenu.classList.add('hidden');
-        if (menuIcon) menuIcon.textContent = 'menu';
-      }
-    });
-
-    // Close mobile menu on clicking any navigation link
-    mobileNavLinks.forEach(link => {
-      link.addEventListener('click', () => {
-        mobileMenu.classList.add('hidden');
-        if (menuIcon) menuIcon.textContent = 'menu';
-      });
+  if (mobileMenuBtn) {
+    mobileMenuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openNavDrawer();
     });
   }
+
+  if (closeNavDrawerBtn) {
+    closeNavDrawerBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      closeNavDrawer();
+    });
+  }
+
+  if (navDrawerOverlay) {
+    navDrawerOverlay.addEventListener('click', closeNavDrawer);
+  }
+
+  if (drawerCartBtn) {
+    drawerCartBtn.addEventListener('click', () => {
+      closeNavDrawer();
+      if (typeof openCart === 'function') openCart();
+    });
+  }
+
+  if (mobileNotificationBtn) {
+    mobileNotificationBtn.addEventListener('click', () => {
+      closeNavDrawer();
+      if (typeof toggleNotificationPanel === 'function') {
+        toggleNotificationPanel(true);
+      }
+    });
+  }
+
+  if (mobileProfileBtn) {
+    mobileProfileBtn.addEventListener('click', () => {
+      closeNavDrawer();
+      if (typeof openProfile === 'function') {
+        openProfile();
+      }
+    });
+  }
+
+  navDrawerLinks.forEach(link => {
+    link.addEventListener('click', closeNavDrawer);
+  });
+
+  // Escape key listener to close drawer
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && navDrawer && !navDrawer.classList.contains('translate-x-full')) {
+      closeNavDrawer();
+    }
+  });
 
   // Window Event Listeners
   window.addEventListener('scroll', () => {

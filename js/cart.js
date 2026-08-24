@@ -73,16 +73,19 @@ function showAddedFeedback(button) {
 function updateCartCount() {
   const totalCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const cartBadge = document.getElementById('cart-badge');
+  const drawerCartBadge = document.getElementById('drawer-cart-badge');
   const cartHeaderCount = document.getElementById('cart-header-count');
 
-  if (cartBadge) {
-    cartBadge.textContent = totalCount;
-    if (totalCount > 0) {
-      cartBadge.classList.remove('hidden');
-    } else {
-      cartBadge.classList.add('hidden');
+  [cartBadge, drawerCartBadge].forEach(badge => {
+    if (badge) {
+      badge.textContent = totalCount;
+      if (totalCount > 0) {
+        badge.classList.remove('hidden');
+      } else {
+        badge.classList.add('hidden');
+      }
     }
-  }
+  });
 
   if (cartHeaderCount) {
     cartHeaderCount.textContent = `(${totalCount} item${totalCount === 1 ? '' : 's'})`;
