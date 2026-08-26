@@ -5,6 +5,17 @@
  * and order confirmation receipt rendering.
  */
 
+// Helper function to prevent XSS in dynamic HTML rendering
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 let isSubmittingCheckout = false;
 
 /**
@@ -759,7 +770,7 @@ function renderOrderSuccess(order) {
       </div>
 
       <h3 class="font-display text-2xl sm:text-3xl font-black text-primary mb-1">Thank You!</h3>
-      <p class="font-body-md text-sm text-on-surface-variant mb-5">Thanks, <strong class="text-primary">${order.customer.name}</strong>! Your order and payment details are securely saved.</p>
+      <p class="font-body-md text-sm text-on-surface-variant mb-5">Thanks, <strong class="text-primary">${escapeHtml(order.customer.name)}</strong>! Your order and payment details are securely saved.</p>
 
       <!-- Receipt Card (Rendered strictly from immutable snapshot) -->
       <div class="w-full bg-surface border border-outline-variant/30 rounded-2xl p-4 sm:p-5 mb-6 text-left shadow-xs flex flex-col gap-2.5">
@@ -793,13 +804,13 @@ function renderOrderSuccess(order) {
 
         ${order.customer.address ? `
           <div class="text-xs text-on-surface-variant pt-1 border-t border-outline-variant/10">
-            <span class="font-bold text-primary">Delivery Address:</span> ${order.customer.address}
+            <span class="font-bold text-primary">Delivery Address:</span> ${escapeHtml(order.customer.address)}
           </div>
         ` : ''}
 
         ${order.customer.notes ? `
           <div class="text-xs text-on-surface-variant pt-1 border-t border-outline-variant/10">
-            <span class="font-bold text-primary">Notes:</span> ${order.customer.notes}
+            <span class="font-bold text-primary">Notes:</span> ${escapeHtml(order.customer.notes)}
           </div>
         ` : ''}
       </div>

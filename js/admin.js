@@ -4,6 +4,17 @@
  * customer activity insights, CSV data export, and live product catalog controls.
  */
 
+// Helper function to prevent XSS in dynamic HTML rendering
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 // In-Memory Admin State
 let adminOrders = [];
 let adminOrderItems = [];
@@ -532,13 +543,13 @@ function renderOverviewTab(bestSellers, rangeOrders) {
     ? `<tr><td colspan="5" class="py-6 text-center text-xs text-on-surface-variant">No orders recorded for this time range.</td></tr>`
     : recentOrders.map(order => {
         const profile = adminProfiles.find(p => p.id === order.user_id);
-        const customerName = profile?.full_name || order.customer_name || 'Customer';
+        const customerName = order.customer_name || profile?.full_name || 'Customer';
         const dateStr = order.created_at ? new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Recent';
 
         return `
           <tr class="border-b border-outline-variant/15 hover:bg-surface/50 text-xs">
             <td class="py-3 px-3 font-display font-bold text-primary">${order.order_reference || order.id?.slice(0, 8)}</td>
-            <td class="py-3 px-3 text-primary font-medium">${customerName}</td>
+            <td class="py-3 px-3 text-primary font-medium">${escapeHtml(customerName)}</td>
             <td class="py-3 px-3 text-on-surface-variant">${dateStr}</td>
             <td class="py-3 px-3 font-bold text-primary">$${Number(order.subtotal || 0).toFixed(2)}</td>
             <td class="py-3 px-3">
@@ -687,8 +698,8 @@ function renderOrdersTab() {
     filtered = filtered.filter(o => {
       const ref = (o.order_reference || '').toLowerCase();
       const profile = adminProfiles.find(p => p.id === o.user_id);
-      const name = (profile?.full_name || o.customer_name || '').toLowerCase();
-      const email = (profile?.email || o.customer_email || '').toLowerCase();
+      const name = (o.customer_name || profile?.full_name || '').toLowerCase();
+      const email = (o.customer_email || profile?.email || '').toLowerCase();
       return ref.includes(q) || name.includes(q) || email.includes(q);
     });
   }
@@ -703,9 +714,9 @@ function renderOrdersTab() {
     ? `<div class="p-8 text-center bg-surface rounded-2xl border border-outline-variant/20 text-xs text-on-surface-variant">No orders match your filter criteria.</div>`
     : filtered.map(order => {
         const profile = adminProfiles.find(p => p.id === order.user_id);
-        const customerName = profile?.full_name || order.customer_name || 'Brew & Bite Customer';
-        const customerEmail = profile?.email || order.customer_email || 'No email provided';
-        const customerPhone = profile?.phone || order.customer_phone || 'No phone provided';
+        const customerName = order.customer_name || profile?.full_name || 'Brew & Bite Customer';
+        const customerEmail = order.customer_email || profile?.email || 'No email provided';
+        const customerPhone = order.customer_phone || profile?.phone || 'No phone provided';
         const dateStr = order.created_at
           ? new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
           : 'Recent';
@@ -762,15 +773,15 @@ function renderOrdersTab() {
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs bg-surface-container-high/30 p-3.5 rounded-xl border border-outline-variant/15">
               <div>
                 <span class="text-on-surface-variant font-bold block mb-0.5">Customer:</span>
-                <span class="text-primary font-medium">${customerName}</span>
+                <span class="text-primary font-medium">${escapeHtml(customerName)}</span>
               </div>
               <div>
                 <span class="text-on-surface-variant font-bold block mb-0.5">Email:</span>
-                <span class="text-primary font-medium">${customerEmail}</span>
+                <span class="text-primary font-medium">${escapeHtml(customerEmail)}</span>
               </div>
               <div>
                 <span class="text-on-surface-variant font-bold block mb-0.5">Phone:</span>
-                <span class="text-primary font-medium">${customerPhone}</span>
+                <span class="text-primary font-medium">${escapeHtml(customerPhone)}</span>
               </div>
               <div>
                 <span class="text-on-surface-variant font-bold block mb-0.5">Payment Method:</span>
@@ -789,7 +800,7 @@ function renderOrdersTab() {
               ${order.delivery_address ? `
                 <div class="sm:col-span-3">
                   <span class="text-on-surface-variant font-bold block mb-0.5">Delivery Address:</span>
-                  <span class="text-primary font-medium">${order.delivery_address}</span>
+                  <span class="text-primary font-medium">${escapeHtml(order.delivery_address)}</span>
                 </div>
               ` : ''}
             </div>
@@ -1265,9 +1276,9 @@ function exportAdminOrdersToCSV() {
     const items = adminOrderItems.filter(i => i.order_id === order.id);
 
     const itemsSummary = items.map(i => `${i.product_name || i.product_id} (x${i.quantity})`).join("; ");
-    const name = profile?.full_name || order.customer_name || 'Brew & Bite Customer';
-    const email = profile?.email || order.customer_email || '';
-    const phone = profile?.phone || order.customer_phone || '';
+    const name = order.customer_name || profile?.full_name || 'Brew & Bite Customer';
+    const email = order.customer_email || profile?.email || '';
+    const phone = order.customer_phone || profile?.phone || '';
     const payMethod = payment?.payment_method || (order.payment_method || 'cash_on_delivery');
     const payStatus = payment?.payment_status || (order.payment_status || 'pending');
     const txnRef = payment?.transaction_ref || `COD-${order.order_reference || order.id?.slice(0, 8)}`;
