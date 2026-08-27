@@ -42,12 +42,23 @@ let adminSelectedCustomer = null; // For customer order history drill-down modal
 let adminEditingProduct = null;   // For product edit modal
 
 /**
- * Check if active session is an authorized Admin.
+ * Check if active session is an authorized Admin via Postgres RPC.
  */
-function isUserAdmin() {
+async function isUserAdmin() {
   if (typeof currentUser === 'undefined' || !currentUser) return false;
-  if (typeof userProfile === 'undefined' || !userProfile) return false;
-  return userProfile.role === 'admin';
+  if (typeof supabaseClient === 'undefined' || !supabaseClient) return false;
+
+  try {
+    const { data, error } = await supabaseClient.rpc('get_my_role');
+    if (error) {
+      console.warn("Could not verify admin role:", error.message);
+      return false;
+    }
+    return data === 'admin';
+  } catch (err) {
+    console.warn("Error checking admin status:", err);
+    return false;
+  }
 }
 
 /**
@@ -57,7 +68,8 @@ async function openAdminDashboard() {
   const adminModal = document.getElementById('admin-modal');
   if (!adminModal) return;
 
-  if (!isUserAdmin()) {
+  const isAdmin = await isUserAdmin();
+  if (!isAdmin) {
     alert("Access Denied: Admin authorization required. Your account does not have admin privileges.");
     return;
   }

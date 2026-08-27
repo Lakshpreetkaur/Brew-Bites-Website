@@ -35,6 +35,7 @@ const COUNTRIES = [
 // Global Auth & Profile State
 let currentUser = null;
 let userProfile = null;
+let currentUserRole = 'customer';
 let isProfileLoading = false;
 let currentAuthMode = 'login'; // 'login' | 'signup' | 'forgot_password' | 'reset_password'
 let profileActiveTab = 'dashboard'; // 'dashboard' | 'orders' | 'addresses' | 'details' | 'security'
@@ -61,9 +62,26 @@ if (isInitialRecoveryDetected) {
   console.log("[Auth Recovery Stage 5: isPasswordRecoveryMode] isPasswordRecoveryMode set to:", isPasswordRecoveryMode);
 }
 
-// Update visibility of Navbar Admin Badges / Buttons
-function updateAdminNavVisibility() {
-  const isAdmin = !!(userProfile && userProfile.role === 'admin');
+// Update visibility of Navbar Admin Badges / Buttons via Postgres RPC
+async function updateAdminNavVisibility() {
+  let isAdmin = false;
+  if (!currentUser) {
+    isAdmin = false;
+    currentUserRole = 'customer';
+  } else if (typeof isUserAdmin === 'function') {
+    isAdmin = await isUserAdmin();
+    currentUserRole = isAdmin ? 'admin' : 'customer';
+  } else if (typeof supabaseClient !== 'undefined' && supabaseClient && currentUser) {
+    try {
+      const { data, error } = await supabaseClient.rpc('get_my_role');
+      isAdmin = !error && data === 'admin';
+      currentUserRole = isAdmin ? 'admin' : 'customer';
+    } catch (e) {
+      isAdmin = false;
+      currentUserRole = 'customer';
+    }
+  }
+
   const navAdminBtn = document.getElementById('nav-admin-btn');
   const mobileNavAdminBtn = document.getElementById('mobile-nav-admin-btn');
 
@@ -149,6 +167,7 @@ async function initSupabaseAuth() {
           }
         } else {
           userProfile = null;
+          currentUserRole = 'customer';
           if (typeof clearUserOrderState === 'function') {
             clearUserOrderState();
           }
@@ -160,7 +179,7 @@ async function initSupabaseAuth() {
           }
         }
 
-        updateAdminNavVisibility();
+        await updateAdminNavVisibility();
 
         const profileModal = document.getElementById('profile-modal');
         if (profileModal && profileModal.classList.contains('opacity-100')) {
@@ -193,6 +212,7 @@ async function initSupabaseAuth() {
         }
       } else {
         userProfile = null;
+        currentUserRole = 'customer';
         if (typeof clearNotificationState === 'function') {
           clearNotificationState();
         }
@@ -200,7 +220,7 @@ async function initSupabaseAuth() {
           clearUserAddresses();
         }
       }
-      updateAdminNavVisibility();
+      await updateAdminNavVisibility();
     } catch (err) {
       console.error("Supabase Auth Initialization error:", err);
     }
@@ -215,28 +235,22 @@ async function fetchOrCreateUserProfile(user) {
   try {
     const { data: existingProfile, error: fetchError } = await supabaseClient
       .from('profiles')
-      .select('id, full_name, email, phone, role')
+      .select('id, full_name, email, phone')
       .eq('id', user.id)
       .maybeSingle();
 
     if (existingProfile) {
       userProfile = existingProfile;
       isProfileLoading = false;
-      updateAdminNavVisibility();
+      await updateAdminNavVisibility();
       return userProfile;
     }
-
-    // Role check from user_roles table or admin email match
-    const adminEmails = ['lakshsadhioura03@gmail.com', 'admin@brewandbite.com'];
-    const isAdminDefault = user.email && adminEmails.includes(user.email.toLowerCase());
-    let role = isAdminDefault ? 'admin' : 'customer';
 
     const newProfileData = {
       id: user.id,
       full_name: user.user_metadata?.full_name || (user.email ? user.email.split('@')[0] : 'Brew & Bite Member'),
       email: user.email,
       phone: user.user_metadata?.phone || '',
-      role: role,
       updated_at: new Date().toISOString()
     };
 
@@ -248,18 +262,17 @@ async function fetchOrCreateUserProfile(user) {
 
     userProfile = insertedProfile || newProfileData;
     isProfileLoading = false;
-    updateAdminNavVisibility();
+    await updateAdminNavVisibility();
     return userProfile;
   } catch (err) {
     console.warn("Error handling Supabase profile:", err);
     userProfile = {
       id: user.id,
       full_name: user.user_metadata?.full_name || user.email.split('@')[0] || 'Brew & Bite Member',
-      email: user.email,
-      role: 'customer'
+      email: user.email
     };
     isProfileLoading = false;
-    updateAdminNavVisibility();
+    await updateAdminNavVisibility();
     return userProfile;
   }
 }
@@ -388,7 +401,7 @@ function renderProfileMain() {
     const displayCountry = currentUser.user_metadata?.country || 'India';
     const displayPhone = userProfile?.phone || (currentUser.user_metadata?.phone ? `${currentUser.user_metadata?.dial_code || ''} ${currentUser.user_metadata?.phone}`.trim() : '');
     const initial = displayName.charAt(0).toUpperCase();
-    const isAdmin = !!(userProfile && userProfile.role === 'admin');
+    const isAdmin = currentUserRole === 'admin';
     const isEmailConfirmed = !!currentUser.email_confirmed_at;
 
     const orders = (typeof getOrders === 'function') ? getOrders() : [];
@@ -1578,8 +1591,9 @@ async function handleSignOut() {
       if (typeof clearUserAddresses === 'function') {
         clearUserAddresses();
       }
+      currentUserRole = 'customer';
       console.log("Supabase Sign Out completed. In-memory session purged.");
-      updateAdminNavVisibility();
+      await updateAdminNavVisibility();
       renderProfileMain();
     } catch (err) {
       console.warn("Sign Out error:", err);
