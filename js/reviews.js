@@ -4,6 +4,17 @@
  * enforcing Verified Purchase validation, 1-5 star ratings, and review moderation.
  */
 
+// Helper function to prevent XSS in dynamic HTML rendering
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 let allProductReviews = [];
 let activeReviewModalProductId = null;
 
@@ -209,7 +220,7 @@ function renderProductReviewsModalContent(productId) {
           <div class="p-4 rounded-2xl bg-surface border border-outline-variant/25 flex flex-col gap-2 shadow-xs">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-2">
-                <span class="font-bold text-xs text-primary">${r.user_name}</span>
+                <span class="font-bold text-xs text-primary">${escapeHtml(r.user_name)}</span>
                 ${r.verified_purchase ? `
                   <span class="inline-flex items-center gap-0.5 bg-green-50 text-green-800 border border-green-200 text-[9px] font-bold px-1.5 py-0.2 rounded-full">
                     <span class="material-symbols-outlined text-[10px]">verified</span>
@@ -221,7 +232,7 @@ function renderProductReviewsModalContent(productId) {
             </div>
 
             <div class="text-amber-500 text-xs font-bold">${starsStr}</div>
-            <p class="text-xs text-on-surface leading-relaxed">${r.review_text}</p>
+            <p class="text-xs text-on-surface leading-relaxed">${escapeHtml(r.review_text)}</p>
 
             ${isOwner ? `
               <div class="flex items-center justify-end gap-2 pt-1 border-t border-outline-variant/15 mt-1">

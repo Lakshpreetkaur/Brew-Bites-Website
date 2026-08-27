@@ -7,6 +7,17 @@
  * - public.addresses: (id, user_id, full_name, phone, address_line_1, address_line_2, city, state, postal_code, country, is_default, created_at, updated_at)
  */
 
+// Helper function to prevent XSS in dynamic HTML rendering
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 // Standard Country dataset with flags and dialing codes
 const COUNTRIES = [
   { name: "India", code: "IN", dial: "+91", flag: "🇮🇳" },
@@ -1719,7 +1730,7 @@ function openOrderDetail(orderId) {
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs bg-surface-container-high/40 p-4 sm:p-5 rounded-2xl border border-outline-variant/20 break-anywhere min-w-0">
           <div class="min-w-0">
             <span class="text-on-surface-variant font-bold text-xs block mb-1">Customer Name:</span>
-            <span class="text-primary font-medium text-sm break-anywhere block leading-relaxed">${order.customer.name || 'Brew & Bite Customer'}</span>
+            <span class="text-primary font-medium text-sm break-anywhere block leading-relaxed">${escapeHtml(order.customer.name || 'Brew & Bite Customer')}</span>
           </div>
           <div class="min-w-0">
             <span class="text-on-surface-variant font-bold text-xs block mb-1">Order Type:</span>
@@ -1728,13 +1739,13 @@ function openOrderDetail(orderId) {
           ${order.customer.address ? `
             <div class="sm:col-span-2 min-w-0 pt-2 border-t border-outline-variant/15">
               <span class="text-on-surface-variant font-bold text-xs block mb-1">Delivery Address:</span>
-              <span class="text-primary font-medium text-sm break-anywhere block leading-relaxed">${order.customer.address}</span>
+              <span class="text-primary font-medium text-sm break-anywhere block leading-relaxed">${escapeHtml(order.customer.address)}</span>
             </div>
           ` : ''}
           ${order.customer.notes ? `
             <div class="sm:col-span-2 min-w-0 pt-2 border-t border-outline-variant/15">
               <span class="text-on-surface-variant font-bold text-xs block mb-1">Order Notes:</span>
-              <span class="text-primary font-medium text-sm break-anywhere block leading-relaxed">${order.customer.notes}</span>
+              <span class="text-primary font-medium text-sm break-anywhere block leading-relaxed">${escapeHtml(order.customer.notes)}</span>
             </div>
           ` : ''}
         </div>
