@@ -389,13 +389,17 @@ function subscribeToUserNotifications(userId) {
 async function notifyOrderPlaced(order, user) {
   if (!order || !user || !user.id) return;
   const ref = order.orderId || order.order_reference || 'Recent Order';
+  const orderCurr = order.currency || order.payment?.currency || 'USD';
+  const formattedAmount = (typeof formatHistoricalCurrency === 'function')
+    ? formatHistoricalCurrency(order.subtotal, orderCurr)
+    : `$${Number(order.subtotal || 0).toFixed(2)}`;
 
   // 1. Customer Notification: Order Placed
   await createNotification({
     user_id: user.id,
     type: 'order_placed',
     title: `Order Placed: ${ref}`,
-    message: `Your order for $${Number(order.subtotal || 0).toFixed(2)} has been placed successfully. We are getting it ready!`,
+    message: `Your order for ${formattedAmount} has been placed successfully. We are getting it ready!`,
     order_id: order.id
   });
 
@@ -404,7 +408,7 @@ async function notifyOrderPlaced(order, user) {
     await createNotification({
       user_id: user.id,
       type: 'payment_success',
-      title: `Payment Successful ($${Number(order.subtotal || 0).toFixed(2)})`,
+      title: `Payment Successful (${formattedAmount})`,
       message: `Your online payment was verified. Ref: ${order.payment.transactionRef || ref}.`,
       order_id: order.id
     });
@@ -413,7 +417,7 @@ async function notifyOrderPlaced(order, user) {
       user_id: user.id,
       type: 'payment_pending',
       title: `Cash on Delivery Selected`,
-      message: `Amount due on pickup/delivery: $${Number(order.subtotal || 0).toFixed(2)}.`,
+      message: `Amount due on pickup/delivery: ${formattedAmount}.`,
       order_id: order.id
     });
   }
@@ -475,6 +479,10 @@ async function notifyAdminNewOrder(order) {
   if (typeof supabaseClient === 'undefined' || !supabaseClient) return;
   const ref = order.orderId || order.order_reference || 'New Order';
   const custName = order.customer?.name || order.customer_name || 'Customer';
+  const orderCurr = order.currency || order.payment?.currency || 'USD';
+  const formattedAmount = (typeof formatHistoricalCurrency === 'function')
+    ? formatHistoricalCurrency(order.subtotal, orderCurr)
+    : `$${Number(order.subtotal || 0).toFixed(2)}`;
 
   try {
     // Find all profiles with role = 'admin'
@@ -489,7 +497,7 @@ async function notifyAdminNewOrder(order) {
           user_id: admin.id,
           type: 'admin_new_order',
           title: `🔔 New Order Received: ${ref}`,
-          message: `New order from ${custName} for $${Number(order.subtotal || 0).toFixed(2)} (${order.customer?.orderType || order.order_type || 'pickup'}).`,
+          message: `New order from ${custName} for ${formattedAmount} (${order.customer?.orderType || order.order_type || 'pickup'}).`,
           order_id: order.id
         });
       }

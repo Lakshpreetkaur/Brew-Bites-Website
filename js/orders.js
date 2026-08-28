@@ -247,15 +247,25 @@ async function createAndSaveOrderInSupabase(cartItems, customerDetails, user, pa
     throw new Error("Online Payment Declined (Simulated Card/Gateway Error). Your card was not charged and no order was created. Please try again or select Cash on Delivery.");
   }
 
+  const placedCurrency = (typeof getActiveCurrency === 'function') ? getActiveCurrency() : 'USD';
   let calculatedSubtotal = 0;
 
-  // 1. Snapshot items and lock current catalog unit prices
+  // 1. Snapshot items and lock current catalog unit prices converted to active currency
   const orderItems = cartItems.map(cartItem => {
     const product = (typeof getProductById === 'function')
       ? getProductById(cartItem.productId)
       : ((typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS)) ? PRODUCTS.find(p => p.id === cartItem.productId) : null);
 
-    const unitPrice = product ? Number(product.price) : 0;
+    const rawUsdPrice = product ? Number(product.price) : 0;
+
+    if (typeof convertUSD !== 'function') {
+      throw new Error('Currency conversion is unavailable.');
+    }
+
+    const unitPrice = Number(
+      convertUSD(rawUsdPrice, placedCurrency).toFixed(2)
+    );
+
     const quantity = Number(cartItem.quantity) || 1;
     const lineTotal = Number((unitPrice * quantity).toFixed(2));
     calculatedSubtotal += lineTotal;
@@ -317,8 +327,6 @@ async function createAndSaveOrderInSupabase(cartItems, customerDetails, user, pa
     console.error("Failed to insert into Supabase order_items table:", itemsError);
     throw new Error(itemsError?.message || "Failed to create order line items in database.");
   }
-
-  const placedCurrency = (typeof getActiveCurrency === 'function') ? getActiveCurrency() : 'USD';
 
   // 4. Insert dedicated payment record into Supabase `payments` table
   let paymentRecord = null;

@@ -557,13 +557,18 @@ function renderOverviewTab(bestSellers, rangeOrders) {
         const profile = adminProfiles.find(p => p.id === order.user_id);
         const customerName = order.customer_name || profile?.full_name || 'Customer';
         const dateStr = order.created_at ? new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Recent';
+        const payment = adminPayments.find(p => p.order_id === order.id);
+        const orderCurr = payment?.currency || order.currency || 'USD';
+        const formattedTotal = (typeof formatHistoricalCurrency === 'function')
+          ? formatHistoricalCurrency(order.subtotal, orderCurr)
+          : `$${Number(order.subtotal || 0).toFixed(2)}`;
 
         return `
           <tr class="border-b border-outline-variant/15 hover:bg-surface/50 text-xs">
             <td class="py-3 px-3 font-display font-bold text-primary">${order.order_reference || order.id?.slice(0, 8)}</td>
             <td class="py-3 px-3 text-primary font-medium">${escapeHtml(customerName)}</td>
             <td class="py-3 px-3 text-on-surface-variant">${dateStr}</td>
-            <td class="py-3 px-3 font-bold text-primary">$${Number(order.subtotal || 0).toFixed(2)}</td>
+            <td class="py-3 px-3 font-bold text-primary">${formattedTotal}</td>
             <td class="py-3 px-3">
               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-label-bold uppercase tracking-wider ${getStatusBadgeClass(order.status)}">${order.status || 'placed'}</span>
             </td>
@@ -737,6 +742,10 @@ function renderOrdersTab() {
         const isPaid = payment?.payment_status === 'paid';
         const isCOD = payment?.payment_method === 'cash_on_delivery' || !payment;
         const txnRef = payment?.transaction_ref || `COD-${order.order_reference || order.id?.slice(0, 8)}`;
+        const orderCurr = payment?.currency || order.currency || 'USD';
+        const formatPrice = (val) => (typeof formatHistoricalCurrency === 'function')
+          ? formatHistoricalCurrency(val, orderCurr)
+          : `$${Number(val || 0).toFixed(2)}`;
 
         const items = adminOrderItems.filter(item => item.order_id === order.id);
 
@@ -746,9 +755,9 @@ function renderOrdersTab() {
               <div class="flex items-center justify-between py-1 border-b border-outline-variant/10 text-xs">
                 <div>
                   <span class="font-bold text-primary">${item.product_name || item.product_id}</span>
-                  <span class="text-[11px] text-on-surface-variant ml-1.5">$${Number(item.unit_price || 0).toFixed(2)} × ${item.quantity}</span>
+                  <span class="text-[11px] text-on-surface-variant ml-1.5">${formatPrice(item.unit_price)} × ${item.quantity}</span>
                 </div>
-                <span class="font-bold text-primary">$${Number(item.line_total || 0).toFixed(2)}</span>
+                <span class="font-bold text-primary">${formatPrice(item.line_total)}</span>
               </div>
             `).join('');
 
@@ -828,7 +837,7 @@ function renderOrdersTab() {
             <!-- Total Calculation -->
             <div class="border-t border-outline-variant/20 pt-2.5 flex items-center justify-between">
               <span class="text-xs font-label-bold text-on-surface-variant">Total Amount</span>
-              <span class="font-display font-black text-lg text-primary">$${Number(order.subtotal || 0).toFixed(2)}</span>
+              <span class="font-display font-black text-lg text-primary">${formatPrice(order.subtotal)}</span>
             </div>
           </div>
         `;
@@ -1167,19 +1176,27 @@ function renderCustomerHistoryModal(customer) {
 
   const ordersHTML = customerOrders.length === 0
     ? `<p class="text-xs text-on-surface-variant text-center py-6">No orders placed by this customer yet.</p>`
-    : customerOrders.map(order => `
-        <div class="p-3.5 rounded-xl bg-surface border border-outline-variant/20 flex flex-col gap-2">
-          <div class="flex items-center justify-between">
-            <span class="font-bold text-xs text-primary">${order.order_reference || order.id?.slice(0, 8)}</span>
-            <span class="px-2 py-0.5 rounded-full text-[10px] font-label-bold uppercase ${getStatusBadgeClass(order.status)}">${order.status || 'placed'}</span>
+    : customerOrders.map(order => {
+        const payment = adminPayments.find(p => p.order_id === order.id);
+        const orderCurr = payment?.currency || order.currency || 'USD';
+        const formattedSubtotal = (typeof formatHistoricalCurrency === 'function')
+          ? formatHistoricalCurrency(order.subtotal, orderCurr)
+          : `$${Number(order.subtotal || 0).toFixed(2)}`;
+
+        return `
+          <div class="p-3.5 rounded-xl bg-surface border border-outline-variant/20 flex flex-col gap-2">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-xs text-primary">${order.order_reference || order.id?.slice(0, 8)}</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-label-bold uppercase ${getStatusBadgeClass(order.status)}">${order.status || 'placed'}</span>
+            </div>
+            <p class="text-[11px] text-on-surface-variant">${order.created_at ? new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recent'}</p>
+            <div class="border-t border-outline-variant/15 pt-2 flex items-center justify-between text-xs">
+              <span class="text-on-surface-variant">Subtotal:</span>
+              <span class="font-bold text-primary">${formattedSubtotal}</span>
+            </div>
           </div>
-          <p class="text-[11px] text-on-surface-variant">${order.created_at ? new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Recent'}</p>
-          <div class="border-t border-outline-variant/15 pt-2 flex items-center justify-between text-xs">
-            <span class="text-on-surface-variant">Subtotal:</span>
-            <span class="font-bold text-primary">$${Number(order.subtotal || 0).toFixed(2)}</span>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
 
   return `
     <div id="customer-history-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">

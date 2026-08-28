@@ -456,7 +456,7 @@ function renderProfileMain() {
                     <span class="font-display font-bold text-xs sm:text-sm text-primary">Active Order: ${activeOrder.orderId}</span>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-label-bold uppercase ${getStatusBadgeClass(activeOrder.status)}">${activeOrder.status}</span>
                   </div>
-                  <p class="text-[11px] text-on-surface-variant mt-0.5">${activeOrder.items?.length || 1} item(s) • Total $${Number(activeOrder.subtotal || 0).toFixed(2)}</p>
+                  <p class="text-[11px] text-on-surface-variant mt-0.5">${activeOrder.items?.length || 1} item(s) • Total ${typeof formatHistoricalCurrency === 'function' ? formatHistoricalCurrency(activeOrder.subtotal, activeOrder.currency || activeOrder.payment?.currency || 'USD') : '$' + Number(activeOrder.subtotal || 0).toFixed(2)}</p>
                 </div>
               </div>
               <button data-order-id="${activeOrder.orderId}" class="view-order-btn bg-tertiary text-on-tertiary font-label-bold text-xs py-2 px-4 rounded-full transition-all shadow-xs cursor-pointer active:scale-95 whitespace-nowrap self-start sm:self-auto">
@@ -502,7 +502,7 @@ function renderProfileMain() {
                   <div class="flex items-center justify-between">
                     <div>
                       <p class="text-xs font-bold text-primary">${orders[0].orderId}</p>
-                      <p class="text-[11px] text-on-surface-variant">${orders[0].items?.length || 1} items • $${Number(orders[0].subtotal || 0).toFixed(2)}</p>
+                      <p class="text-[11px] text-on-surface-variant">${orders[0].items?.length || 1} items • ${typeof formatHistoricalCurrency === 'function' ? formatHistoricalCurrency(orders[0].subtotal, orders[0].currency || orders[0].payment?.currency || 'USD') : '$' + Number(orders[0].subtotal || 0).toFixed(2)}</p>
                     </div>
                     <button data-reorder-id="${orders[0].orderId}" class="reorder-order-btn bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary text-xs font-label-bold px-3 py-1.5 rounded-full transition-all flex items-center gap-1 cursor-pointer">
                       <span class="material-symbols-outlined text-sm">replay</span>
@@ -563,7 +563,7 @@ function renderProfileMain() {
                   </div>
 
                   <div class="flex items-center justify-between sm:justify-end gap-2.5 border-t sm:border-t-0 border-outline-variant/15 pt-1.5 sm:pt-0">
-                    <span class="font-display font-bold text-primary text-sm sm:text-base mr-1">$${Number(order.subtotal || 0).toFixed(2)}</span>
+                    <span class="font-display font-bold text-primary text-sm sm:text-base mr-1">${typeof formatHistoricalCurrency === 'function' ? formatHistoricalCurrency(order.subtotal, order.currency || order.payment?.currency || 'USD') : '$' + Number(order.subtotal || 0).toFixed(2)}</span>
                     <button data-reorder-id="${order.orderId}" class="reorder-order-btn bg-surface-container-high hover:bg-secondary-container text-primary text-xs font-label-bold py-1.5 px-3 rounded-full transition-all flex items-center gap-1 cursor-pointer">
                       <span class="material-symbols-outlined text-xs">replay</span>
                       <span>Reorder</span>
@@ -1695,14 +1695,19 @@ function openOrderDetail(orderId) {
     ? new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     : 'Recent Order';
 
+  const orderCurr = order.currency || order.payment?.currency || 'USD';
+  const formatPrice = (val) => typeof formatHistoricalCurrency === 'function'
+    ? formatHistoricalCurrency(val, orderCurr)
+    : `$${Number(val || 0).toFixed(2)}`;
+
   const itemsListHTML = Array.isArray(order.items)
     ? order.items.map(item => `
         <div class="flex items-center justify-between py-1.5 border-b border-outline-variant/15 text-xs">
           <div>
             <h5 class="font-display font-bold text-primary text-xs">${item.name || item.productId}</h5>
-            <p class="text-[11px] text-on-surface-variant">$${Number(item.unitPrice || 0).toFixed(2)} × ${item.quantity}</p>
+            <p class="text-[11px] text-on-surface-variant">${formatPrice(item.unitPrice)} × ${item.quantity}</p>
           </div>
-          <span class="font-label-bold text-primary text-xs">$${Number(item.lineTotal || 0).toFixed(2)}</span>
+          <span class="font-label-bold text-primary text-xs">${formatPrice(item.lineTotal)}</span>
         </div>
       `).join('')
     : '<p class="text-xs text-on-surface-variant">No items recorded.</p>';
@@ -1793,7 +1798,7 @@ function openOrderDetail(orderId) {
         <!-- Total Calculation -->
         <div class="border-t border-outline-variant/20 pt-2 flex items-center justify-between">
           <span class="font-label-bold text-xs text-on-surface-variant">Total Amount:</span>
-          <span class="font-display font-black text-base sm:text-lg text-primary">$${Number(order.subtotal || 0).toFixed(2)}</span>
+          <span class="font-display font-black text-base sm:text-lg text-primary">${formatPrice(order.subtotal)}</span>
         </div>
       </div>
 
