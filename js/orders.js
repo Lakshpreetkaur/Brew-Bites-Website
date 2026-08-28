@@ -248,140 +248,62 @@ async function createAndSaveOrderInSupabase(cartItems, customerDetails, user, pa
   }
 
   const placedCurrency = (typeof getActiveCurrency === 'function') ? getActiveCurrency() : 'USD';
-  let calculatedSubtotal = 0;
 
-  // 1. Snapshot items and lock current catalog unit prices converted to active currency
-  const orderItems = cartItems.map(cartItem => {
-    const product = (typeof getProductById === 'function')
-      ? getProductById(cartItem.productId)
-      : ((typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS)) ? PRODUCTS.find(p => p.id === cartItem.productId) : null);
-
-    const rawUsdPrice = product ? Number(product.price) : 0;
-
-    if (typeof convertUSD !== 'function') {
-      throw new Error('Currency conversion is unavailable.');
-    }
-
-    const unitPrice = Number(
-      convertUSD(rawUsdPrice, placedCurrency).toFixed(2)
-    );
-
-    const quantity = Number(cartItem.quantity) || 1;
-    const lineTotal = Number((unitPrice * quantity).toFixed(2));
-    calculatedSubtotal += lineTotal;
-
-    return {
-      productId: cartItem.productId,
-      name: product ? product.name : cartItem.productId,
-      quantity: quantity,
-      unitPrice: unitPrice,
-      lineTotal: lineTotal
-    };
-  });
-
-  const generatedRef = generateOrderId();
-  const subtotalValue = Number(calculatedSubtotal.toFixed(2));
-  const paymentStatus = paymentMethod === 'online' ? 'paid' : 'pending';
-  const txnPrefix = paymentMethod === 'online' ? 'TXN-ONL' : 'COD';
-  const transactionRef = `${txnPrefix}-${generatedRef.replace('BB-DEMO-', '')}-${Math.floor(1000 + Math.random() * 9000)}`;
-
-  // 2. Insert into Supabase `orders` table
-  const orderInsertPayload = {
-    order_reference: generatedRef,
-    user_id: user.id,
-    customer_name: customerDetails.name || '',
-    customer_phone: customerDetails.phone || '',
-    customer_email: customerDetails.email || user.email || '',
-    order_type: customerDetails.orderType || 'pickup',
-    delivery_address: customerDetails.address || '',
-    subtotal: subtotalValue,
-    status: 'placed'
-  };
-
-  const { data: orderRecord, error: orderError } = await supabaseClient
-    .from('orders')
-    .insert(orderInsertPayload)
-    .select()
-    .single();
-
-  if (orderError || !orderRecord) {
-    console.error("Failed to insert into Supabase orders table:", orderError);
-    throw new Error(orderError?.message || "Failed to create order record in database.");
-  }
-
-  // 3. Insert line items into Supabase `order_items` table
-  const itemsToInsert = orderItems.map(item => ({
-    order_id: orderRecord.id,
-    product_id: item.productId,
-    product_name: item.name,
-    quantity: item.quantity,
-    unit_price: item.unitPrice,
-    line_total: item.lineTotal
+  // 1. Prepare minimal cart payload for server-side verification (IDs & quantities only)
+  const cartPayload = cartItems.map(item => ({
+    productId: item.productId,
+    quantity: Number(item.quantity)
   }));
 
-  const { error: itemsError } = await supabaseClient
-    .from('order_items')
-    .insert(itemsToInsert);
+  // 2. Call atomic server-side order verification and creation RPC
+  const { data: verifiedOrder, error: orderError } = await supabaseClient.rpc('create_verified_order', {
+    p_cart_items: cartPayload,
+    p_customer_name: customerDetails.name || '',
+    p_customer_phone: customerDetails.phone || '',
+    p_customer_email: customerDetails.email || user.email || '',
+    p_order_type: customerDetails.orderType || 'pickup',
+    p_delivery_address: customerDetails.address || '',
+    p_payment_method: paymentMethod,
+    p_currency: placedCurrency
+  });
 
-  if (itemsError) {
-    console.error("Failed to insert into Supabase order_items table:", itemsError);
-    throw new Error(itemsError?.message || "Failed to create order line items in database.");
+  if (orderError || !verifiedOrder) {
+    console.error("Failed to create verified order via RPC:", orderError);
+    throw new Error(orderError?.message || "Failed to create verified order in database.");
   }
 
-  // 4. Insert dedicated payment record into Supabase `payments` table
-  let paymentRecord = null;
-  try {
-    const paymentPayload = {
-      order_id: orderRecord.id,
-      user_id: user.id,
-      payment_method: paymentMethod,
-      payment_status: paymentStatus,
-      amount: subtotalValue,
-      currency: placedCurrency,
-      transaction_ref: transactionRef
-    };
-
-    const { data: pData, error: pError } = await supabaseClient
-      .from('payments')
-      .insert(paymentPayload)
-      .select()
-      .maybeSingle();
-
-    if (pError) {
-      console.warn("Notice: payments table insert note (will use in-memory payment snapshot):", pError.message);
-    } else {
-      paymentRecord = pData;
-    }
-  } catch (pErr) {
-    console.warn("Could not insert payment record:", pErr);
-  }
-
-  // 5. Build standard completed order object with integrated payment metadata
+  // 3. Build standard completed order object from verified server response
   const standardOrderObject = {
-    id: orderRecord.id,
-    orderId: generatedRef,
+    id: verifiedOrder.id,
+    orderId: verifiedOrder.order_reference,
     userId: user.id,
-    createdAt: orderRecord.created_at || new Date().toISOString(),
+    createdAt: verifiedOrder.created_at || new Date().toISOString(),
     status: "placed",
-    currency: placedCurrency,
+    currency: verifiedOrder.currency || placedCurrency,
     customer: {
-      name: customerDetails.name || "",
-      phone: customerDetails.phone || "",
-      email: customerDetails.email || user.email || "",
-      orderType: customerDetails.orderType || "pickup",
-      address: customerDetails.address || "",
+      name: verifiedOrder.customer_name || customerDetails.name || "",
+      phone: verifiedOrder.customer_phone || customerDetails.phone || "",
+      email: verifiedOrder.customer_email || customerDetails.email || user.email || "",
+      orderType: verifiedOrder.order_type || customerDetails.orderType || "pickup",
+      address: verifiedOrder.delivery_address || customerDetails.address || "",
       notes: customerDetails.notes || ""
     },
-    items: orderItems,
-    subtotal: subtotalValue,
+    items: Array.isArray(verifiedOrder.items) ? verifiedOrder.items.map(item => ({
+      productId: item.product_id,
+      name: item.product_name,
+      quantity: Number(item.quantity) || 1,
+      unitPrice: Number(item.unit_price) || 0,
+      lineTotal: Number(item.line_total) || 0
+    })) : [],
+    subtotal: Number(verifiedOrder.subtotal) || 0,
     payment: {
-      id: paymentRecord?.id || null,
-      method: paymentMethod,
-      status: paymentStatus,
-      amount: subtotalValue,
-      currency: placedCurrency,
-      transactionRef: transactionRef,
-      createdAt: paymentRecord?.created_at || new Date().toISOString()
+      id: verifiedOrder.payment?.id || null,
+      method: verifiedOrder.payment?.payment_method || paymentMethod,
+      status: verifiedOrder.payment?.payment_status || (paymentMethod === 'online' ? 'paid' : 'pending'),
+      amount: Number(verifiedOrder.payment?.amount || verifiedOrder.subtotal) || 0,
+      currency: verifiedOrder.payment?.currency || placedCurrency,
+      transactionRef: verifiedOrder.payment?.transaction_ref || `TXN-${verifiedOrder.order_reference}`,
+      createdAt: verifiedOrder.payment?.created_at || verifiedOrder.created_at || new Date().toISOString()
     }
   };
 
