@@ -73,14 +73,14 @@ function getProductReviewSummary(productId) {
 }
 
 /**
- * Check if the user has purchased this product in a completed/non-cancelled order (Verified Purchase).
+ * Check if the user has purchased this product in a completed/delivered order (Verified Purchase).
  */
 function checkUserPurchasedProduct(productId, user) {
   if (!user || !user.id || !productId) return false;
 
   const orders = (typeof getOrders === 'function') ? getOrders() : [];
   for (const order of orders) {
-    if (order.status !== 'cancelled' && Array.isArray(order.items)) {
+    if (order.status === 'delivered' && Array.isArray(order.items)) {
       const found = order.items.some(item => item.productId === productId);
       if (found) return true;
     }
@@ -105,9 +105,23 @@ async function submitProductReview(productId, rating, reviewText, user) {
     throw new Error("Please write a helpful review (at least 3 characters).");
   }
 
-  const hasPurchased = checkUserPurchasedProduct(productId, user);
-  if (!hasPurchased) {
-    throw new Error("Verified Purchase Required: You can review this item once you have ordered it.");
+  // Verify purchase: query order_items joined to orders for matching user and product with delivered status
+  let isVerifiedPurchase = false;
+  try {
+    const { data: matchedItems, error: matchError } = await supabaseClient
+      .from('order_items')
+      .select('id, orders!inner(user_id, status)')
+      .eq('product_id', productId)
+      .eq('orders.user_id', user.id)
+      .eq('orders.status', 'delivered')
+      .limit(1);
+
+    if (!matchError && Array.isArray(matchedItems) && matchedItems.length > 0) {
+      isVerifiedPurchase = true;
+    }
+  } catch (chkErr) {
+    console.warn("Could not verify purchase status from database:", chkErr);
+    isVerifiedPurchase = false;
   }
 
   const displayName = (typeof userProfile !== 'undefined' && userProfile?.full_name)
@@ -120,7 +134,7 @@ async function submitProductReview(productId, rating, reviewText, user) {
     user_name: displayName,
     rating: ratingNum,
     review_text: reviewText.trim(),
-    verified_purchase: true,
+    verified_purchase: isVerifiedPurchase,
     updated_at: new Date().toISOString()
   };
 
@@ -269,11 +283,13 @@ function renderProductReviewsModalContent(productId) {
     ${isLoggedIn ? (hasPurchased ? `
       <div class="p-4 rounded-2xl bg-secondary-container/15 border border-secondary/30 flex flex-col gap-3">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-label-bold text-primary">${existingUserReview ? 'Edit Your Review' : 'Write a Verified Customer Review'}</span>
-          <span class="text-[10px] text-green-700 font-bold flex items-center gap-1">
-            <span class="material-symbols-outlined text-xs">check_circle</span>
-            <span>Verified Purchase</span>
-          </span>
+          <span class="text-xs font-label-bold text-primary">${existingUserReview ? 'Edit Your Review' : (hasPurchased ? 'Write a Verified Customer Review' : 'Write a Customer Review')}</span>
+          ${hasPurchased ? `
+            <span class="text-[10px] text-green-700 font-bold flex items-center gap-1">
+              <span class="material-symbols-outlined text-xs">check_circle</span>
+              <span>Verified Purchase</span>
+            </span>
+          ` : ''}
         </div>
 
         <form id="product-review-form" class="flex flex-col gap-2.5">
