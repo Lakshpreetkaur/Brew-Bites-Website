@@ -113,8 +113,21 @@ function initCurrency() {
     const saved = localStorage.getItem('bb_active_currency');
     if (saved && CURRENCIES[saved]) {
       activeCurrency = saved;
-    } else if (typeof currentUser !== 'undefined' && currentUser?.user_metadata?.country === 'India') {
-      activeCurrency = 'INR';
+    } else {
+      const userCountry = (typeof userProfile !== 'undefined' && userProfile?.country)
+        || (typeof currentUser !== 'undefined' && currentUser?.user_metadata?.country)
+        || null;
+
+      if (userCountry && typeof COUNTRIES !== 'undefined') {
+        const countryKey = String(userCountry).toUpperCase();
+        const matched = COUNTRIES[countryKey]
+          || (Array.isArray(COUNTRIES) ? COUNTRIES.find(c => c.code === countryKey || (c.name && c.name.toLowerCase() === userCountry.toLowerCase())) : null)
+          || (typeof COUNTRIES === 'object' ? Object.values(COUNTRIES).find(c => c.code === countryKey || (c.name && c.name.toLowerCase() === userCountry.toLowerCase())) : null);
+
+        if (matched && matched.currency && CURRENCIES[matched.currency]) {
+          activeCurrency = matched.currency;
+        }
+      }
     }
   } catch (e) {
     activeCurrency = 'USD';

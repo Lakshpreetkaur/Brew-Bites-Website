@@ -235,7 +235,7 @@ async function fetchOrCreateUserProfile(user) {
   try {
     const { data: existingProfile, error: fetchError } = await supabaseClient
       .from('profiles')
-      .select('id, full_name, email, phone')
+      .select('id, full_name, email, phone, country')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -251,6 +251,7 @@ async function fetchOrCreateUserProfile(user) {
       full_name: user.user_metadata?.full_name || (user.email ? user.email.split('@')[0] : 'Brew & Bite Member'),
       email: user.email,
       phone: user.user_metadata?.phone || '',
+      country: user.user_metadata?.country || null,
       updated_at: new Date().toISOString()
     };
 
@@ -879,12 +880,28 @@ function renderProfileMain() {
         ${currentAuthMode === 'signup' ? `
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="font-label-bold text-xs text-primary block mb-1">First Name</label>
+              <label class="font-label-bold text-xs text-primary block mb-1">First Name *</label>
               <input id="auth-first-name" type="text" required placeholder="Alex" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 text-primary placeholder-on-surface-variant/50 focus:outline-none focus:border-tertiary" />
             </div>
             <div>
-              <label class="font-label-bold text-xs text-primary block mb-1">Last Name</label>
+              <label class="font-label-bold text-xs text-primary block mb-1">Last Name *</label>
               <input id="auth-last-name" type="text" required placeholder="Rivers" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 text-primary placeholder-on-surface-variant/50 focus:outline-none focus:border-tertiary" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="font-label-bold text-xs text-primary block mb-1">Country (Optional)</label>
+              <select id="auth-country" class="w-full text-xs px-3 py-2.5 rounded-xl bg-surface border border-outline-variant/40 text-primary focus:outline-none focus:border-tertiary cursor-pointer">
+                <option value="">Select country...</option>
+                ${(typeof COUNTRIES !== 'undefined' ? (Array.isArray(COUNTRIES) ? COUNTRIES : Object.values(COUNTRIES)) : []).map(c => `
+                  <option value="${c.code}" data-dial="${c.dial}">${c.flag} ${c.name}</option>
+                `).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="font-label-bold text-xs text-primary block mb-1">Phone Number (Optional)</label>
+              <input id="auth-phone" type="tel" placeholder="e.g. 98765 43210" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-surface border border-outline-variant/40 text-primary placeholder-on-surface-variant/50 focus:outline-none focus:border-tertiary" />
             </div>
           </div>
         ` : ''}
@@ -1176,7 +1193,9 @@ function attachLoggedOutProfileEvents() {
       if (currentAuthMode === 'login') {
         handleSignIn(email, pwd);
       } else {
-        handleSignUp(email, pwd, first, last);
+        const country = document.getElementById('auth-country')?.value || null;
+        const phone = document.getElementById('auth-phone')?.value?.trim() || null;
+        handleSignUp(email, pwd, first, last, country, phone);
       }
     });
   }
@@ -1350,7 +1369,7 @@ async function handleSignIn(email, password) {
 }
 
 // Handle Sign Up
-async function handleSignUp(email, password, firstName, lastName) {
+async function handleSignUp(email, password, firstName, lastName, country = null, phone = null) {
   const errorEl = document.getElementById('auth-error-msg');
   const submitBtn = document.getElementById('auth-submit-btn');
 
@@ -1368,7 +1387,9 @@ async function handleSignUp(email, password, firstName, lastName) {
         data: {
           first_name: firstName,
           last_name: lastName,
-          full_name: fullName
+          full_name: fullName,
+          country: country || null,
+          phone: phone || null
         }
       }
     });
