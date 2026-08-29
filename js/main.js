@@ -207,8 +207,15 @@ document.addEventListener('DOMContentLoaded', () => {
     return String(num).padStart(3, '0');
   }
 
+  // Helper to select optimal frame asset directory based on screen width
+  function getFrameBasePath() {
+    return (window.matchMedia && window.matchMedia('(max-width: 768px)').matches)
+      ? 'assets/frames-mobile/'
+      : 'assets/frames/';
+  }
+
   // Preload first key frames for immediate display
-  const initialFrameSrc = `assets/frames/ezgif-frame-001.jpg`;
+  const initialFrameSrc = `${getFrameBasePath()}ezgif-frame-001.jpg`;
   if (imgElement) {
     imgElement.src = initialFrameSrc;
   }
@@ -223,10 +230,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function preloadNearbyFrames(centerFrame) {
     if (prefersReducedMotion) return;
     const range = 5;
+    const basePath = getFrameBasePath();
     for (let i = Math.max(1, centerFrame - range); i <= Math.min(FRAME_COUNT, centerFrame + range); i++) {
       if (!frameCache[i]) {
         const img = new Image();
-        img.src = `assets/frames/ezgif-frame-${padFrame(i)}.jpg`;
+        img.src = `${basePath}ezgif-frame-${padFrame(i)}.jpg`;
         frameCache[i] = img;
       }
     }
@@ -255,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (targetFrame !== currentFrame) {
       currentFrame = targetFrame;
-      imgElement.src = `assets/frames/ezgif-frame-${padFrame(currentFrame)}.jpg`;
+      imgElement.src = `${getFrameBasePath()}ezgif-frame-${padFrame(currentFrame)}.jpg`;
       preloadNearbyFrames(currentFrame);
     }
 
