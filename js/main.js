@@ -213,90 +213,7 @@ if (typeof onProductsUpdated === 'function') {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  const FRAME_COUNT = 222;
-  const imgElement = document.getElementById('anim');
-  const scrollHint = document.getElementById('scroll-hint');
-  const heroSection = document.getElementById('animation-container') || document.getElementById('hero-section');
-
-  // Helper to format frame numbers with 3-digit padding (e.g. 1 -> "001")
-  function padFrame(num) {
-    return String(num).padStart(3, '0');
-  }
-
-  // Helper to select optimal frame asset directory based on screen width
-  function getFrameBasePath() {
-    return (window.matchMedia && window.matchMedia('(max-width: 768px)').matches)
-      ? 'assets/frames-mobile/'
-      : 'assets/frames/';
-  }
-
-  // Preload first key frames for immediate display
-  const initialFrameSrc = `${getFrameBasePath()}ezgif-frame-001.jpg`;
-  if (imgElement) {
-    imgElement.src = initialFrameSrc;
-  }
-
-  // 1. Image Sequence Scroll-Driven Animation (Performance Optimized)
-  let currentFrame = 1;
-  let isTicking = false;
-  const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // Frame preloader cache for smooth buttery scrolling
-  const frameCache = {};
-  function preloadNearbyFrames(centerFrame) {
-    if (prefersReducedMotion) return;
-    const range = 5;
-    const basePath = getFrameBasePath();
-    for (let i = Math.max(1, centerFrame - range); i <= Math.min(FRAME_COUNT, centerFrame + range); i++) {
-      if (!frameCache[i]) {
-        const img = new Image();
-        img.src = `${basePath}ezgif-frame-${padFrame(i)}.jpg`;
-        frameCache[i] = img;
-      }
-    }
-  }
-
-  function updateFrame() {
-    if (!heroSection || !imgElement) return;
-
-    // Respect reduced motion preference
-    if (prefersReducedMotion) {
-      if (imgElement.src !== initialFrameSrc) imgElement.src = initialFrameSrc;
-      isTicking = false;
-      return;
-    }
-
-    const scrollY = window.scrollY || window.pageYOffset;
-    const heroHeight = heroSection.offsetHeight;
-    const windowHeight = window.innerHeight;
-    const scrollableDistance = Math.max(heroHeight - windowHeight, 1);
-
-    const progress = Math.min(Math.max(scrollY / scrollableDistance, 0), 1);
-    const targetFrame = Math.min(
-      Math.max(Math.floor(progress * (FRAME_COUNT - 1)) + 1, 1),
-      FRAME_COUNT
-    );
-
-    if (targetFrame !== currentFrame) {
-      currentFrame = targetFrame;
-      imgElement.src = `${getFrameBasePath()}ezgif-frame-${padFrame(currentFrame)}.jpg`;
-      preloadNearbyFrames(currentFrame);
-    }
-
-    // 2. Hide scroll hint once user starts scrolling
-    if (scrollHint) {
-      if (scrollY > 50) {
-        scrollHint.classList.add('opacity-0');
-        scrollHint.classList.remove('opacity-100');
-      } else {
-        scrollHint.classList.remove('opacity-0');
-        scrollHint.classList.add('opacity-100');
-      }
-    }
-    isTicking = false;
-  }
-
-  // 4. Floating Navbar Transparency, Compact Sizing and Blur on Scroll
+  // Floating Navbar Transparency, Compact Sizing and Blur on Scroll
   const mainNav = document.getElementById('main-nav');
   function updateNavStyle() {
     if (!mainNav) return;
@@ -309,25 +226,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Escape key listener to close drawer
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && navDrawer && navDrawer.classList.contains('translate-x-0')) {
-      closeNavDrawer();
-    }
-  });
-
   // Window Event Listeners
   window.addEventListener('scroll', () => {
     updateNavStyle();
-    if (!isTicking) {
-      window.requestAnimationFrame(updateFrame);
-      isTicking = true;
-    }
   }, { passive: true });
 
   window.addEventListener('resize', () => {
     updateNavStyle();
-    updateFrame();
   });
 
   // Storefront Search Input Listener
@@ -437,5 +342,4 @@ document.addEventListener('DOMContentLoaded', () => {
   // Page-Level Initializations
   renderProducts();
   updateNavStyle();
-  updateFrame();
 });

@@ -6,11 +6,15 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
   <title>Brew &amp; Bites | Artisanal Roastery &amp; Cold Brews</title>
   <!-- Material Symbols Icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+    rel="stylesheet" />
   <!-- Google Fonts: Fraunces, Playfair Display & Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600..900;1,9..144,600..900&amp;family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&amp;display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600..900;1,9..144,600..900&amp;family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&amp;display=swap"
+    rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script id="tailwind-config">
     tailwind.config = {
@@ -36,10 +40,12 @@
             "background": "#FDF9EE"
           },
           "fontFamily": {
-            "display": ["Fraunces", "serif"],
-            "headline": ["Playfair Display", "serif"],
-            "body": ["Plus Jakarta Sans", "sans-serif"],
-            "label-bold": ["Plus Jakarta Sans", "sans-serif"]
+            "display": ["'Playfair Display'", "Georgia", "serif"],
+            "headline": ["'Playfair Display'", "Georgia", "serif"],
+            "serif": ["'Playfair Display'", "Georgia", "serif"],
+            "body": ["'Plus Jakarta Sans'", "sans-serif"],
+            "sans": ["'Plus Jakarta Sans'", "sans-serif"],
+            "label-bold": ["'Plus Jakarta Sans'", "sans-serif"]
           },
           "borderRadius": {
             "DEFAULT": "0.5rem",
@@ -61,41 +67,52 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 
-<body class="bg-surface text-primary font-body antialiased min-h-screen flex flex-col selection:bg-caramel/20 selection:text-primary overflow-x-hidden">
+<body
+  class="bg-surface text-primary font-body antialiased min-h-screen flex flex-col selection:bg-caramel/20 selection:text-primary overflow-x-hidden">
 
-  <!-- TOP APP BAR / NAVBAR -->
-  <header id="main-nav" class="w-full bg-[#fdf9ee]/95 backdrop-blur-md sticky top-0 z-40 border-b border-outline/60 px-4 sm:px-8 py-3.5 transition-all duration-200">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
+  <!-- TOP APP BAR / NAVBAR (Seamless Overlay over Unified One-Frame Hero) -->
+  <header id="main-nav"
+    class="absolute top-0 left-0 w-full z-40 bg-transparent border-0 px-4 sm:px-6 lg:px-8 py-3 sm:py-4 transition-all duration-200">
+    <div class="max-w-7xl mx-auto grid grid-cols-3 items-center w-full">
 
-      <!-- Left: Hamburger + Nav Links -->
-      <div class="flex items-center gap-6">
-        <button id="mobile-menu-btn" onclick="openNavDrawer()" aria-label="Open Navigation Menu" class="p-1.5 rounded-lg text-primary hover:bg-surface-container transition-colors cursor-pointer flex items-center justify-center">
+      <!-- Left: Hamburger + Nav Links (Aligned Start) -->
+      <div class="flex items-center gap-4 lg:gap-6 justify-start min-w-0">
+        <button id="mobile-menu-btn" onclick="openNavDrawer()" aria-label="Open Navigation Menu"
+          class="p-1.5 rounded-lg text-primary hover:bg-surface-container transition-colors cursor-pointer flex items-center justify-center shrink-0">
           <span class="material-symbols-outlined text-2xl">menu</span>
         </button>
 
-        <nav class="hidden md:flex items-center gap-6 text-xs font-label-bold uppercase tracking-wider">
+        <nav
+          class="hidden lg:flex items-center gap-5 xl:gap-6 text-xs font-label-bold uppercase tracking-wider shrink-0">
           <a href="#animation-container" class="text-primary border-b-2 border-primary pb-0.5">Home</a>
           <a href="#menu-section" class="text-on-surface-variant hover:text-primary transition-colors">Menu</a>
-          <a href="#story-section" class="text-on-surface-variant hover:text-primary transition-colors">Our Roastery</a>
+          <a href="#story-section"
+            class="text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Our Roastery</a>
           <a href="#reviews-section" class="text-on-surface-variant hover:text-primary transition-colors">Reviews</a>
         </nav>
       </div>
 
-      <!-- Center: Brand Logo (Script / Editorial Display) -->
-      <a href="#animation-container" class="font-display italic font-black text-2xl sm:text-3xl text-primary tracking-tight hover:opacity-90 transition-opacity">
-        Brew&amp;Bites
-      </a>
+      <!-- Center: Brand Logo (Strictly Centered in Viewport) -->
+      <div class="flex items-center justify-center">
+        <a href="#animation-container"
+          class="font-display italic font-black text-2xl sm:text-3xl text-primary tracking-tight hover:opacity-90 transition-opacity whitespace-nowrap">
+          Brew&amp;Bites
+        </a>
+      </div>
 
-      <!-- Right: Controls (Currency, Notification, Profile, Cart) -->
-      <div class="flex items-center gap-3 sm:gap-4">
-        <!-- Admin Dashboard Button (Conditional, Shown for Admins) -->
-        <button id="nav-admin-btn" style="display: none;" onclick="if(typeof openAdminDashboard==='function') openAdminDashboard()" aria-label="Open Admin Dashboard" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-caramel/15 hover:bg-caramel/25 text-primary text-xs font-bold transition-all cursor-pointer border border-caramel/30">
+      <!-- Right: Controls (Aligned End) -->
+      <div class="flex items-center justify-end gap-2 sm:gap-3 lg:gap-4 min-w-0">
+        <!-- Admin Dashboard Button (Conditional) -->
+        <button id="nav-admin-btn" style="display: none;"
+          onclick="if(typeof openAdminDashboard==='function') openAdminDashboard()" aria-label="Open Admin Dashboard"
+          class="hidden sm:inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-caramel/15 hover:bg-caramel/25 text-primary text-xs font-bold transition-all cursor-pointer border border-caramel/30 shrink-0">
           <span class="material-symbols-outlined text-base">dashboard</span>
-          <span>Admin</span>
+          <span class="hidden md:inline">Admin</span>
         </button>
 
         <!-- Currency Selector -->
-        <select id="currency-selector" aria-label="Select Currency" class="bg-transparent border border-outline text-primary text-xs font-bold px-2.5 py-1 rounded-full cursor-pointer hover:border-primary transition-all outline-none">
+        <select id="currency-selector" aria-label="Select Currency"
+          class="bg-transparent border border-outline text-primary text-xs font-bold px-2 py-1 rounded-full cursor-pointer hover:border-primary transition-all outline-none shrink-0">
           <option value="INR">INR (₹)</option>
           <option value="USD">USD ($)</option>
           <option value="CAD">CAD (CA$)</option>
@@ -103,20 +120,25 @@
         </select>
 
         <!-- Notification Bell -->
-        <button id="notification-btn" aria-label="View Notifications" class="relative p-1.5 rounded-full text-primary hover:bg-surface-container transition-colors cursor-pointer">
+        <button id="notification-btn" aria-label="View Notifications"
+          class="relative p-1.5 rounded-full text-primary hover:bg-surface-container transition-colors cursor-pointer shrink-0">
           <span class="material-symbols-outlined text-xl">notifications</span>
-          <span id="notification-badge" class="hidden absolute -top-0.5 -right-0.5 bg-caramel text-white font-bold text-[9px] min-w-[15px] h-[15px] px-0.5 rounded-full flex items-center justify-center">0</span>
+          <span id="notification-badge"
+            class="hidden absolute -top-0.5 -right-0.5 bg-caramel text-white font-bold text-[9px] min-w-[15px] h-[15px] px-0.5 rounded-full flex items-center justify-center">0</span>
         </button>
 
         <!-- Profile Button -->
-        <button id="profile-btn" onclick="openProfile()" aria-label="Customer Profile" class="p-1.5 rounded-full text-primary hover:bg-surface-container transition-colors cursor-pointer">
+        <button id="profile-btn" onclick="openProfile()" aria-label="Customer Profile"
+          class="p-1.5 rounded-full text-primary hover:bg-surface-container transition-colors cursor-pointer shrink-0">
           <span class="material-symbols-outlined text-xl">person</span>
         </button>
 
         <!-- Cart Button -->
-        <button id="cart-btn" onclick="openCart()" aria-label="View Cart" class="relative p-1.5 rounded-full text-primary hover:bg-surface-container transition-colors cursor-pointer">
+        <button id="cart-btn" onclick="openCart()" aria-label="View Cart"
+          class="relative p-1.5 rounded-full text-primary hover:bg-surface-container transition-colors cursor-pointer shrink-0">
           <span class="material-symbols-outlined text-xl">shopping_bag</span>
-          <span id="cart-badge" class="absolute -top-0.5 -right-0.5 bg-primary text-white font-bold text-[10px] min-w-[17px] h-[17px] px-1 rounded-full flex items-center justify-center">0</span>
+          <span id="cart-badge"
+            class="absolute -top-0.5 -right-0.5 bg-primary text-white font-bold text-[10px] min-w-[17px] h-[17px] px-1 rounded-full flex items-center justify-center">0</span>
         </button>
       </div>
 
@@ -124,21 +146,28 @@
   </header>
 
   <!-- Side Navigation Drawer Backdrop Overlay (Layer: z-[990]) -->
-  <div id="nav-drawer-overlay" class="fixed inset-0 bg-[#331C11]/50 backdrop-blur-xs z-[990] opacity-0 pointer-events-none transition-opacity duration-300"></div>
+  <div id="nav-drawer-overlay"
+    class="fixed inset-0 bg-[#331C11]/50 backdrop-blur-xs z-[990] opacity-0 pointer-events-none transition-opacity duration-300">
+  </div>
 
   <!-- Side Navigation Drawer (Solid Fixed Modal Drawer from LEFT, Layer: z-[1000]) -->
-  <aside id="nav-drawer" role="dialog" aria-labelledby="nav-drawer-heading" aria-modal="true" class="fixed top-0 left-0 bottom-0 h-full h-[100dvh] w-[300px] sm:w-[340px] max-w-[85vw] bg-surface text-primary z-[1000] shadow-2xl flex flex-col transform -translate-x-full transition-transform duration-300 ease-out border-r border-outline">
+  <aside id="nav-drawer" role="dialog" aria-labelledby="nav-drawer-heading" aria-modal="true"
+    class="fixed top-0 left-0 bottom-0 h-full h-[100dvh] w-[300px] sm:w-[340px] max-w-[85vw] bg-surface text-primary z-[1000] shadow-2xl flex flex-col transform -translate-x-full transition-transform duration-300 ease-out border-r border-outline">
     <!-- Drawer Header -->
     <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-outline bg-surface flex-shrink-0">
       <div class="flex items-center gap-2">
         <span id="nav-drawer-heading" class="font-display italic font-black text-2xl text-primary">Brew&amp;Bites</span>
       </div>
       <div class="flex items-center gap-2">
-        <button id="drawer-cart-btn" onclick="closeNavDrawer(); if(typeof openCart==='function') openCart();" aria-label="View Cart" class="relative p-1.5 rounded-full text-primary hover:bg-black/5 transition-colors cursor-pointer flex items-center justify-center">
+        <button id="drawer-cart-btn" onclick="closeNavDrawer(); if(typeof openCart==='function') openCart();"
+          aria-label="View Cart"
+          class="relative p-1.5 rounded-full text-primary hover:bg-black/5 transition-colors cursor-pointer flex items-center justify-center">
           <span class="material-symbols-outlined text-xl">shopping_bag</span>
-          <span id="drawer-cart-badge" class="hidden absolute -top-0.5 -right-0.5 bg-primary text-white font-bold text-[9px] min-w-[15px] h-[15px] px-0.5 rounded-full flex items-center justify-center">0</span>
+          <span id="drawer-cart-badge"
+            class="hidden absolute -top-0.5 -right-0.5 bg-primary text-white font-bold text-[9px] min-w-[15px] h-[15px] px-0.5 rounded-full flex items-center justify-center">0</span>
         </button>
-        <button id="close-nav-drawer-btn" aria-label="Close navigation menu" class="p-2 rounded-full text-primary hover:bg-black/5 active:scale-95 transition-all cursor-pointer flex items-center justify-center">
+        <button id="close-nav-drawer-btn" aria-label="Close navigation menu"
+          class="p-2 rounded-full text-primary hover:bg-black/5 active:scale-95 transition-all cursor-pointer flex items-center justify-center">
           <span class="material-symbols-outlined text-2xl">close</span>
         </button>
       </div>
@@ -147,16 +176,20 @@
     <!-- Drawer Links & Mobile Actions -->
     <div class="flex-1 px-6 py-5 flex flex-col gap-4 text-left overflow-y-auto bg-surface">
       <div class="flex flex-col gap-3 font-bold text-base">
-        <a href="#animation-container" class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Home</a>
+        <a href="#animation-container"
+          class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Home</a>
         <a href="#menu-section" class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Menu</a>
-        <a href="#story-section" class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Our Roastery</a>
-        <a href="#reviews-section" class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Reviews</a>
+        <a href="#story-section" class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Our
+          Roastery</a>
+        <a href="#reviews-section"
+          class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Reviews</a>
       </div>
 
       <div class="border-t border-outline pt-4 flex flex-col gap-3">
         <div class="flex items-center justify-between py-1">
           <span class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Currency</span>
-          <select id="mobile-currency-selector" aria-label="Select Currency" class="bg-white border border-outline text-primary text-xs font-bold px-3 py-1.5 rounded-full cursor-pointer transition-all outline-none">
+          <select id="mobile-currency-selector" aria-label="Select Currency"
+            class="bg-white border border-outline text-primary text-xs font-bold px-3 py-1.5 rounded-full cursor-pointer transition-all outline-none">
             <option value="INR">🇮🇳 INR (₹)</option>
             <option value="USD">🇺🇸 USD ($)</option>
             <option value="CAD">🇨🇦 CAD (CA$)</option>
@@ -164,20 +197,24 @@
           </select>
         </div>
 
-        <button id="mobile-notification-btn" class="font-bold text-sm text-primary hover:text-caramel py-1.5 text-left flex items-center justify-between cursor-pointer">
+        <button id="mobile-notification-btn"
+          class="font-bold text-sm text-primary hover:text-caramel py-1.5 text-left flex items-center justify-between cursor-pointer">
           <div class="flex items-center gap-2.5">
             <span class="material-symbols-outlined text-xl">notifications</span>
             <span>Notifications</span>
           </div>
-          <span id="mobile-notification-badge" class="hidden bg-caramel text-white font-bold text-[10px] px-2 py-0.5 rounded-full">0</span>
+          <span id="mobile-notification-badge"
+            class="hidden bg-caramel text-white font-bold text-[10px] px-2 py-0.5 rounded-full">0</span>
         </button>
 
-        <button id="mobile-profile-btn" onclick="closeNavDrawer(); openProfile();" class="font-bold text-sm text-primary hover:text-caramel py-1.5 text-left flex items-center gap-2.5 cursor-pointer">
+        <button id="mobile-profile-btn" onclick="closeNavDrawer(); openProfile();"
+          class="font-bold text-sm text-primary hover:text-caramel py-1.5 text-left flex items-center gap-2.5 cursor-pointer">
           <span class="material-symbols-outlined text-xl">person</span>
           <span>My Profile &amp; Orders</span>
         </button>
 
-        <button id="mobile-nav-admin-btn" style="display: none;" class="font-bold text-sm text-caramel hover:text-primary py-1.5 text-left items-center gap-2.5 cursor-pointer">
+        <button id="mobile-nav-admin-btn" style="display: none;"
+          class="font-bold text-sm text-caramel hover:text-primary py-1.5 text-left items-center gap-2.5 cursor-pointer">
           <span class="material-symbols-outlined text-xl">dashboard</span>
           <span>Admin Dashboard</span>
         </button>
@@ -186,7 +223,8 @@
 
     <!-- Drawer Footer Order Now Button -->
     <div class="p-6 border-t border-outline bg-surface flex-shrink-0">
-      <a href="#menu-section" class="nav-drawer-link flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-container text-white font-label-bold text-sm py-3.5 rounded-full shadow-warm-sm transition-all cursor-pointer">
+      <a href="#menu-section"
+        class="nav-drawer-link flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-container text-white font-label-bold text-sm py-3.5 rounded-full shadow-warm-sm transition-all cursor-pointer">
         <span>Order Now</span>
         <span class="material-symbols-outlined text-base">arrow_forward</span>
       </a>
@@ -194,7 +232,8 @@
   </aside>
 
   <!-- Floating Notification Center Panel -->
-  <div id="notification-panel" class="fixed top-16 right-4 sm:right-8 w-[92vw] sm:w-[380px] max-w-[420px] bg-white text-primary z-50 rounded-2xl shadow-warm-lg border border-outline opacity-0 pointer-events-none scale-95 transition-all duration-200 ease-out flex flex-col max-h-[75vh]">
+  <div id="notification-panel"
+    class="fixed top-16 right-4 sm:right-8 w-[92vw] sm:w-[380px] max-w-[420px] bg-white text-primary z-50 rounded-2xl shadow-warm-lg border border-outline opacity-0 pointer-events-none scale-95 transition-all duration-200 ease-out flex flex-col max-h-[75vh]">
     <div class="flex items-center justify-between px-5 py-4 border-b border-outline bg-surface rounded-t-2xl">
       <div class="flex items-center gap-2">
         <span class="material-symbols-outlined text-primary text-xl">notifications</span>
@@ -202,10 +241,12 @@
         <span id="notification-unread-header-count" class="text-[10px] font-bold text-caramel"></span>
       </div>
       <div class="flex items-center gap-2">
-        <button id="mark-all-read-btn" class="text-[11px] font-bold text-caramel hover:text-primary transition-colors cursor-pointer">
+        <button id="mark-all-read-btn"
+          class="text-[11px] font-bold text-caramel hover:text-primary transition-colors cursor-pointer">
           <span>Mark all read</span>
         </button>
-        <button id="close-notification-panel-btn" class="p-1 rounded-full text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
+        <button id="close-notification-panel-btn"
+          class="p-1 rounded-full text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
           <span class="material-symbols-outlined text-lg">close</span>
         </button>
       </div>
@@ -216,69 +257,84 @@
   <!-- MAIN CONTENT -->
   <main class="w-full flex-1">
 
-    <!-- HERO SECTION (Approved Visual Direction) -->
-    <section id="animation-container" class="relative w-full min-h-[85vh] lg:min-h-[90vh] flex items-center bg-[#fdf9ee] overflow-hidden py-10 lg:py-16">
-      <div class="max-w-7xl mx-auto px-4 sm:px-8 w-full grid grid-cols-1 lg:grid-cols-12 items-center gap-8 relative z-10">
+    <!-- HERO SECTION (Unified Single-Frame Visual Composition) -->
+    <section id="animation-container"
+      class="relative w-full h-[100vh] min-h-[580px] max-h-[920px] flex items-center bg-[#fdf9ee] overflow-hidden">
 
-        <!-- LEFT COLUMN: Typography & CTA (5 Cols) -->
-        <div id="hero-text-col" class="lg:col-span-5 flex flex-col items-start text-left z-20">
+      <!-- Full-Bleed Exact Approved Coffee Artwork Background (Compact Balanced Scale) -->
+      <div class="absolute inset-0 w-full h-full pointer-events-none select-none z-0 overflow-hidden">
+        <img id="anim" src="assets/hero-one-frame-compact.jpg"
+          alt="Brew &amp; Bites Signature Cold Brew with Splash, Cookies, Beans and Croissant"
+          class="w-full h-full object-cover object-right select-none pointer-events-none" />
+      </div>
+
+      <!-- Typography Layered in Dedicated Safe Area on Left (Zero Collision with Cup) -->
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full relative z-10 pt-20 sm:pt-24 pb-6 flex items-center">
+        <div id="hero-text-col" class="w-full max-w-[340px] sm:max-w-[400px] lg:max-w-[460px] xl:max-w-[520px] flex flex-col items-start text-left z-20">
+
           <!-- Eyebrow + Dash -->
-          <div class="mb-4">
-            <span class="font-label-bold text-xs uppercase tracking-widest text-primary font-bold">BREW&amp;BITES</span>
-            <div class="w-8 h-0.5 bg-caramel rounded-full mt-1"></div>
+          <div class="mb-2.5 sm:mb-3">
+            <span
+              class="font-label-bold text-xs uppercase tracking-[0.22em] text-primary font-extrabold">BREW&amp;BITES</span>
+            <div class="w-8 sm:w-10 h-0.5 bg-caramel rounded-full mt-1"></div>
           </div>
 
-          <!-- Headline -->
-          <h1 class="font-display font-black text-5xl sm:text-6xl md:text-7xl lg:text-[76px] text-primary leading-[1.04] tracking-tight mb-5">
+          <!-- Editorial Headline (Playfair Display) -->
+          <h1
+            class="font-display font-black text-4xl sm:text-5xl md:text-6xl lg:text-[60px] xl:text-[70px] text-primary leading-[1.04] tracking-tight mb-3 sm:mb-4">
             Your New<br />
             <span class="text-caramel font-black">Coffee</span><br />
             Obsession.
           </h1>
 
           <!-- Supporting Copy -->
-          <p class="font-body text-base sm:text-lg text-on-surface-variant max-w-sm mb-8 leading-relaxed font-medium">
+          <p
+            class="font-body text-xs sm:text-sm md:text-base text-on-surface-variant max-w-[280px] sm:max-w-sm mb-5 sm:mb-6 leading-relaxed font-semibold">
             Rich coffee. Creamy indulgence.<br />
             Made to crave.
           </p>
 
           <!-- Primary CTA Button -->
-          <a href="#menu-section" class="bg-primary hover:bg-primary-container text-white font-label-bold text-sm sm:text-base px-8 py-4 rounded-full shadow-warm-md hover:scale-[1.02] active:scale-95 transition-all duration-300 inline-flex items-center gap-2.5 cursor-pointer">
+          <a href="#menu-section"
+            class="bg-primary hover:bg-primary-container text-white font-label-bold text-xs sm:text-sm md:text-base px-7 sm:px-8 py-3.5 rounded-full shadow-warm-md hover:shadow-warm-lg hover:scale-[1.02] active:scale-95 transition-all duration-300 inline-flex items-center gap-2.5 cursor-pointer">
             <span>Discover the Flavour</span>
-            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            <span class="material-symbols-outlined text-sm sm:text-base">arrow_forward</span>
           </a>
-        </div>
 
-        <!-- RIGHT COLUMN: Large Cold Coffee Product with Splash (7 Cols) -->
-        <div class="lg:col-span-7 flex items-center justify-center relative lg:-ml-6 py-4 lg:py-0">
-          <img id="anim" src="assets/hero-cup-splash.png" alt="Brew &amp; Bites Signature Cold Brew with Splash and Bites" class="w-full max-w-[580px] lg:max-w-[680px] h-auto object-contain select-none pointer-events-none drop-shadow-xl" />
         </div>
-
       </div>
     </section>
 
     <!-- CATEGORY NAVIGATION STRIP -->
     <section class="w-full max-w-7xl mx-auto px-4 sm:px-8 -mt-2 sm:-mt-4 mb-8 relative z-20">
-      <div class="bg-[#fbf7ee] rounded-full border border-outline p-1.5 flex flex-col md:flex-row items-center justify-between gap-3 shadow-warm-xs">
+      <div
+        class="bg-[#fbf7ee] rounded-full border border-outline p-1.5 flex flex-col md:flex-row items-center justify-between gap-3 shadow-warm-xs">
 
         <!-- Left: Category Pills -->
         <div class="flex items-center gap-1 overflow-x-auto hide-scrollbar w-full md:w-auto p-0.5">
-          <button data-menu-cat="all" class="menu-cat-btn flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white font-label-bold text-xs shadow-warm-xs transition-all cursor-pointer">
+          <button data-menu-cat="all"
+            class="menu-cat-btn flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white font-label-bold text-xs shadow-warm-xs transition-all cursor-pointer">
             <span class="material-symbols-outlined text-base">local_cafe</span>
             <span>All Menu</span>
           </button>
-          <button data-menu-cat="coffee" class="menu-cat-btn flex items-center gap-2 px-4 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer">
+          <button data-menu-cat="coffee"
+            class="menu-cat-btn flex items-center gap-2 px-4 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer">
             <span class="material-symbols-outlined text-base">icecream</span>
             <span>Cold Brews</span>
           </button>
-          <button data-menu-cat="cookies" class="menu-cat-btn flex items-center gap-2 px-4 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer">
+          <button data-menu-cat="cookies"
+            class="menu-cat-btn flex items-center gap-2 px-4 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer">
             <span class="material-symbols-outlined text-base">cookie</span>
             <span>Cookies</span>
           </button>
-          <button data-menu-cat="muffins" class="menu-cat-btn flex items-center gap-2 px-4 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer">
+          <button data-menu-cat="muffins"
+            class="menu-cat-btn flex items-center gap-2 px-4 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer">
             <span class="material-symbols-outlined text-base">bakery_dining</span>
             <span>Muffins</span>
           </button>
-          <button data-menu-cat="croissants" class="menu-cat-btn flex items-center gap-2 px-4 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer">
+          <button data-menu-cat="croissants"
+            class="menu-cat-btn flex items-center gap-2 px-4 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer">
             <span class="material-symbols-outlined text-base">breakfast_dining</span>
             <span>Croissants</span>
           </button>
@@ -287,10 +343,13 @@
         <!-- Right: Search Input -->
         <div class="flex items-center gap-2 w-full md:w-auto pr-1">
           <div class="relative w-full md:w-64">
-            <input id="menu-search-input" type="text" placeholder="Search your cravings..." class="w-full text-xs pl-4 pr-9 py-2 rounded-full bg-[#fbf6ec] border border-outline text-primary placeholder:text-on-surface-variant/70 focus:outline-none focus:border-primary shadow-2xs" />
-            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-base">search</span>
+            <input id="menu-search-input" type="text" placeholder="Search your cravings..."
+              class="w-full text-xs pl-4 pr-9 py-2 rounded-full bg-[#fbf6ec] border border-outline text-primary placeholder:text-on-surface-variant/70 focus:outline-none focus:border-primary shadow-2xs" />
+            <span
+              class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-base">search</span>
           </div>
-          <select id="menu-avail-filter" class="hidden sm:inline-block text-xs font-bold bg-[#fbf6ec] border border-outline rounded-full px-3 py-2 text-primary cursor-pointer shadow-2xs">
+          <select id="menu-avail-filter"
+            class="hidden sm:inline-block text-xs font-bold bg-[#fbf6ec] border border-outline rounded-full px-3 py-2 text-primary cursor-pointer shadow-2xs">
             <option value="all">All</option>
             <option value="available">In Stock</option>
             <option value="soldout">Sold Out</option>
@@ -304,7 +363,8 @@
     <section id="menu-section" class="w-full max-w-7xl mx-auto px-4 sm:px-8 py-6 mb-12 scroll-mt-24">
       <div class="flex items-center justify-between mb-6">
         <h2 class="font-display font-bold text-2xl sm:text-3xl text-primary">Our Favourites</h2>
-        <a href="#menu-section" onclick="storefrontCategoryFilter='all'; renderProducts();" class="text-xs font-bold text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
+        <a href="#menu-section" onclick="storefrontCategoryFilter='all'; renderProducts();"
+          class="text-xs font-bold text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
           <span>View All Products</span>
           <span class="material-symbols-outlined text-sm">arrow_forward</span>
         </a>
@@ -329,42 +389,50 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 
         <!-- LEFT: Our Roastery Card (7 Cols) -->
-        <div id="story-section" class="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-7 border border-outline shadow-warm-xs flex flex-col justify-between scroll-mt-24 relative overflow-hidden">
+        <div id="story-section"
+          class="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-7 border border-outline shadow-warm-xs flex flex-col justify-between scroll-mt-24 relative overflow-hidden">
           <div>
             <div class="flex items-center gap-2 mb-3">
               <h3 class="font-display font-bold text-2xl text-primary">Our Roastery</h3>
               <span class="material-symbols-outlined text-primary text-xl">coffee_maker</span>
             </div>
             <p class="font-body text-xs sm:text-sm text-on-surface-variant leading-relaxed max-w-md mb-6 font-medium">
-              We source the finest beans from the best farms and roast them in small batches to bring out rich flavours in every cup.
+              We source the finest beans from the best farms and roast them in small batches to bring out rich flavours
+              in every cup.
             </p>
-            <a href="#menu-section" class="bg-primary hover:bg-primary-container text-white font-label-bold text-xs px-5 py-2.5 rounded-full shadow-warm-xs hover:scale-[1.02] active:scale-95 transition-all inline-flex items-center gap-2 mb-6">
+            <a href="#menu-section"
+              class="bg-primary hover:bg-primary-container text-white font-label-bold text-xs px-5 py-2.5 rounded-full shadow-warm-xs hover:scale-[1.02] active:scale-95 transition-all inline-flex items-center gap-2 mb-6">
               <span>Know Our Story</span>
               <span class="material-symbols-outlined text-xs">arrow_forward</span>
             </a>
           </div>
 
           <div class="w-full rounded-2xl overflow-hidden shadow-xs mt-auto">
-            <img src="assets/roastery-roasting.jpg" alt="Artisanal Roastery Machine" class="w-full h-36 sm:h-44 object-cover rounded-2xl" />
+            <img src="assets/roastery-roasting.jpg" alt="Artisanal Roastery Machine"
+              class="w-full h-36 sm:h-44 object-cover rounded-2xl" />
           </div>
         </div>
 
         <!-- RIGHT: What Our Locals Say (5 Cols) -->
-        <div id="reviews-section" class="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-7 border border-outline shadow-warm-xs flex flex-col justify-between scroll-mt-24">
+        <div id="reviews-section"
+          class="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-7 border border-outline shadow-warm-xs flex flex-col justify-between scroll-mt-24">
           <div class="flex items-center justify-between mb-5">
             <div class="flex items-center gap-2">
               <h3 class="font-display font-bold text-2xl text-primary">What Our Locals Say</h3>
               <span class="material-symbols-outlined text-caramel text-xl">star</span>
             </div>
             <div class="flex items-center gap-1.5">
-              <button class="w-7 h-7 rounded-full border border-outline flex items-center justify-center text-primary hover:bg-surface-container transition-colors cursor-pointer text-xs font-bold">&lt;</button>
-              <button class="w-7 h-7 rounded-full border border-outline flex items-center justify-center text-primary hover:bg-surface-container transition-colors cursor-pointer text-xs font-bold">&gt;</button>
+              <button
+                class="w-7 h-7 rounded-full border border-outline flex items-center justify-center text-primary hover:bg-surface-container transition-colors cursor-pointer text-xs font-bold">&lt;</button>
+              <button
+                class="w-7 h-7 rounded-full border border-outline flex items-center justify-center text-primary hover:bg-surface-container transition-colors cursor-pointer text-xs font-bold">&gt;</button>
             </div>
           </div>
 
           <!-- 3 Review Testimonial Cards Grid -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div class="bg-[#fcf9f2] rounded-2xl p-3.5 border border-outline/70 flex flex-col justify-between text-left">
+            <div
+              class="bg-[#fcf9f2] rounded-2xl p-3.5 border border-outline/70 flex flex-col justify-between text-left">
               <div>
                 <div class="flex text-caramel text-xs mb-2">★★★★★</div>
                 <p class="font-body text-[11px] text-on-surface-variant leading-relaxed mb-3">
@@ -377,7 +445,8 @@
               </div>
             </div>
 
-            <div class="bg-[#fcf9f2] rounded-2xl p-3.5 border border-outline/70 flex flex-col justify-between text-left">
+            <div
+              class="bg-[#fcf9f2] rounded-2xl p-3.5 border border-outline/70 flex flex-col justify-between text-left">
               <div>
                 <div class="flex text-caramel text-xs mb-2">★★★★★</div>
                 <p class="font-body text-[11px] text-on-surface-variant leading-relaxed mb-3">
@@ -390,7 +459,8 @@
               </div>
             </div>
 
-            <div class="bg-[#fcf9f2] rounded-2xl p-3.5 border border-outline/70 flex flex-col justify-between text-left">
+            <div
+              class="bg-[#fcf9f2] rounded-2xl p-3.5 border border-outline/70 flex flex-col justify-between text-left">
               <div>
                 <div class="flex text-caramel text-xs mb-2">★★★★★</div>
                 <p class="font-body text-[11px] text-on-surface-variant leading-relaxed mb-3">
@@ -437,10 +507,13 @@
 
       <div class="flex flex-col gap-2 text-xs">
         <span class="font-bold uppercase tracking-wider text-primary mb-1">Stay Connected</span>
-        <p class="text-on-surface-variant text-xs mb-2">Subscribe for seasonal single-origin releases and bakery specials.</p>
+        <p class="text-on-surface-variant text-xs mb-2">Subscribe for seasonal single-origin releases and bakery
+          specials.</p>
         <div class="flex items-center gap-1.5">
-          <input type="email" placeholder="Enter your email" class="w-full text-xs px-3.5 py-2 rounded-full bg-white border border-outline text-primary focus:outline-none focus:border-primary" />
-          <button class="bg-primary hover:bg-primary-container text-white text-xs font-bold px-4 py-2 rounded-full transition-all cursor-pointer">Join</button>
+          <input type="email" placeholder="Enter your email"
+            class="w-full text-xs px-3.5 py-2 rounded-full bg-white border border-outline text-primary focus:outline-none focus:border-primary" />
+          <button
+            class="bg-primary hover:bg-primary-container text-white text-xs font-bold px-4 py-2 rounded-full transition-all cursor-pointer">Join</button>
         </div>
       </div>
     </div>
@@ -454,8 +527,7 @@
   <aside id="cart-drawer" role="dialog" aria-labelledby="cart-heading" aria-modal="true"
     class="fixed top-0 right-0 h-full w-full sm:w-[420px] max-w-full bg-surface text-primary z-[1050] shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out border-l border-outline">
     <!-- Cart Header -->
-    <div
-      class="flex items-center justify-between px-6 py-5 border-b border-outline bg-surface/80 backdrop-blur-sm">
+    <div class="flex items-center justify-between px-6 py-5 border-b border-outline bg-surface/80 backdrop-blur-sm">
       <div class="flex items-center gap-2.5">
         <span class="material-symbols-outlined text-primary text-2xl">shopping_bag</span>
         <h2 id="cart-heading" class="font-display text-xl font-bold text-primary tracking-tight">Your Order</h2>
@@ -489,7 +561,8 @@
   </aside>
 
   <!-- Full-Page Checkout Overlay Modal (Layer: z-[1100]) -->
-  <div id="checkout-modal" onclick="if(event.target === this) closeCheckout()" role="dialog" aria-labelledby="checkout-title" aria-modal="true"
+  <div id="checkout-modal" onclick="if(event.target === this) closeCheckout()" role="dialog"
+    aria-labelledby="checkout-title" aria-modal="true"
     class="fixed inset-0 z-[1100] bg-black/60 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
     <div id="checkout-modal-card"
       class="w-full max-w-4xl max-h-[92vh] overflow-y-auto bg-surface text-on-surface rounded-3xl shadow-2xl border border-outline flex flex-col transform scale-95 transition-transform duration-300 my-auto">
@@ -522,7 +595,8 @@
   </div>
 
   <!-- Full-Page Customer Profile & Orders Modal (Layer: z-[1110]) -->
-  <div id="profile-modal" onclick="if(event.target === this) closeProfile()" role="dialog" aria-labelledby="profile-title" aria-modal="true"
+  <div id="profile-modal" onclick="if(event.target === this) closeProfile()" role="dialog"
+    aria-labelledby="profile-title" aria-modal="true"
     class="fixed inset-0 z-[1110] bg-black/60 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
     <div id="profile-modal-card"
       class="w-full max-w-3xl max-h-[92vh] overflow-y-auto bg-surface text-on-surface rounded-3xl shadow-2xl border border-outline flex flex-col transform scale-95 transition-transform duration-300 my-auto">
@@ -531,8 +605,7 @@
       <div
         class="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-outline bg-surface/80 backdrop-blur-sm sticky top-0 z-10">
         <div class="flex items-center gap-3">
-          <div
-            class="w-9 h-9 rounded-full bg-secondary/10 text-primary flex items-center justify-center font-bold">
+          <div class="w-9 h-9 rounded-full bg-secondary/10 text-primary flex items-center justify-center font-bold">
             <span class="material-symbols-outlined text-xl">person</span>
           </div>
           <div>
