@@ -4,102 +4,55 @@
 <head>
   <meta charset="utf-8" />
   <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-  <title>Brew &amp; Bite | Premium Chilled Coffee</title>
+  <title>Brew &amp; Bites | Artisanal Roastery &amp; Cold Brews</title>
+  <!-- Material Symbols Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+  <!-- Google Fonts: Fraunces, Playfair Display & Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600..900;1,9..144,600..900&amp;family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&amp;display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-    rel="stylesheet" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;family=Sora:wght@600;700;800;900&amp;display=swap"
-    rel="stylesheet" />
   <script id="tailwind-config">
     tailwind.config = {
       darkMode: "class",
       theme: {
         extend: {
           "colors": {
-            "tertiary-fixed-dim": "#f4b6c1",
-            "on-surface": "#1b1d0e",
-            "surface-variant": "#e4e4cc",
-            "inverse-primary": "#e1c1a4",
-            "secondary-container": "#fdbe49",
-            "surface": "#fbfbe2",
-            "secondary-fixed-dim": "#fabc46",
-            "surface-container": "#efefd7",
-            "surface-dim": "#dbdcc3",
-            "on-secondary-fixed-variant": "#5f4100",
-            "on-surface-variant": "#4e453d",
-            "on-primary-container": "#bd9f83",
-            "primary-container": "#4b3621",
-            "on-primary": "#ffffff",
-            "surface-container-high": "#eaead1",
-            "on-secondary-container": "#704e00",
-            "on-error": "#ffffff",
-            "tertiary-container": "#582d37",
-            "surface-container-highest": "#e4e4cc",
-            "on-primary-fixed": "#291806",
-            "on-primary-fixed-variant": "#59422c",
-            "surface-bright": "#fbfbe2",
-            "on-error-container": "#93000a",
-            "on-tertiary": "#ffffff",
-            "on-tertiary-fixed-variant": "#663a43",
-            "inverse-on-surface": "#f2f2d9",
-            "surface-container-lowest": "#ffffff",
-            "inverse-surface": "#303221",
-            "outline-variant": "#d2c4ba",
-            "on-tertiary-container": "#cf959f",
-            "primary": "#33210d",
-            "surface-container-low": "#f5f5dc",
-            "primary-fixed-dim": "#e1c1a4",
-            "on-secondary": "#ffffff",
-            "secondary-fixed": "#ffdeab",
-            "on-background": "#1b1d0e",
-            "tertiary-fixed": "#ffd9df",
-            "on-secondary-fixed": "#271900",
-            "secondary": "#7d5700",
-            "background": "#fbfbe2",
-            "surface-tint": "#725a42",
-            "error-container": "#ffdad6",
-            "tertiary": "#3e1821",
-            "outline": "#80756c",
-            "primary-fixed": "#fedcbe",
-            "error": "#ba1a1a",
-            "on-tertiary-fixed": "#330f19"
-          },
-          "borderRadius": {
-            "DEFAULT": "1rem",
-            "lg": "2rem",
-            "xl": "3rem",
-            "full": "9999px"
-          },
-          "spacing": {
-            "container-margin-desktop": "80px",
-            "section-gap": "64px",
-            "base": "8px",
-            "container-margin-mobile": "20px",
-            "gutter": "24px"
+            "surface": "#FDF9EE",
+            "surface-dim": "#F5EFE0",
+            "surface-card": "#FFFFFF",
+            "surface-container": "#F8EFE4",
+            "surface-container-high": "#F1E5D6",
+            "primary": "#331C11",
+            "primary-container": "#4A1F0B",
+            "on-primary": "#FFFFFF",
+            "secondary": "#6C2F00",
+            "caramel": "#C87A2A",
+            "caramel-light": "#E8A359",
+            "on-surface": "#331C11",
+            "on-surface-variant": "#6B4F3E",
+            "outline": "#EADDD0",
+            "outline-variant": "#D8C7B5",
+            "background": "#FDF9EE"
           },
           "fontFamily": {
-            "label-bold": ["Sora"],
-            "body-lg": ["Plus Jakarta Sans"],
-            "headline-lg": ["Sora"],
-            "headline-md": ["Sora"],
-            "headline-xl": ["Sora"],
-            "headline-lg-mobile": ["Sora"],
-            "body-md": ["Plus Jakarta Sans"],
-            "caption": ["Plus Jakarta Sans"],
-            "display": ["Sora"]
+            "display": ["Fraunces", "serif"],
+            "headline": ["Playfair Display", "serif"],
+            "body": ["Plus Jakarta Sans", "sans-serif"],
+            "label-bold": ["Plus Jakarta Sans", "sans-serif"]
           },
-          "fontSize": {
-            "label-bold": ["14px", { "lineHeight": "20px", "fontWeight": "700" }],
-            "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
-            "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
-            "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
-            "headline-xl": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "800" }],
-            "display-lg": ["80px", { "lineHeight": "88px", "letterSpacing": "-0.04em", "fontWeight": "900" }],
-            "headline-lg-mobile": ["28px", { "lineHeight": "34px", "fontWeight": "700" }],
-            "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
-            "caption": ["12px", { "lineHeight": "16px", "fontWeight": "500" }]
+          "borderRadius": {
+            "DEFAULT": "0.5rem",
+            "lg": "1rem",
+            "xl": "1.5rem",
+            "2xl": "2rem",
+            "full": "9999px"
+          },
+          "boxShadow": {
+            "warm-xs": "0 2px 8px rgba(51, 28, 17, 0.05)",
+            "warm-sm": "0 4px 14px rgba(51, 28, 17, 0.08)",
+            "warm-md": "0 10px 25px rgba(51, 28, 17, 0.10)",
+            "warm-lg": "0 20px 40px rgba(51, 28, 17, 0.14)"
           }
         }
       }
@@ -108,182 +61,132 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 
-<body
-  class="bg-background text-on-background font-body-md selection:bg-tertiary-fixed-dim selection:text-primary overflow-x-hidden">
+<body class="bg-surface text-primary font-body antialiased min-h-screen flex flex-col selection:bg-caramel/20 selection:text-primary overflow-x-hidden">
 
-  <!-- Floating Transparent Glass Navbar -->
-  <!-- Floating Transparent Glass Navbar -->
-  <header id="main-nav"
-    class="fixed top-3 sm:top-6 left-1/2 -translate-x-1/2 w-[94%] sm:w-[92%] max-w-7xl rounded-full z-40 transition-all duration-200 border border-white/20 bg-white/10 backdrop-blur-xs py-2.5 sm:py-3.5 px-4 sm:px-6 md:px-8">
-    <div class="flex items-center justify-between w-full min-w-0">
-      <!-- Left: Brand / Logo -->
-      <a href="#animation-container"
-        class="text-lg sm:text-2xl font-display font-black text-primary tracking-tighter hover:scale-105 transition-transform flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-        <span>Brew &amp; Bite</span>
+  <!-- TOP APP BAR / NAVBAR -->
+  <header id="main-nav" class="w-full bg-[#fdf9ee]/95 backdrop-blur-md sticky top-0 z-40 border-b border-outline/60 px-4 sm:px-8 py-3.5 transition-all duration-200">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+
+      <!-- Left: Hamburger + Nav Links -->
+      <div class="flex items-center gap-6">
+        <button id="mobile-menu-btn" onclick="openNavDrawer()" aria-label="Open Navigation Menu" class="p-1.5 rounded-lg text-primary hover:bg-surface-container transition-colors cursor-pointer flex items-center justify-center">
+          <span class="material-symbols-outlined text-2xl">menu</span>
+        </button>
+
+        <nav class="hidden md:flex items-center gap-6 text-xs font-label-bold uppercase tracking-wider">
+          <a href="#animation-container" class="text-primary border-b-2 border-primary pb-0.5">Home</a>
+          <a href="#menu-section" class="text-on-surface-variant hover:text-primary transition-colors">Menu</a>
+          <a href="#story-section" class="text-on-surface-variant hover:text-primary transition-colors">Our Roastery</a>
+          <a href="#reviews-section" class="text-on-surface-variant hover:text-primary transition-colors">Reviews</a>
+        </nav>
+      </div>
+
+      <!-- Center: Brand Logo (Script / Editorial Display) -->
+      <a href="#animation-container" class="font-display italic font-black text-2xl sm:text-3xl text-primary tracking-tight hover:opacity-90 transition-opacity">
+        Brew&amp;Bites
       </a>
 
-      <!-- Center: Navigation Links (Desktop / Tablet) -->
-      <nav class="hidden md:flex items-center gap-6 lg:gap-9">
-        <a href="#animation-container"
-          class="font-label-bold text-sm text-primary/80 hover:text-tertiary hover:scale-105 transition-all">Home</a>
-        <a href="#coffee-section"
-          class="font-label-bold text-sm text-primary/80 hover:text-tertiary hover:scale-105 transition-all">Coffee</a>
-        <a href="#bites-section"
-          class="font-label-bold text-sm text-primary/80 hover:text-tertiary hover:scale-105 transition-all">Bites</a>
-        <a href="#story-section"
-          class="font-label-bold text-sm text-primary/80 hover:text-tertiary hover:scale-105 transition-all">Our Story</a>
-        <a href="#reviews-section"
-          class="font-label-bold text-sm text-primary/80 hover:text-tertiary hover:scale-105 transition-all">Reviews</a>
-      </nav>
-
-      <!-- Right: Notifications, Profile, Cart, Order Now & Mobile Hamburger -->
-      <div class="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
-        <!-- Admin Dashboard Quick Button (Hidden unless admin logged in) -->
-        <button id="nav-admin-btn" style="display: none;"
-          onclick="if(typeof openAdminDashboard==='function') openAdminDashboard()" aria-label="Open Admin Dashboard"
-          class="items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-full bg-tertiary text-on-tertiary font-label-bold text-xs shadow-sm hover:scale-105 transition-all cursor-pointer">
-          <span class="material-symbols-outlined text-sm">dashboard</span>
-          <span class="hidden sm:inline">Admin</span>
+      <!-- Right: Controls (Currency, Notification, Profile, Cart) -->
+      <div class="flex items-center gap-3 sm:gap-4">
+        <!-- Admin Dashboard Button (Conditional, Shown for Admins) -->
+        <button id="nav-admin-btn" style="display: none;" onclick="if(typeof openAdminDashboard==='function') openAdminDashboard()" aria-label="Open Admin Dashboard" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-caramel/15 hover:bg-caramel/25 text-primary text-xs font-bold transition-all cursor-pointer border border-caramel/30">
+          <span class="material-symbols-outlined text-base">dashboard</span>
+          <span>Admin</span>
         </button>
 
-        <!-- Currency Selector (Desktop / Tablet) -->
-        <select id="currency-selector" aria-label="Select Currency"
-          class="hidden sm:inline-block bg-white/30 hover:bg-white/50 border border-white/40 text-primary text-xs font-label-bold px-2 py-1.5 rounded-full cursor-pointer transition-all outline-none">
-          <option value="USD">🇺🇸 USD ($)</option>
-          <option value="INR">🇮🇳 INR (₹)</option>
-          <option value="CAD">🇨🇦 CAD (CA$)</option>
-          <option value="GBP">🇬🇧 GBP (£)</option>
+        <!-- Currency Selector -->
+        <select id="currency-selector" aria-label="Select Currency" class="bg-transparent border border-outline text-primary text-xs font-bold px-2.5 py-1 rounded-full cursor-pointer hover:border-primary transition-all outline-none">
+          <option value="INR">INR (₹)</option>
+          <option value="USD">USD ($)</option>
+          <option value="CAD">CAD (CA$)</option>
+          <option value="GBP">GBP (£)</option>
         </select>
 
-        <!-- Notification Bell Button (Desktop / Tablet) -->
-        <button id="notification-btn" aria-label="View Notifications"
-          class="hidden sm:flex relative items-center justify-center p-2.5 rounded-full bg-white/20 hover:bg-white/40 border border-white/30 text-primary transition-all duration-200 cursor-pointer shadow-xs active:scale-95">
+        <!-- Notification Bell -->
+        <button id="notification-btn" aria-label="View Notifications" class="relative p-1.5 rounded-full text-primary hover:bg-surface-container transition-colors cursor-pointer">
           <span class="material-symbols-outlined text-xl">notifications</span>
-          <!-- Notification Badge Counter -->
-          <span id="notification-badge"
-            class="hidden absolute -top-1 -right-1 bg-tertiary text-on-tertiary font-label-bold text-[10px] leading-none min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center shadow-sm">0</span>
+          <span id="notification-badge" class="hidden absolute -top-0.5 -right-0.5 bg-caramel text-white font-bold text-[9px] min-w-[15px] h-[15px] px-0.5 rounded-full flex items-center justify-center">0</span>
         </button>
 
-        <!-- Profile Button (Desktop / Tablet) -->
-        <button id="profile-btn" aria-label="Customer Profile & Order History"
-          class="hidden sm:flex items-center justify-center p-2.5 rounded-full bg-white/20 hover:bg-white/40 border border-white/30 text-primary transition-all duration-200 cursor-pointer shadow-xs active:scale-95">
+        <!-- Profile Button -->
+        <button id="profile-btn" onclick="openProfile()" aria-label="Customer Profile" class="p-1.5 rounded-full text-primary hover:bg-surface-container transition-colors cursor-pointer">
           <span class="material-symbols-outlined text-xl">person</span>
         </button>
 
-        <!-- Cart Drawer Toggle Button -->
-        <button id="cart-btn" aria-label="View Cart"
-          class="relative flex items-center justify-center p-2 sm:p-2.5 rounded-full bg-white/20 hover:bg-white/40 border border-white/30 text-primary transition-all duration-200 cursor-pointer shadow-xs active:scale-95">
-          <span class="material-symbols-outlined text-lg sm:text-xl">shopping_bag</span>
-          <!-- Cart Badge Counter -->
-          <span id="cart-badge"
-            class="hidden absolute -top-1 -right-1 bg-tertiary text-on-tertiary font-label-bold text-[11px] leading-none min-w-[19px] h-[19px] px-1 rounded-full flex items-center justify-center shadow-sm">0</span>
-        </button>
-
-        <!-- Order Now CTA (Desktop / Tablet) -->
-        <a href="#order-section"
-          class="hidden sm:inline-flex items-center gap-2 bg-tertiary text-on-tertiary font-label-bold text-xs sm:text-sm px-4 sm:px-5 py-2 sm:py-2.5 rounded-full hover:scale-105 hover:-translate-y-0.5 transition-all duration-300 shadow-md pink-glow flex-shrink-0">
-          <span>Order Now</span>
-          <span class="material-symbols-outlined text-sm">arrow_forward</span>
-        </a>
-
-        <!-- Mobile Hamburger Button -->
-        <button id="mobile-menu-btn" onclick="openNavDrawer()" aria-label="Toggle navigation menu"
-          class="md:hidden flex items-center justify-center p-1.5 sm:p-2 rounded-full text-primary hover:bg-white/30 transition-colors cursor-pointer">
-          <span id="menu-icon" class="material-symbols-outlined text-2xl">menu</span>
+        <!-- Cart Button -->
+        <button id="cart-btn" onclick="openCart()" aria-label="View Cart" class="relative p-1.5 rounded-full text-primary hover:bg-surface-container transition-colors cursor-pointer">
+          <span class="material-symbols-outlined text-xl">shopping_bag</span>
+          <span id="cart-badge" class="absolute -top-0.5 -right-0.5 bg-primary text-white font-bold text-[10px] min-w-[17px] h-[17px] px-1 rounded-full flex items-center justify-center">0</span>
         </button>
       </div>
+
     </div>
   </header>
 
-  <!-- Side Navigation Drawer Backdrop Overlay -->
-  <div id="nav-drawer-overlay" onclick="closeNavDrawer()"
-    class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 opacity-0 pointer-events-none transition-opacity duration-300">
-  </div>
+  <!-- Side Navigation Drawer Backdrop Overlay (Layer: z-[990]) -->
+  <div id="nav-drawer-overlay" class="fixed inset-0 bg-[#331C11]/50 backdrop-blur-xs z-[990] opacity-0 pointer-events-none transition-opacity duration-300"></div>
 
-  <!-- Side Navigation Drawer (Solid Opaque Warm Cream #fbfbe2, Matches Reference) -->
-  <aside id="nav-drawer" role="dialog" aria-labelledby="nav-drawer-heading" aria-modal="true"
-    class="fixed top-0 right-0 h-full w-[290px] sm:w-[340px] max-w-[85vw] bg-surface text-on-surface z-50 shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-out border-l border-outline-variant/30">
-    
-    <!-- Drawer Top Bar -->
-    <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-outline-variant/20 bg-surface">
-      <span id="nav-drawer-heading" class="text-xs font-label-bold uppercase tracking-widest text-primary/60">Menu</span>
+  <!-- Side Navigation Drawer (Solid Fixed Modal Drawer from LEFT, Layer: z-[1000]) -->
+  <aside id="nav-drawer" role="dialog" aria-labelledby="nav-drawer-heading" aria-modal="true" class="fixed top-0 left-0 bottom-0 h-full h-[100dvh] w-[300px] sm:w-[340px] max-w-[85vw] bg-surface text-primary z-[1000] shadow-2xl flex flex-col transform -translate-x-full transition-transform duration-300 ease-out border-r border-outline">
+    <!-- Drawer Header -->
+    <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-outline bg-surface flex-shrink-0">
       <div class="flex items-center gap-2">
-        <!-- Quick Cart Icon in Drawer -->
-        <button id="drawer-cart-btn" onclick="closeNavDrawer(); if(typeof openCart==='function') openCart();" aria-label="View Cart"
-          class="relative flex items-center justify-center p-2 rounded-full bg-white/70 hover:bg-white border border-outline-variant/30 text-primary transition-all cursor-pointer shadow-xs">
+        <span id="nav-drawer-heading" class="font-display italic font-black text-2xl text-primary">Brew&amp;Bites</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="drawer-cart-btn" onclick="closeNavDrawer(); if(typeof openCart==='function') openCart();" aria-label="View Cart" class="relative p-1.5 rounded-full text-primary hover:bg-black/5 transition-colors cursor-pointer flex items-center justify-center">
           <span class="material-symbols-outlined text-xl">shopping_bag</span>
-          <span id="drawer-cart-badge"
-            class="hidden absolute -top-1 -right-1 bg-tertiary text-on-tertiary font-label-bold text-[10px] min-w-[17px] h-[17px] px-1 rounded-full flex items-center justify-center shadow-xs">0</span>
+          <span id="drawer-cart-badge" class="hidden absolute -top-0.5 -right-0.5 bg-primary text-white font-bold text-[9px] min-w-[15px] h-[15px] px-0.5 rounded-full flex items-center justify-center">0</span>
         </button>
-
-        <!-- Close Button -->
-        <button id="close-nav-drawer-btn" onclick="closeNavDrawer()" aria-label="Close navigation menu"
-          class="p-2 rounded-full text-primary hover:bg-black/5 transition-colors cursor-pointer flex items-center justify-center">
+        <button id="close-nav-drawer-btn" aria-label="Close navigation menu" class="p-2 rounded-full text-primary hover:bg-black/5 active:scale-95 transition-all cursor-pointer flex items-center justify-center">
           <span class="material-symbols-outlined text-2xl">close</span>
         </button>
       </div>
     </div>
 
-    <!-- Drawer Navigation Links & Controls -->
-    <div class="flex-1 px-6 py-5 flex flex-col gap-5 text-left overflow-y-auto bg-surface">
-      <div class="flex flex-col gap-3.5 font-label-bold text-base">
-        <a href="#animation-container"
-          class="nav-drawer-link text-primary/90 hover:text-tertiary hover:translate-x-1 transition-all py-1">Home</a>
-        <a href="#coffee-section"
-          class="nav-drawer-link text-primary/90 hover:text-tertiary hover:translate-x-1 transition-all py-1">Coffee</a>
-        <a href="#bites-section"
-          class="nav-drawer-link text-primary/90 hover:text-tertiary hover:translate-x-1 transition-all py-1">Bites</a>
-        <a href="#story-section"
-          class="nav-drawer-link text-primary/90 hover:text-tertiary hover:translate-x-1 transition-all py-1">Our Story</a>
-        <a href="#reviews-section"
-          class="nav-drawer-link text-primary/90 hover:text-tertiary hover:translate-x-1 transition-all py-1">Reviews</a>
+    <!-- Drawer Links & Mobile Actions -->
+    <div class="flex-1 px-6 py-5 flex flex-col gap-4 text-left overflow-y-auto bg-surface">
+      <div class="flex flex-col gap-3 font-bold text-base">
+        <a href="#animation-container" class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Home</a>
+        <a href="#menu-section" class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Menu</a>
+        <a href="#story-section" class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Our Roastery</a>
+        <a href="#reviews-section" class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Reviews</a>
       </div>
 
-      <div class="border-t border-outline-variant/20 pt-4 flex flex-col gap-3.5">
-        <!-- Currency Selector Row -->
+      <div class="border-t border-outline pt-4 flex flex-col gap-3">
         <div class="flex items-center justify-between py-1">
-          <span class="text-xs font-label-bold uppercase tracking-wider text-primary/70">Currency</span>
-          <select id="mobile-currency-selector" aria-label="Select Currency"
-            class="bg-white hover:bg-surface border border-outline-variant/30 text-primary text-xs font-label-bold px-3 py-1.5 rounded-full cursor-pointer transition-all outline-none shadow-xs">
-            <option value="USD">🇺🇸 USD ($)</option>
+          <span class="text-xs font-bold uppercase tracking-wider text-on-surface-variant">Currency</span>
+          <select id="mobile-currency-selector" aria-label="Select Currency" class="bg-white border border-outline text-primary text-xs font-bold px-3 py-1.5 rounded-full cursor-pointer transition-all outline-none">
             <option value="INR">🇮🇳 INR (₹)</option>
+            <option value="USD">🇺🇸 USD ($)</option>
             <option value="CAD">🇨🇦 CAD (CA$)</option>
             <option value="GBP">🇬🇧 GBP (£)</option>
           </select>
         </div>
 
-        <!-- Notifications Link Button -->
-        <button id="mobile-notification-btn"
-          class="font-label-bold text-sm text-primary/90 hover:text-tertiary py-1.5 text-left flex items-center justify-between cursor-pointer">
+        <button id="mobile-notification-btn" class="font-bold text-sm text-primary hover:text-caramel py-1.5 text-left flex items-center justify-between cursor-pointer">
           <div class="flex items-center gap-2.5">
             <span class="material-symbols-outlined text-xl">notifications</span>
             <span>Notifications</span>
           </div>
-          <span id="mobile-notification-badge"
-            class="hidden bg-tertiary text-on-tertiary font-label-bold text-[10px] px-2 py-0.5 rounded-full">0</span>
+          <span id="mobile-notification-badge" class="hidden bg-caramel text-white font-bold text-[10px] px-2 py-0.5 rounded-full">0</span>
         </button>
 
-        <!-- Profile & Orders Link Button -->
-        <button id="mobile-profile-btn"
-          class="font-label-bold text-sm text-primary/90 hover:text-tertiary py-1.5 text-left flex items-center gap-2.5 cursor-pointer">
+        <button id="mobile-profile-btn" onclick="closeNavDrawer(); openProfile();" class="font-bold text-sm text-primary hover:text-caramel py-1.5 text-left flex items-center gap-2.5 cursor-pointer">
           <span class="material-symbols-outlined text-xl">person</span>
           <span>My Profile &amp; Orders</span>
         </button>
 
-        <!-- Admin Dashboard Link (Conditional) -->
-        <button id="mobile-nav-admin-btn" style="display: none;"
-          onclick="if(typeof openAdminDashboard==='function') openAdminDashboard()"
-          class="font-label-bold text-sm text-tertiary hover:text-primary py-1.5 text-left items-center gap-2.5 cursor-pointer">
+        <button id="mobile-nav-admin-btn" style="display: none;" class="font-bold text-sm text-caramel hover:text-primary py-1.5 text-left items-center gap-2.5 cursor-pointer">
           <span class="material-symbols-outlined text-xl">dashboard</span>
           <span>Admin Dashboard</span>
         </button>
       </div>
     </div>
 
-    <!-- Drawer Footer CTA -->
-    <div class="p-6 border-t border-outline-variant/20 bg-surface">
-      <a href="#order-section"
-        class="nav-drawer-link flex items-center justify-center gap-2 w-full bg-tertiary text-on-tertiary font-label-bold text-sm py-3.5 rounded-full shadow-lg pink-glow hover:bg-primary transition-all">
+    <!-- Drawer Footer Order Now Button -->
+    <div class="p-6 border-t border-outline bg-surface flex-shrink-0">
+      <a href="#menu-section" class="nav-drawer-link flex items-center justify-center gap-2 w-full bg-primary hover:bg-primary-container text-white font-label-bold text-sm py-3.5 rounded-full shadow-warm-sm transition-all cursor-pointer">
         <span>Order Now</span>
         <span class="material-symbols-outlined text-base">arrow_forward</span>
       </a>
@@ -291,433 +194,293 @@
   </aside>
 
   <!-- Floating Notification Center Panel -->
-  <div id="notification-panel"
-    class="fixed top-20 sm:top-24 right-4 sm:right-12 md:right-24 w-[92vw] sm:w-[380px] max-w-[420px] bg-surface-container-lowest text-on-surface z-50 rounded-3xl shadow-2xl border border-outline-variant/30 opacity-0 pointer-events-none scale-95 transition-all duration-200 ease-out flex flex-col max-h-[75vh]">
-    <!-- Panel Header -->
-    <div
-      class="flex items-center justify-between px-5 py-4 border-b border-outline-variant/20 bg-surface/60 backdrop-blur-xs rounded-t-3xl">
+  <div id="notification-panel" class="fixed top-16 right-4 sm:right-8 w-[92vw] sm:w-[380px] max-w-[420px] bg-white text-primary z-50 rounded-2xl shadow-warm-lg border border-outline opacity-0 pointer-events-none scale-95 transition-all duration-200 ease-out flex flex-col max-h-[75vh]">
+    <div class="flex items-center justify-between px-5 py-4 border-b border-outline bg-surface rounded-t-2xl">
       <div class="flex items-center gap-2">
         <span class="material-symbols-outlined text-primary text-xl">notifications</span>
         <h3 class="font-display text-sm font-bold text-primary">Notifications</h3>
-        <span id="notification-unread-header-count" class="text-[10px] font-bold text-secondary"></span>
+        <span id="notification-unread-header-count" class="text-[10px] font-bold text-caramel"></span>
       </div>
       <div class="flex items-center gap-2">
-        <button id="mark-all-read-btn"
-          class="text-[11px] font-label-bold text-secondary hover:text-tertiary transition-colors cursor-pointer">
+        <button id="mark-all-read-btn" class="text-[11px] font-bold text-caramel hover:text-primary transition-colors cursor-pointer">
           <span>Mark all read</span>
         </button>
-        <button id="close-notification-panel-btn"
-          class="p-1 rounded-full text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
+        <button id="close-notification-panel-btn" class="p-1 rounded-full text-on-surface-variant hover:text-primary transition-colors cursor-pointer">
           <span class="material-symbols-outlined text-lg">close</span>
         </button>
       </div>
     </div>
-
-    <!-- Scrollable Notifications List -->
-    <div id="notification-list" class="flex-1 overflow-y-auto p-3.5 flex flex-col gap-2">
-      <!-- Populated via js/notifications.js -->
-    </div>
+    <div id="notification-list" class="flex-1 overflow-y-auto p-3.5 flex flex-col gap-2"></div>
   </div>
 
-  <!-- Scroll Animation Section (Hero) -->
-  <section id="animation-container" class="relative w-full h-[150vh] bg-surface-container-low overflow-clip">
-    <div
-      class="sticky top-0 min-h-screen w-full flex flex-col items-center justify-center overflow-hidden px-4 sm:px-6 md:px-10 lg:px-16 pt-24 sm:pt-28 lg:pt-0 pb-16 lg:pb-0">
-      <!-- Ambient glowing backgrounds matching the theme -->
-      <div
-        class="absolute top-1/4 -left-1/4 w-[700px] h-[700px] bg-tertiary-fixed-dim rounded-full mix-blend-multiply filter blur-[130px] opacity-45 blob-1 pointer-events-none">
-      </div>
-      <div
-        class="absolute bottom-1/4 -right-1/4 w-[700px] h-[700px] bg-secondary-container rounded-full mix-blend-multiply filter blur-[110px] opacity-40 blob-2 pointer-events-none">
-      </div>
+  <!-- MAIN CONTENT -->
+  <main class="w-full flex-1">
 
-      <!-- Main Two-Column Hero Composition -->
-      <div
-        class="w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-6 sm:gap-8 lg:gap-14 relative z-10 py-2 sm:py-4 lg:py-0">
+    <!-- HERO SECTION (Approved Visual Direction) -->
+    <section id="animation-container" class="relative w-full min-h-[85vh] lg:min-h-[90vh] flex items-center bg-[#fdf9ee] overflow-hidden py-10 lg:py-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-8 w-full grid grid-cols-1 lg:grid-cols-12 items-center gap-8 relative z-10">
 
-        <!-- LEFT COLUMN: Dedicated Text Content (~38% width on desktop) -->
-        <div id="hero-text-col"
-          class="hero-text-overlay w-full lg:w-[40%] flex flex-col items-start justify-center gap-4 sm:gap-5 lg:gap-6 z-20 text-left transition-all duration-300">
-
-          <!-- Pill Label -->
-          <div
-            class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 backdrop-blur-md border border-primary/20 shadow-xs text-primary font-label-bold text-xs tracking-wider uppercase">
-            <span class="w-2 h-2 rounded-full bg-secondary-container animate-pulse"></span>
-            <span>MOCHA CREAM • SIGNATURE BLEND</span>
+        <!-- LEFT COLUMN: Typography & CTA (5 Cols) -->
+        <div id="hero-text-col" class="lg:col-span-5 flex flex-col items-start text-left z-20">
+          <!-- Eyebrow + Dash -->
+          <div class="mb-4">
+            <span class="font-label-bold text-xs uppercase tracking-widest text-primary font-bold">BREW&amp;BITES</span>
+            <div class="w-8 h-0.5 bg-caramel rounded-full mt-1"></div>
           </div>
 
-          <!-- Brand Name & Main Headline -->
-          <div class="space-y-1.5 w-full">
-            <span class="block font-display font-bold text-base md:text-lg tracking-tight text-primary/80 uppercase">
-              BREW &amp; BITE
-            </span>
-            <h1
-              class="font-display font-black text-2xl sm:text-3xl md:text-4xl lg:text-[36px] xl:text-[42px] text-primary leading-[1.15] tracking-tight">
-              YOUR NEW COFFEE <br class="hidden sm:inline" />
-              <span class="text-gradient-buzz inline-block">OBSESSION.</span>
-            </h1>
-          </div>
+          <!-- Headline -->
+          <h1 class="font-display font-black text-5xl sm:text-6xl md:text-7xl lg:text-[76px] text-primary leading-[1.04] tracking-tight mb-5">
+            Your New<br />
+            <span class="text-caramel font-black">Coffee</span><br />
+            Obsession.
+          </h1>
 
-          <!-- Subtitle Description -->
-          <p class="font-body-md text-sm sm:text-base text-on-surface-variant font-normal leading-relaxed max-w-md">
-            Rich coffee. Creamy indulgence. Made to crave.
+          <!-- Supporting Copy -->
+          <p class="font-body text-base sm:text-lg text-on-surface-variant max-w-sm mb-8 leading-relaxed font-medium">
+            Rich coffee. Creamy indulgence.<br />
+            Made to crave.
           </p>
 
-          <!-- Compact Rounded CTA Button -->
-          <div class="pt-1">
-            <a href="#menu-section"
-              class="group inline-flex items-center gap-2 bg-primary text-on-primary font-label-bold text-xs sm:text-sm px-5 sm:px-6 py-2.5 sm:py-3 rounded-full hover:scale-105 hover:bg-tertiary transition-all duration-300 shadow-md caramel-glow-strong">
-              <span>Discover the flavour</span>
-              <span
-                class="material-symbols-outlined text-base transition-transform duration-300 group-hover:translate-x-1"
-                data-icon="arrow_forward">arrow_forward</span>
+          <!-- Primary CTA Button -->
+          <a href="#menu-section" class="bg-primary hover:bg-primary-container text-white font-label-bold text-sm sm:text-base px-8 py-4 rounded-full shadow-warm-md hover:scale-[1.02] active:scale-95 transition-all duration-300 inline-flex items-center gap-2.5 cursor-pointer">
+            <span>Discover the Flavour</span>
+            <span class="material-symbols-outlined text-sm">arrow_forward</span>
+          </a>
+        </div>
+
+        <!-- RIGHT COLUMN: Large Cold Coffee Product with Splash (7 Cols) -->
+        <div class="lg:col-span-7 flex items-center justify-center relative lg:-ml-6 py-4 lg:py-0">
+          <img id="anim" src="assets/hero-cup-splash.png" alt="Brew &amp; Bites Signature Cold Brew with Splash and Bites" class="w-full max-w-[580px] lg:max-w-[680px] h-auto object-contain select-none pointer-events-none drop-shadow-xl" />
+        </div>
+
+      </div>
+    </section>
+
+    <!-- CATEGORY NAVIGATION STRIP -->
+    <section class="w-full max-w-7xl mx-auto px-4 sm:px-8 -mt-2 sm:-mt-4 mb-8 relative z-20">
+      <div class="bg-[#fbf7ee] rounded-full border border-outline p-1.5 flex flex-col md:flex-row items-center justify-between gap-3 shadow-warm-xs">
+
+        <!-- Left: Category Pills -->
+        <div class="flex items-center gap-1 overflow-x-auto hide-scrollbar w-full md:w-auto p-0.5">
+          <button data-menu-cat="all" class="menu-cat-btn flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white font-label-bold text-xs shadow-warm-xs transition-all cursor-pointer">
+            <span class="material-symbols-outlined text-base">local_cafe</span>
+            <span>All Menu</span>
+          </button>
+          <button data-menu-cat="coffee" class="menu-cat-btn flex items-center gap-2 px-4 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer">
+            <span class="material-symbols-outlined text-base">icecream</span>
+            <span>Cold Brews</span>
+          </button>
+          <button data-menu-cat="cookies" class="menu-cat-btn flex items-center gap-2 px-4 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer">
+            <span class="material-symbols-outlined text-base">cookie</span>
+            <span>Cookies</span>
+          </button>
+          <button data-menu-cat="muffins" class="menu-cat-btn flex items-center gap-2 px-4 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer">
+            <span class="material-symbols-outlined text-base">bakery_dining</span>
+            <span>Muffins</span>
+          </button>
+          <button data-menu-cat="croissants" class="menu-cat-btn flex items-center gap-2 px-4 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer">
+            <span class="material-symbols-outlined text-base">breakfast_dining</span>
+            <span>Croissants</span>
+          </button>
+        </div>
+
+        <!-- Right: Search Input -->
+        <div class="flex items-center gap-2 w-full md:w-auto pr-1">
+          <div class="relative w-full md:w-64">
+            <input id="menu-search-input" type="text" placeholder="Search your cravings..." class="w-full text-xs pl-4 pr-9 py-2 rounded-full bg-[#fbf6ec] border border-outline text-primary placeholder:text-on-surface-variant/70 focus:outline-none focus:border-primary shadow-2xs" />
+            <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-base">search</span>
+          </div>
+          <select id="menu-avail-filter" class="hidden sm:inline-block text-xs font-bold bg-[#fbf6ec] border border-outline rounded-full px-3 py-2 text-primary cursor-pointer shadow-2xs">
+            <option value="all">All</option>
+            <option value="available">In Stock</option>
+            <option value="soldout">Sold Out</option>
+          </select>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- PRODUCT SECTION ("Our Favourites") -->
+    <section id="menu-section" class="w-full max-w-7xl mx-auto px-4 sm:px-8 py-6 mb-12 scroll-mt-24">
+      <div class="flex items-center justify-between mb-6">
+        <h2 class="font-display font-bold text-2xl sm:text-3xl text-primary">Our Favourites</h2>
+        <a href="#menu-section" onclick="storefrontCategoryFilter='all'; renderProducts();" class="text-xs font-bold text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
+          <span>View All Products</span>
+          <span class="material-symbols-outlined text-sm">arrow_forward</span>
+        </a>
+      </div>
+
+      <!-- Coffee Section Container -->
+      <div id="coffee-section">
+        <!-- 5-Column Product Grid -->
+        <div id="coffee-products" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <!-- Dynamically rendered via js/main.js renderProducts() -->
+        </div>
+      </div>
+
+      <!-- Bites Section Container (Fallback/Hidden) -->
+      <div id="bites-section" class="hidden">
+        <div id="bite-products"></div>
+      </div>
+    </section>
+
+    <!-- OUR ROASTERY & REVIEWS ROW -->
+    <section class="w-full max-w-7xl mx-auto px-4 sm:px-8 py-6 mb-16">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+
+        <!-- LEFT: Our Roastery Card (7 Cols) -->
+        <div id="story-section" class="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-7 border border-outline shadow-warm-xs flex flex-col justify-between scroll-mt-24 relative overflow-hidden">
+          <div>
+            <div class="flex items-center gap-2 mb-3">
+              <h3 class="font-display font-bold text-2xl text-primary">Our Roastery</h3>
+              <span class="material-symbols-outlined text-primary text-xl">coffee_maker</span>
+            </div>
+            <p class="font-body text-xs sm:text-sm text-on-surface-variant leading-relaxed max-w-md mb-6 font-medium">
+              We source the finest beans from the best farms and roast them in small batches to bring out rich flavours in every cup.
+            </p>
+            <a href="#menu-section" class="bg-primary hover:bg-primary-container text-white font-label-bold text-xs px-5 py-2.5 rounded-full shadow-warm-xs hover:scale-[1.02] active:scale-95 transition-all inline-flex items-center gap-2 mb-6">
+              <span>Know Our Story</span>
+              <span class="material-symbols-outlined text-xs">arrow_forward</span>
             </a>
           </div>
 
-        </div>
-
-        <!-- RIGHT COLUMN: Animation Showcase Card (~58% width on desktop) -->
-        <div class="w-full lg:w-[56%] flex items-center justify-center relative z-10">
-          <div
-            class="w-full max-w-[420px] lg:max-w-[500px] aspect-[4/3] sm:aspect-[16/11] lg:aspect-[4/3] flex items-center justify-center p-3 sm:p-4 rounded-3xl bg-white/40 backdrop-blur-xl border border-white/60 shadow-[0_20px_50px_rgba(75,54,33,0.09)] transition-all">
-            <img id="anim" alt="Brew &amp; Bite Product Animation"
-              class="w-full h-full object-contain rounded-2xl select-none pointer-events-none drop-shadow-xl" />
+          <div class="w-full rounded-2xl overflow-hidden shadow-xs mt-auto">
+            <img src="assets/roastery-roasting.jpg" alt="Artisanal Roastery Machine" class="w-full h-36 sm:h-44 object-cover rounded-2xl" />
           </div>
         </div>
 
-      </div>
-
-      <!-- Interactive Scroll Guide Hint -->
-      <div id="scroll-hint"
-        class="absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-1 text-primary/70 font-label-bold text-xs sm:text-sm bg-white/60 backdrop-blur-md px-4 sm:px-5 py-2 rounded-full border border-white/70 shadow-md transition-opacity duration-300 pointer-events-none">
-        <span>Scroll to explore</span>
-        <span class="material-symbols-outlined text-base sm:text-lg animate-bounce"
-          data-icon="expand_more">expand_more</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- Featured Menu Grid -->
-  <section id="menu-section"
-    class="pt-4 sm:pt-6 pb-16 sm:pb-20 px-container-margin-mobile md:px-container-margin-desktop bg-surface relative">
-    <div class="max-w-7xl mx-auto">
-      <div class="text-center mb-8 sm:mb-10">
-        <h2 class="font-display text-headline-xl text-primary mb-3">Our Favorites</h2>
-        <p class="font-body-lg text-on-surface-variant max-w-2xl mx-auto text-sm sm:text-base">The lineup everyone's
-          talking about. Find your new go-to.</p>
-      </div>
-
-      <!-- Storefront Product Search & Filter Bar -->
-      <div
-        class="mb-10 bg-surface-container-high/40 p-4 rounded-3xl border border-outline-variant/30 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xs">
-        <!-- Search Input -->
-        <div class="relative w-full md:w-80">
-          <span
-            class="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg">search</span>
-          <input id="menu-search-input" type="text" placeholder="Search coffee, bites, mocha..."
-            class="w-full text-xs pl-10 pr-4 py-2.5 rounded-full bg-surface border border-outline-variant/40 text-primary focus:outline-none focus:border-tertiary shadow-2xs" />
-        </div>
-
-        <!-- Filters (Category & Availability) -->
-        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-between md:justify-end">
-          <!-- Category Pills -->
-          <div class="flex items-center gap-1 bg-surface p-1 rounded-full border border-outline-variant/30">
-            <button data-menu-cat="all"
-              class="menu-cat-btn px-3 py-1 rounded-full text-xs font-label-bold transition-all bg-primary text-on-primary shadow-2xs cursor-pointer">All</button>
-            <button data-menu-cat="coffee"
-              class="menu-cat-btn px-3 py-1 rounded-full text-xs font-label-bold transition-all text-on-surface-variant hover:bg-surface-container-high cursor-pointer">Coffee</button>
-            <button data-menu-cat="bites"
-              class="menu-cat-btn px-3 py-1 rounded-full text-xs font-label-bold transition-all text-on-surface-variant hover:bg-surface-container-high cursor-pointer">Bites</button>
+        <!-- RIGHT: What Our Locals Say (5 Cols) -->
+        <div id="reviews-section" class="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-7 border border-outline shadow-warm-xs flex flex-col justify-between scroll-mt-24">
+          <div class="flex items-center justify-between mb-5">
+            <div class="flex items-center gap-2">
+              <h3 class="font-display font-bold text-2xl text-primary">What Our Locals Say</h3>
+              <span class="material-symbols-outlined text-caramel text-xl">star</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button class="w-7 h-7 rounded-full border border-outline flex items-center justify-center text-primary hover:bg-surface-container transition-colors cursor-pointer text-xs font-bold">&lt;</button>
+              <button class="w-7 h-7 rounded-full border border-outline flex items-center justify-center text-primary hover:bg-surface-container transition-colors cursor-pointer text-xs font-bold">&gt;</button>
+            </div>
           </div>
 
-          <!-- Availability Select -->
-          <select id="menu-avail-filter"
-            class="text-xs font-label-bold bg-surface border border-outline-variant/30 rounded-full px-3 py-1.5 text-primary cursor-pointer shadow-2xs">
-            <option value="all">All Items</option>
-            <option value="available">Available Only</option>
-            <option value="soldout">Sold Out Only</option>
-          </select>
-        </div>
-      </div>
+          <!-- 3 Review Testimonial Cards Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div class="bg-[#fcf9f2] rounded-2xl p-3.5 border border-outline/70 flex flex-col justify-between text-left">
+              <div>
+                <div class="flex text-caramel text-xs mb-2">★★★★★</div>
+                <p class="font-body text-[11px] text-on-surface-variant leading-relaxed mb-3">
+                  "The cold brew is out of this world! And those croissants? Just perfect."
+                </p>
+              </div>
+              <div class="border-t border-outline/40 pt-2">
+                <p class="font-bold text-[11px] text-primary">— Sarah J.</p>
+                <span class="text-[10px] text-emerald-700 font-medium">✓ Verified Buyer</span>
+              </div>
+            </div>
 
-      <div id="coffee-section" class="mb-12 scroll-mt-28">
-        <h3 class="font-display text-headline-md text-tertiary mb-6">Signature Brews</h3>
-        <div id="coffee-products" class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-          <!-- Dynamically rendered from js/products.js -->
+            <div class="bg-[#fcf9f2] rounded-2xl p-3.5 border border-outline/70 flex flex-col justify-between text-left">
+              <div>
+                <div class="flex text-caramel text-xs mb-2">★★★★★</div>
+                <p class="font-body text-[11px] text-on-surface-variant leading-relaxed mb-3">
+                  "My go-to place for coffee and a cozy morning vibe."
+                </p>
+              </div>
+              <div class="border-t border-outline/40 pt-2">
+                <p class="font-bold text-[11px] text-primary">— Karan M.</p>
+                <span class="text-[10px] text-emerald-700 font-medium">✓ Verified Buyer</span>
+              </div>
+            </div>
+
+            <div class="bg-[#fcf9f2] rounded-2xl p-3.5 border border-outline/70 flex flex-col justify-between text-left">
+              <div>
+                <div class="flex text-caramel text-xs mb-2">★★★★★</div>
+                <p class="font-body text-[11px] text-on-surface-variant leading-relaxed mb-3">
+                  "Fresh, delicious and made with so much love. Highly recommend!"
+                </p>
+              </div>
+              <div class="border-t border-outline/40 pt-2">
+                <p class="font-bold text-[11px] text-primary">— Priya S.</p>
+                <span class="text-[10px] text-emerald-700 font-medium">✓ Verified Buyer</span>
+              </div>
+            </div>
+          </div>
+
         </div>
+
       </div>
-      <div id="bites-section" class="scroll-mt-28">
-        <h3 class="font-display text-headline-md text-tertiary mb-6">Bakery Bites</h3>
-        <div id="bite-products" class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-          <!-- Dynamically rendered from js/products.js -->
-        </div>
-      </div>
-    </div>
-  </section>
-  <!-- Our Brew Process (Our Story) -->
-  <section id="story-section"
-    class="py-16 sm:py-20 px-container-margin-mobile md:px-container-margin-desktop bg-surface-container-high relative overflow-hidden scroll-mt-20">
-    <div class="max-w-7xl mx-auto relative z-10">
-      <h2 class="font-display text-headline-xl text-primary text-center mb-10 sm:mb-12">How We Do It</h2>
-      <div class="flex flex-col md:flex-row justify-center items-start gap-12 md:gap-8">
-        <!-- Step 1 -->
-        <div class="flex-1 flex flex-col items-center text-center relative">
-          <div
-            class="w-24 h-24 bg-tertiary text-on-tertiary rounded-full flex items-center justify-center mb-6 shadow-lg transform hover:rotate-12 transition-transform">
-            <span class="material-symbols-outlined text-4xl" data-icon="psychiatry">psychiatry</span>
-          </div>
-          <h3 class="font-display text-headline-md text-primary mb-3">1. Selection</h3>
-          <p class="font-body-md text-on-surface-variant">We source only the finest, ethically grown beans from top
-            farms.</p>
-          <div
-            class="hidden md:block absolute top-12 left-[60%] w-[80%] h-0.5 bg-outline-variant/50 border-t-2 border-dashed border-outline-variant/50">
-          </div>
-        </div>
-        <!-- Step 2 -->
-        <div class="flex-1 flex flex-col items-center text-center relative">
-          <div
-            class="w-24 h-24 bg-secondary-container text-on-secondary-container rounded-full flex items-center justify-center mb-6 shadow-lg transform hover:rotate-12 transition-transform">
-            <span class="material-symbols-outlined text-4xl"
-              data-icon="local_fire_department">local_fire_department</span>
-          </div>
-          <h3 class="font-display text-headline-md text-primary mb-3">2. Roasting</h3>
-          <p class="font-body-md text-on-surface-variant">Carefully roasted in small batches to lock in those bold
-            flavors.</p>
-          <div
-            class="hidden md:block absolute top-12 left-[60%] w-[80%] h-0.5 bg-outline-variant/50 border-t-2 border-dashed border-outline-variant/50">
-          </div>
-        </div>
-        <!-- Step 3 -->
-        <div class="flex-1 flex flex-col items-center text-center">
-          <div
-            class="w-24 h-24 bg-primary text-on-primary rounded-full flex items-center justify-center mb-6 shadow-lg transform hover:rotate-12 transition-transform">
-            <span class="material-symbols-outlined text-4xl" data-icon="coffee_maker">coffee_maker</span>
-          </div>
-          <h3 class="font-display text-headline-md text-primary mb-3">3. Brewing</h3>
-          <p class="font-body-md text-on-surface-variant">Cold-brewed to perfection, then chilled for the ultimate
-            refreshment.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-  <!-- The "Bite" Gallery -->
-  <section class="py-16 sm:py-20 px-container-margin-mobile md:px-container-margin-desktop bg-background">
-    <div class="max-w-7xl mx-auto">
-      <h2 class="font-display text-headline-xl text-primary text-center mb-10 sm:mb-12">The Perfect Match</h2>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div class="aspect-square rounded-3xl overflow-hidden group relative">
-          <img alt="Coffee and Croissant"
-            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCKQ2dbJrh35_sCz6GFzKzIN4mCpvy5FC_xfUW4OwpKgL4WENK4cjMyybCrbQMpNWIQP2fXiNYqqB1y-EsFS9BdUaH1apEJZ-VN0xFsKz5228TeUG396nm2roGi4GhD-4ceFIsYOchN5hv1dDAmssalMMiCb83DU25aVLGdM4yNdzWVJ-b5pbEyZ2_UF9E1XQs7UJeugINMUQJRT8VLhLsejF4tz6LfZABjmEpCe4COM-1h0cI24N_C5Q" />
-          <div
-            class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
-            <span class="text-white font-label-bold text-base sm:text-lg">Morning Rituals</span>
-          </div>
-        </div>
-        <div class="aspect-square rounded-3xl overflow-hidden group relative">
-          <img alt="Iced Coffee and Brownie"
-            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCMZN_L7KvttHU-v8yk2Gzg4H6sJ5rE80bhsA0TJ3qi_JwrN113X8F7d4K7TN-Dwl1XztvXcNr92xOUk2n3duW7xbU_zmej4O61_LrXsPzHoM45p__AlcVMloSkph_ATX-T1RqA-SW7H_I_IwfjNewBafwlohoQ8kvXF3yN4H-qf54A3PaZfD49U6tHUuc3PAOTJKXla4B3fSKLruw0D2Fn0o33E-1eAJMjA7WDXJhVJMvz9zkAoIQttA" />
-          <div
-            class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
-            <span class="text-white font-label-bold text-base sm:text-lg">Sweet Escape</span>
-          </div>
-        </div>
-        <div class="aspect-square rounded-3xl overflow-hidden group relative hidden lg:block">
-          <img alt="Pastry Assortment"
-            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCeWHyo2qyr-Yhvp6T1MkYouUlmy_Y6JWtmKuUvx8x5IAg0_G179PNYD7xWML1EZusnzRPjNLoTUykxnX7SdWdEQE1GxNsoIEvAVXwKhm6849w4l2SiZ_9g01HQAeiwLXND4xKEdb1W1dE3HSYOw6TVx9wk4293z-lT7BvQFQbl2NSCkucT0UqNtp33iV372N3ZgbfA6Ynco2Zmue-4HvWNBP283j5N4mx3uBSXMedhjRgEPwgArSJXtQ" />
-          <div
-            class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-6">
-            <span class="text-white font-label-bold text-base sm:text-lg">Share the Love</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-  <!-- Bite Section moved up for impact -->
-  <section
-    class="py-16 sm:py-20 px-container-margin-mobile md:px-container-margin-desktop relative bg-tertiary-fixed-dim/20 overflow-hidden">
-    <div class="absolute right-0 top-0 w-1/2 h-full bg-secondary-fixed/30 rounded-l-[100px] -z-10"></div>
-    <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12 md:gap-16">
-      <div class="w-full md:w-1/2 relative">
-        <div
-          class="aspect-square max-w-[340px] mx-auto bg-gradient-to-br from-tertiary-fixed to-secondary-fixed rounded-full p-6 relative animate-[spin_30s_linear_infinite]">
-          <div
-            class="w-full h-full bg-white rounded-full flex items-center justify-center text-tertiary font-display text-4xl font-black overflow-hidden">
-            <img alt="Brownie" class="w-full h-full object-cover rounded-full"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZh_8FWrorHhEdSYevBAe9IOldSiLey9kHqZtw7fdcluobMBryNDEfo-lpxdZACMC2FV7TB40H8I9teiCY4eEoAe6HzkuSLDBoMtTLpm8Xauhvd5Hzjnl0_3y5F_Sk3DWQxVhH8q0MYcr2BGChGqskhs713UrYgFwLnyPN4ydrW-JGGe_4r5wdidCZjOIbJJ_rFkntLDpA-j7rEN6h_nCo4K7laznQqnnIH0MV0Ds1OqgvpJ5ASi1vuA" />
-          </div>
-        </div>
-      </div>
-      <div class="w-full md:w-1/2 flex flex-col items-start gap-5 relative">
-        <div class="absolute -top-10 -right-10 text-[100px] font-display font-black text-tertiary/10 rotate-12">SNACKS
-        </div>
-        <h2 class="font-display text-headline-xl text-primary">Pair it with <span class="text-tertiary">Play.</span>
-        </h2>
-        <p class="font-body-lg text-on-surface-variant max-w-md text-sm sm:text-base">Our bakery bites are just as bold
-          as our brews. Sticky, sweet, and totally craveable.</p>
-        <a href="#bites-section"
-          class="bg-secondary-container text-on-secondary-container font-label-bold text-xs sm:text-sm px-6 sm:px-7 py-3 rounded-full hover:scale-105 transition-transform shadow-md hover:shadow-lg">Explore
-          Bites</a>
-      </div>
-    </div>
-  </section>
-  <!-- Social Proof / Reviews -->
-  <section id="reviews-section"
-    class="py-16 sm:py-20 px-container-margin-mobile md:px-container-margin-desktop bg-surface-container-lowest scroll-mt-20">
-    <div class="max-w-7xl mx-auto">
-      <h2 class="font-display text-headline-xl text-primary text-center mb-10 sm:mb-12">What the Gen-Z says</h2>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-        <!-- Review 1 -->
-        <div class="bg-surface p-6 sm:p-7 rounded-3xl border border-outline-variant/30 shadow-md">
-          <div class="flex text-secondary mb-3">
-            <span class="material-symbols-outlined text-sm" data-icon="star">star</span>
-            <span class="material-symbols-outlined text-sm" data-icon="star">star</span>
-            <span class="material-symbols-outlined text-sm" data-icon="star">star</span>
-            <span class="material-symbols-outlined text-sm" data-icon="star">star</span>
-            <span class="material-symbols-outlined text-sm" data-icon="star">star</span>
-          </div>
-          <p class="font-body-md text-sm sm:text-base text-on-surface-variant italic mb-5">"Literally the best iced
-            mocha I've ever had. It's my new daily obsession."</p>
-          <div class="flex items-center gap-3">
-            <div
-              class="w-10 h-10 bg-tertiary-fixed rounded-full flex items-center justify-center text-tertiary font-bold text-sm">
-              J</div>
-            <span class="font-label-bold text-primary text-xs sm:text-sm">@jess_vibes</span>
-          </div>
-        </div>
-        <!-- Review 2 -->
-        <div class="bg-surface p-6 sm:p-7 rounded-3xl border border-outline-variant/30 shadow-md">
-          <div class="flex text-secondary mb-3">
-            <span class="material-symbols-outlined text-sm" data-icon="star">star</span>
-            <span class="material-symbols-outlined text-sm" data-icon="star">star</span>
-            <span class="material-symbols-outlined text-sm" data-icon="star">star</span>
-            <span class="material-symbols-outlined text-sm" data-icon="star">star</span>
-            <span class="material-symbols-outlined text-sm" data-icon="star">star</span>
-          </div>
-          <p class="font-body-md text-sm sm:text-base text-on-surface-variant italic mb-5">"The packaging is fire, and
-            the taste is even better. Plus, those brownies? Unreal."</p>
-          <div class="flex items-center gap-3">
-            <div
-              class="w-10 h-10 bg-secondary-fixed rounded-full flex items-center justify-center text-secondary font-bold text-sm">
-              M</div>
-            <span class="font-label-bold text-primary text-xs sm:text-sm">@marcus_chills</span>
-          </div>
-        </div>
-        <!-- Review 3 -->
-        <div class="bg-surface p-6 sm:p-7 rounded-3xl border border-outline-variant/30 shadow-md">
-          <div class="flex text-secondary mb-3">
-            <span class="material-symbols-outlined text-sm" data-icon="star">star</span>
-            <span class="material-symbols-outlined text-sm" data-icon="star">star</span>
-            <span class="material-symbols-outlined text-sm" data-icon="star">star</span>
-            <span class="material-symbols-outlined text-sm" data-icon="star">star</span>
-            <span class="material-symbols-outlined text-outline-variant text-sm" data-icon="star">star</span>
-          </div>
-          <p class="font-body-md text-sm sm:text-base text-on-surface-variant italic mb-5">"Perfect for studying or just
-            hanging out. Caramel Latte hits the spot every time."</p>
-          <div class="flex items-center gap-3">
-            <div
-              class="w-10 h-10 bg-primary-fixed rounded-full flex items-center justify-center text-primary font-bold text-sm">
-              S</div>
-            <span class="font-label-bold text-primary text-xs sm:text-sm">@sarah_sweets</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-  <!-- Final CTA / Order Section -->
-  <section id="order-section"
-    class="py-20 sm:py-24 px-container-margin-mobile md:px-container-margin-desktop bg-tertiary text-on-tertiary text-center relative overflow-hidden scroll-mt-20">
-    <div
-      class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1559525839-b184a4d698c7?w=1600&amp;q=80')] bg-cover bg-center opacity-20 mix-blend-overlay">
-    </div>
-    <div class="relative z-10 max-w-2xl mx-auto flex flex-col items-center gap-6">
-      <h2 class="font-display text-3xl sm:text-4xl md:text-5xl leading-tight font-black">Your coffee break just got
-        better.</h2>
-      <p class="font-body-md text-sm sm:text-base text-tertiary-fixed opacity-90">Join the movement and taste the
-        difference today.</p>
-      <a href="#menu-section"
-        class="inline-flex items-center gap-2 bg-surface-container-lowest text-tertiary font-label-bold text-sm sm:text-base px-8 sm:px-10 py-3.5 sm:py-4 rounded-full hover:scale-105 transition-all duration-300 shadow-lg cursor-pointer">
-        <span>Order Now</span>
-        <span class="material-symbols-outlined text-base">arrow_forward</span>
-      </a>
-    </div>
-  </section>
-  <!-- Footer Component -->
-  <footer
-    class="bg-surface-container-highest w-full py-14 sm:py-16 px-container-margin-mobile md:px-container-margin-desktop border-t-4 border-tertiary/20 relative overflow-hidden">
-    <div class="absolute -bottom-20 -right-20 w-96 h-96 bg-tertiary-fixed-dim/40 rounded-full blur-3xl -z-10"></div>
-    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-gutter relative z-10">
-      <div class="col-span-1 md:col-span-1 flex flex-col gap-6">
-        <h3
-          class="text-headline-lg font-display font-black text-tertiary mb-2 hover:skew-x-6 transition-transform w-fit">
-          Brew &amp; Bite</h3>
-        <p class="font-body-md text-body-md text-on-surface-variant opacity-80 max-w-xs">
-          © 2024 Brew &amp; Bite. All rights reserved. Crafted for the caffeine-curious and the bold.
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer id="order-section" class="w-full py-12 sm:py-14 px-4 sm:px-8 bg-[#f8efe4] border-t border-outline">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div class="flex flex-col items-start gap-3">
+        <h2 class="font-display italic font-black text-2xl text-primary">Brew&amp;Bites</h2>
+        <p class="font-body text-xs text-on-surface-variant leading-relaxed">
+          © 2026 Brew&amp;Bites Artisanal Roastery.<br />Crafted with passion for coffee lovers.
         </p>
       </div>
-      <div class="col-span-1 md:col-span-3 grid grid-cols-2 md:grid-cols-3 gap-8">
-        <div class="flex flex-col gap-6">
-          <h4 class="font-display font-bold text-primary text-xl">Shop</h4>
-          <a class="font-label-bold text-label-bold text-tertiary hover:translate-x-2 transition-transform"
-            href="#">Menu</a>
-          <a class="font-body-md text-body-md text-on-surface-variant hover:text-tertiary hover:translate-x-2 transition-transform"
-            href="#">Subscriptions</a>
-        </div>
-        <div class="flex flex-col gap-6">
-          <h4 class="font-display font-bold text-primary text-xl">Find Us</h4>
-          <a class="font-body-md text-body-md text-on-surface-variant hover:text-tertiary hover:translate-x-2 transition-transform"
-            href="#">Locations</a>
-          <a class="font-body-md text-body-md text-on-surface-variant hover:text-tertiary hover:translate-x-2 transition-transform"
-            href="#">Brew Guide</a>
-        </div>
-        <div class="flex flex-col gap-6">
-          <h4 class="font-display font-bold text-primary text-xl">More</h4>
-          <a class="font-body-md text-body-md text-on-surface-variant hover:text-tertiary hover:translate-x-2 transition-transform"
-            href="#">Sustainability</a>
-          <a class="font-body-md text-body-md text-on-surface-variant hover:text-tertiary hover:translate-x-2 transition-transform"
-            href="#">Join our Newsletter</a>
+
+      <div class="flex flex-col gap-2 text-xs font-medium">
+        <span class="font-bold uppercase tracking-wider text-primary mb-1">Quick Links</span>
+        <a href="#menu-section" class="text-on-surface-variant hover:text-primary transition-colors">Menu</a>
+        <a href="#story-section" class="text-on-surface-variant hover:text-primary transition-colors">Our Roastery</a>
+        <a href="#reviews-section" class="text-on-surface-variant hover:text-primary transition-colors">Reviews</a>
+      </div>
+
+      <div class="flex flex-col gap-2 text-xs font-medium">
+        <span class="font-bold uppercase tracking-wider text-primary mb-1">Legal &amp; Trust</span>
+        <a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Privacy Policy</a>
+        <a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Terms of Service</a>
+        <a href="#" class="text-on-surface-variant hover:text-primary transition-colors">Ethical Sourcing</a>
+      </div>
+
+      <div class="flex flex-col gap-2 text-xs">
+        <span class="font-bold uppercase tracking-wider text-primary mb-1">Stay Connected</span>
+        <p class="text-on-surface-variant text-xs mb-2">Subscribe for seasonal single-origin releases and bakery specials.</p>
+        <div class="flex items-center gap-1.5">
+          <input type="email" placeholder="Enter your email" class="w-full text-xs px-3.5 py-2 rounded-full bg-white border border-outline text-primary focus:outline-none focus:border-primary" />
+          <button class="bg-primary hover:bg-primary-container text-white text-xs font-bold px-4 py-2 rounded-full transition-all cursor-pointer">Join</button>
         </div>
       </div>
     </div>
   </footer>
 
-  <!-- Cart Drawer & Backdrop Overlay -->
-  <div id="cart-overlay"
-    class="fixed inset-0 bg-black/40 backdrop-blur-xs z-50 opacity-0 pointer-events-none transition-opacity duration-300">
+  <!-- Cart Drawer & Backdrop Overlay (Layer: z-[1040] / z-[1050]) -->
+  <div id="cart-overlay" onclick="closeCart()"
+    class="fixed inset-0 bg-black/40 backdrop-blur-xs z-[1040] opacity-0 pointer-events-none transition-opacity duration-300">
   </div>
 
   <aside id="cart-drawer" role="dialog" aria-labelledby="cart-heading" aria-modal="true"
-    class="fixed top-0 right-0 h-full w-full sm:w-[420px] max-w-full bg-surface-container-lowest text-on-surface z-50 shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out border-l border-outline-variant/30">
+    class="fixed top-0 right-0 h-full w-full sm:w-[420px] max-w-full bg-surface text-primary z-[1050] shadow-2xl flex flex-col transform translate-x-full transition-transform duration-300 ease-in-out border-l border-outline">
     <!-- Cart Header -->
     <div
-      class="flex items-center justify-between px-6 py-5 border-b border-outline-variant/20 bg-surface/60 backdrop-blur-sm">
+      class="flex items-center justify-between px-6 py-5 border-b border-outline bg-surface/80 backdrop-blur-sm">
       <div class="flex items-center gap-2.5">
         <span class="material-symbols-outlined text-primary text-2xl">shopping_bag</span>
         <h2 id="cart-heading" class="font-display text-xl font-bold text-primary tracking-tight">Your Order</h2>
         <span id="cart-header-count"
-          class="text-xs font-label-bold text-secondary bg-secondary/10 px-2.5 py-0.5 rounded-full">(0 items)</span>
+          class="text-xs font-label-bold text-caramel bg-caramel/10 px-2.5 py-0.5 rounded-full">(0 items)</span>
       </div>
-      <button id="close-cart-btn" aria-label="Close Cart"
-        class="p-2 rounded-full text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors cursor-pointer flex items-center justify-center">
+      <button id="close-cart-btn" onclick="closeCart()" aria-label="Close Cart"
+        class="p-2 rounded-full text-primary hover:bg-black/5 active:scale-95 transition-colors cursor-pointer flex items-center justify-center">
         <span class="material-symbols-outlined text-2xl">close</span>
       </button>
     </div>
 
     <!-- Cart Scrollable Content / Items List -->
-    <div id="cart-items-container" class="flex-1 overflow-y-auto p-6 space-y-3">
-      <!-- Populated dynamically via js/main.js -->
+    <div id="cart-items-container" class="flex-1 overflow-y-auto p-6 space-y-3 bg-surface">
+      <!-- Populated dynamically via js/cart.js -->
     </div>
 
     <!-- Cart Footer with Subtotal & Checkout CTA -->
-    <div id="cart-footer" class="p-6 border-t border-outline-variant/20 bg-surface/40 flex flex-col gap-3.5">
+    <div id="cart-footer" class="p-6 border-t border-outline bg-surface flex flex-col gap-3.5">
       <div class="flex items-center justify-between text-base">
-        <span class="font-body-md text-on-surface-variant font-medium">Subtotal</span>
+        <span class="font-body text-on-surface-variant font-medium text-sm">Subtotal</span>
         <span id="cart-subtotal" class="font-display text-2xl font-bold text-primary">$0.00</span>
       </div>
-      <button id="open-checkout-btn"
-        class="w-full bg-tertiary text-on-tertiary font-label-bold text-sm py-3 px-6 rounded-full hover:scale-102 transition-all duration-200 shadow-md pink-glow flex items-center justify-center gap-2 active:scale-95 cursor-pointer disabled:opacity-50 disabled:pointer-events-none">
+      <button id="open-checkout-btn" onclick="if(typeof openCheckout==='function') openCheckout()"
+        class="w-full bg-primary hover:bg-primary-container text-white font-label-bold text-sm py-3.5 px-6 rounded-full transition-all duration-200 shadow-warm-sm flex items-center justify-center gap-2 active:scale-95 cursor-pointer disabled:opacity-50 disabled:pointer-events-none">
         <span>Proceed to Checkout</span>
         <span class="material-symbols-outlined text-sm">arrow_forward</span>
       </button>
@@ -725,18 +488,18 @@
     </div>
   </aside>
 
-  <!-- Full-Page Checkout Overlay Modal -->
-  <div id="checkout-modal" role="dialog" aria-labelledby="checkout-title" aria-modal="true"
-    class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+  <!-- Full-Page Checkout Overlay Modal (Layer: z-[1100]) -->
+  <div id="checkout-modal" onclick="if(event.target === this) closeCheckout()" role="dialog" aria-labelledby="checkout-title" aria-modal="true"
+    class="fixed inset-0 z-[1100] bg-black/60 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
     <div id="checkout-modal-card"
-      class="w-full max-w-4xl max-h-[92vh] overflow-y-auto bg-surface-container-lowest text-on-surface rounded-3xl shadow-2xl border border-outline-variant/30 flex flex-col transform scale-95 transition-transform duration-300 my-auto">
+      class="w-full max-w-4xl max-h-[92vh] overflow-y-auto bg-surface text-on-surface rounded-3xl shadow-2xl border border-outline flex flex-col transform scale-95 transition-transform duration-300 my-auto">
 
       <!-- Checkout Header -->
       <div
-        class="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-outline-variant/20 bg-surface/80 backdrop-blur-sm sticky top-0 z-10">
+        class="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-outline bg-surface/80 backdrop-blur-sm sticky top-0 z-10">
         <div class="flex items-center gap-3">
           <button id="back-to-cart-btn" aria-label="Back to cart"
-            class="p-1.5 rounded-full text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors cursor-pointer flex items-center justify-center">
+            class="p-1.5 rounded-full text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors cursor-pointer flex items-center justify-center">
             <span class="material-symbols-outlined text-xl">arrow_back</span>
           </button>
           <div>
@@ -745,8 +508,8 @@
             <p class="text-xs text-on-surface-variant">Brew &amp; Bite Express Ordering</p>
           </div>
         </div>
-        <button id="close-checkout-btn" aria-label="Close Checkout"
-          class="p-2 rounded-full text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors cursor-pointer flex items-center justify-center">
+        <button id="close-checkout-btn" onclick="closeCheckout()" aria-label="Close Checkout"
+          class="p-2 rounded-full text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors cursor-pointer flex items-center justify-center">
           <span class="material-symbols-outlined text-2xl">close</span>
         </button>
       </div>
@@ -758,18 +521,18 @@
     </div>
   </div>
 
-  <!-- Full-Page Customer Profile & Orders Modal -->
-  <div id="profile-modal" role="dialog" aria-labelledby="profile-title" aria-modal="true"
-    class="fixed inset-0 z-50 bg-black/60 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+  <!-- Full-Page Customer Profile & Orders Modal (Layer: z-[1110]) -->
+  <div id="profile-modal" onclick="if(event.target === this) closeProfile()" role="dialog" aria-labelledby="profile-title" aria-modal="true"
+    class="fixed inset-0 z-[1110] bg-black/60 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
     <div id="profile-modal-card"
-      class="w-full max-w-3xl max-h-[92vh] overflow-y-auto bg-surface-container-lowest text-on-surface rounded-3xl shadow-2xl border border-outline-variant/30 flex flex-col transform scale-95 transition-transform duration-300 my-auto">
+      class="w-full max-w-3xl max-h-[92vh] overflow-y-auto bg-surface text-on-surface rounded-3xl shadow-2xl border border-outline flex flex-col transform scale-95 transition-transform duration-300 my-auto">
 
       <!-- Profile Modal Header -->
       <div
-        class="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-outline-variant/20 bg-surface/80 backdrop-blur-sm sticky top-0 z-10">
+        class="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-outline bg-surface/80 backdrop-blur-sm sticky top-0 z-10">
         <div class="flex items-center gap-3">
           <div
-            class="w-9 h-9 rounded-full bg-secondary-container/20 text-primary flex items-center justify-center font-bold">
+            class="w-9 h-9 rounded-full bg-secondary/10 text-primary flex items-center justify-center font-bold">
             <span class="material-symbols-outlined text-xl">person</span>
           </div>
           <div>
@@ -778,8 +541,8 @@
             <p id="profile-subtitle" class="text-xs text-on-surface-variant">Account &amp; Order History</p>
           </div>
         </div>
-        <button id="close-profile-btn" aria-label="Close Profile"
-          class="p-2 rounded-full text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors cursor-pointer flex items-center justify-center">
+        <button id="close-profile-btn" onclick="closeProfile()" aria-label="Close Profile"
+          class="p-2 rounded-full text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors cursor-pointer flex items-center justify-center">
           <span class="material-symbols-outlined text-2xl">close</span>
         </button>
       </div>
@@ -791,19 +554,19 @@
     </div>
   </div>
 
-  <!-- Full-Page Admin Dashboard Modal -->
+  <!-- Full-Page Admin Dashboard Modal (Layer: z-[1120]) -->
   <div id="admin-modal" role="dialog" aria-labelledby="admin-title" aria-modal="true"
-    class="fixed inset-0 z-50 bg-black/65 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto">
-    <div id="admin-overlay" class="absolute inset-0 -z-10"></div>
+    class="fixed inset-0 z-[1120] bg-black/65 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-300 flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto">
+    <div id="admin-overlay" onclick="closeAdminDashboard()" class="absolute inset-0 -z-10"></div>
     <div id="admin-modal-card"
-      class="w-full max-w-5xl max-h-[94vh] overflow-y-auto bg-surface-container-lowest text-on-surface rounded-3xl shadow-2xl border border-outline-variant/30 flex flex-col transform scale-95 transition-transform duration-300 my-auto">
+      class="w-full max-w-5xl max-h-[94vh] overflow-y-auto bg-surface text-on-surface rounded-3xl shadow-2xl border border-outline flex flex-col transform scale-95 transition-transform duration-300 my-auto">
 
       <!-- Admin Modal Header -->
       <div
-        class="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-outline-variant/20 bg-surface/80 backdrop-blur-sm sticky top-0 z-20">
+        class="flex items-center justify-between px-6 sm:px-8 py-5 border-b border-outline bg-surface/80 backdrop-blur-sm sticky top-0 z-20">
         <div class="flex items-center gap-3">
           <div
-            class="w-10 h-10 rounded-2xl bg-tertiary/15 text-tertiary flex items-center justify-center font-bold shadow-xs">
+            class="w-10 h-10 rounded-2xl bg-caramel/15 text-caramel flex items-center justify-center font-bold shadow-xs">
             <span class="material-symbols-outlined text-2xl">admin_panel_settings</span>
           </div>
           <div>
@@ -811,14 +574,14 @@
               <h2 id="admin-title" class="font-display text-xl sm:text-2xl font-black text-primary tracking-tight">Admin
                 Dashboard</h2>
               <span
-                class="px-2 py-0.5 rounded-full bg-tertiary text-on-tertiary font-label-bold text-[10px] uppercase tracking-wider">Store
+                class="px-2 py-0.5 rounded-full bg-primary text-white font-label-bold text-[10px] uppercase tracking-wider">Store
                 Owner</span>
             </div>
             <p class="text-xs text-on-surface-variant">Live Management of Customers, Orders, &amp; Products</p>
           </div>
         </div>
-        <button id="close-admin-btn" aria-label="Close Admin Dashboard"
-          class="p-2 rounded-full text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-colors cursor-pointer flex items-center justify-center">
+        <button id="close-admin-btn" onclick="closeAdminDashboard()" aria-label="Close Admin Dashboard"
+          class="p-2 rounded-full text-on-surface-variant hover:text-primary hover:bg-surface-container transition-colors cursor-pointer flex items-center justify-center">
           <span class="material-symbols-outlined text-2xl">close</span>
         </button>
       </div>
@@ -830,11 +593,11 @@
     </div>
   </div>
 
-  <!-- Product Reviews & Ratings Modal -->
-  <div id="product-reviews-modal"
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-300">
+  <!-- Product Reviews & Ratings Modal (Layer: z-[1130]) -->
+  <div id="product-reviews-modal" onclick="if(event.target === this) closeProductReviewsModal()"
+    class="fixed inset-0 z-[1130] flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs opacity-0 pointer-events-none transition-opacity duration-300">
     <div
-      class="bg-surface-container-lowest max-w-lg w-full rounded-3xl p-6 border border-outline-variant/30 shadow-2xl flex flex-col gap-4 max-h-[88vh] overflow-hidden"
+      class="bg-surface max-w-lg w-full rounded-3xl p-6 border border-outline shadow-2xl flex flex-col gap-4 max-h-[88vh] overflow-hidden"
       id="product-reviews-modal-content">
       <!-- Dynamically rendered from js/reviews.js -->
     </div>
@@ -843,31 +606,31 @@
   <!-- Supabase Official CDN Client Library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Supabase Client Initialization -->
-  <script src="js/supabase.js?v=2.7" defer></script>
+  <script src="js/supabase.js?v=4.0" defer></script>
   <!-- Centralized Country & Regional Config -->
-  <script src="js/country-config.js?v=2.7" defer></script>
+  <script src="js/country-config.js?v=4.0" defer></script>
   <!-- Multi-Currency Engine -->
-  <script src="js/currency.js?v=2.7" defer></script>
+  <script src="js/currency.js?v=4.0" defer></script>
   <!-- Product Catalog Data -->
-  <script src="js/products.js?v=2.7" defer></script>
+  <script src="js/products.js?v=4.0" defer></script>
   <!-- Customer Reviews Module -->
-  <script src="js/reviews.js?v=2.7" defer></script>
+  <script src="js/reviews.js?v=4.0" defer></script>
   <!-- Shopping Cart Module -->
-  <script src="js/cart.js?v=2.7" defer></script>
+  <script src="js/cart.js?v=4.0" defer></script>
   <!-- Address Book Data Layer -->
-  <script src="js/addresses.js?v=2.7" defer></script>
+  <script src="js/addresses.js?v=4.0" defer></script>
   <!-- Order Management Data Layer -->
-  <script src="js/orders.js?v=2.7" defer></script>
+  <script src="js/orders.js?v=4.0" defer></script>
   <!-- Notifications Module -->
-  <script src="js/notifications.js?v=2.7" defer></script>
+  <script src="js/notifications.js?v=4.0" defer></script>
   <!-- Checkout Module -->
-  <script src="js/checkout.js?v=2.7" defer></script>
+  <script src="js/checkout.js?v=4.0" defer></script>
   <!-- Customer Profile & Order History Module -->
-  <script src="js/profile.js?v=2.7" defer></script>
+  <script src="js/profile.js?v=4.0" defer></script>
   <!-- Admin Dashboard Module -->
-  <script src="js/admin.js?v=2.7" defer></script>
+  <script src="js/admin.js?v=4.0" defer></script>
   <!-- Main Application JavaScript -->
-  <script src="js/main.js?v=2.7" defer></script>
+  <script src="js/main.js?v=4.0" defer></script>
 </body>
 
 </html>

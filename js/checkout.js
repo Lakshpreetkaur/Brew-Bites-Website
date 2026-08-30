@@ -150,14 +150,17 @@ function getCountryPhoneConfig(currencyCode) {
 
 // Open Checkout Modal
 function openCheckout() {
+  // Close any other open modals/drawers first (Mutual Exclusion)
+  if (typeof closeCart === 'function') closeCart();
+  if (typeof closeProfile === 'function') closeProfile();
+  if (typeof closeNavDrawer === 'function') closeNavDrawer();
+  if (typeof toggleNotificationPanel === 'function') toggleNotificationPanel(false);
+  if (typeof closeAdminDashboard === 'function') closeAdminDashboard();
+  if (typeof closeProductReviewsModal === 'function') closeProductReviewsModal();
+
   const checkoutModal = document.getElementById('checkout-modal');
   const checkoutCard = document.getElementById('checkout-modal-card');
   if (!checkoutModal) return;
-
-  // Close the cart drawer first if open
-  if (typeof closeCart === 'function') {
-    closeCart();
-  }
 
   // Render the current checkout state
   renderCheckout();
@@ -172,16 +175,17 @@ function openCheckout() {
   }
 
   document.body.classList.add('overflow-hidden');
+  document.body.style.overflow = 'hidden';
 }
 
 // Close Checkout Modal
 function closeCheckout() {
   const checkoutModal = document.getElementById('checkout-modal');
   const checkoutCard = document.getElementById('checkout-modal-card');
-  if (!checkoutModal) return;
-
-  checkoutModal.classList.remove('opacity-100', 'pointer-events-auto');
-  checkoutModal.classList.add('opacity-0', 'pointer-events-none');
+  if (checkoutModal) {
+    checkoutModal.classList.remove('opacity-100', 'pointer-events-auto');
+    checkoutModal.classList.add('opacity-0', 'pointer-events-none');
+  }
 
   if (checkoutCard) {
     checkoutCard.classList.remove('scale-100');
@@ -189,7 +193,11 @@ function closeCheckout() {
   }
 
   document.body.classList.remove('overflow-hidden');
+  document.body.style.overflow = '';
 }
+
+window.openCheckout = openCheckout;
+window.closeCheckout = closeCheckout;
 
 // Back to Menu Helper
 function backToMenu() {
@@ -279,7 +287,7 @@ function renderCheckout() {
               <span class="material-symbols-outlined text-secondary text-xl">account_circle</span>
               <p class="text-xs text-primary font-medium">Have an account? Sign in for fast checkout.</p>
             </div>
-            <button id="checkout-auth-prompt-btn" class="bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary text-xs font-label-bold px-3 py-1.5 rounded-full transition-colors cursor-pointer whitespace-nowrap">
+            <button id="checkout-auth-prompt-btn" type="button" onclick="closeCheckout(); if(typeof openProfile==='function') openProfile();" class="bg-secondary-container text-on-secondary-container hover:bg-tertiary hover:text-on-tertiary text-xs font-label-bold px-3 py-1.5 rounded-full transition-colors cursor-pointer whitespace-nowrap active:scale-95">
               <span>Sign In / Sign Up</span>
             </button>
           </div>
@@ -458,7 +466,9 @@ function renderCheckout() {
   // Attach Auth Prompt Button Listener if guest
   const authPromptBtn = document.getElementById('checkout-auth-prompt-btn');
   if (authPromptBtn) {
-    authPromptBtn.addEventListener('click', () => {
+    authPromptBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       closeCheckout();
       if (typeof openProfile === 'function') {
         openProfile();

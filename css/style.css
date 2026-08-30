@@ -1,124 +1,19 @@
 /* ==========================================================================
-   Brew & Bite - Custom Stylesheet
+   Brew & Bites - Artisanal Warm Coffee Stylesheet
    ========================================================================== */
 
-/* Glassmorphic Panels */
-.glass-panel-extreme {
-    background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(40px);
-    -webkit-backdrop-filter: blur(40px);
-    border: 2px solid rgba(255, 255, 255, 0.6);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+/* Hide scrollbar utility for horizontal scroll carousels */
+.hide-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+.hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
-/* Ambient Glow Filters */
-.pink-glow {
-    box-shadow: 0 0 60px 20px rgba(244, 182, 193, 0.4);
-}
-
-.caramel-glow-strong {
-    box-shadow: 0 10px 40px 10px rgba(253, 190, 73, 0.3);
-}
-
-/* Text Shimmer Gradient */
-.text-gradient-buzz {
-    background: linear-gradient(135deg, #3e1821, #f4b6c1, #fdbe49);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-size: 200% 200%;
-    animation: gradient-shift 5s ease infinite;
-}
-
-@keyframes gradient-shift {
-    0% {
-        background-position: 0% 50%;
-    }
-
-    50% {
-        background-position: 100% 50%;
-    }
-
-    100% {
-        background-position: 0% 50%;
-    }
-}
-
-/* Floating Ambient Blobs */
-.blob-1 {
-    animation: float 8s ease-in-out infinite;
-}
-
-.blob-2 {
-    animation: float 12s ease-in-out infinite reverse;
-}
-
-@keyframes float {
-    0% {
-        transform: translate(0, 0) scale(1);
-    }
-
-    33% {
-        transform: translate(30px, -50px) scale(1.1);
-    }
-
-    66% {
-        transform: translate(-20px, 20px) scale(0.9);
-    }
-
-    100% {
-        transform: translate(0, 0) scale(1);
-    }
-}
-
-/* Image Breakout Mask */
-.image-breakout {
-    mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
-}
-
-/* Hero Text Animation & Styling (Fast & Responsive) */
-@keyframes heroTextEnter {
-    0% {
-        opacity: 0;
-        transform: translateY(20px) scale(0.98);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
-
-.hero-text-overlay {
-    animation: heroTextEnter 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    will-change: opacity, transform;
-}
-
-.text-shadow-subtle {
-    text-shadow: 0 2px 24px rgba(251, 251, 226, 0.9), 0 4px 12px rgba(255, 255, 255, 0.85);
-}
-
-/* ==========================================================================
-   Solid Non-Glass Mobile Navigation Panel & Viewport Containment
-   ========================================================================== */
-
-/* Solid Opaque Side Navigation Drawer (Matches Reference Layout) */
-#nav-drawer {
-    background-color: #fbfbe2 !important; /* Theme warm cream surface background */
-    background: #fbfbe2 !important;
-    box-shadow: -10px 0 50px rgba(62, 24, 33, 0.25) !important;
-    border-left: 1.5px solid rgba(128, 117, 108, 0.3) !important;
-}
-
-/* Solid Opaque Mobile Navigation Card (NOT Glass / NOT Transparent) */
-.mobile-nav-panel {
-    background-color: #fbfbe2 !important; /* Theme cream surface background */
-    background: #fbfbe2 !important;
-    border-radius: 1.25rem !important;
-    border: 1.5px solid rgba(128, 117, 108, 0.3) !important;
-    box-shadow: 0 15px 45px rgba(62, 24, 33, 0.22) !important;
-    max-height: 85vh;
-    overflow-y: auto;
-    z-index: 100 !important;
+/* Subtle smooth transition for interactive controls */
+button, a, input, select {
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Text Wrapping & Container Containment */
@@ -143,7 +38,9 @@
 }
 
 /* Prevent Horizontal Viewport Overflow */
-html, body {
+html,
+body {
     max-width: 100vw;
     overflow-x: hidden;
+    background-color: #FDF9EE;
 }

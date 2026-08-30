@@ -74,16 +74,18 @@ async function openAdminDashboard() {
     return;
   }
 
-  // Close profile modal if open
-  const profileModal = document.getElementById('profile-modal');
-  if (profileModal) {
-    profileModal.classList.remove('opacity-100', 'pointer-events-auto');
-    profileModal.classList.add('opacity-0', 'pointer-events-none');
-  }
+  // Close other open modals/drawers first (Mutual Exclusion)
+  if (typeof closeCart === 'function') closeCart();
+  if (typeof closeProfile === 'function') closeProfile();
+  if (typeof closeNavDrawer === 'function') closeNavDrawer();
+  if (typeof toggleNotificationPanel === 'function') toggleNotificationPanel(false);
+  if (typeof closeCheckout === 'function') closeCheckout();
+  if (typeof closeProductReviewsModal === 'function') closeProductReviewsModal();
 
   adminModal.classList.remove('opacity-0', 'pointer-events-none');
   adminModal.classList.add('opacity-100', 'pointer-events-auto');
   document.body.classList.add('overflow-hidden');
+  document.body.style.overflow = 'hidden';
 
   await loadAdminData();
   renderAdminDashboard();
@@ -94,14 +96,18 @@ async function openAdminDashboard() {
  */
 function closeAdminDashboard() {
   const adminModal = document.getElementById('admin-modal');
-  if (!adminModal) return;
-
-  adminModal.classList.remove('opacity-100', 'pointer-events-auto');
-  adminModal.classList.add('opacity-0', 'pointer-events-none');
+  if (adminModal) {
+    adminModal.classList.remove('opacity-100', 'pointer-events-auto');
+    adminModal.classList.add('opacity-0', 'pointer-events-none');
+  }
   document.body.classList.remove('overflow-hidden');
+  document.body.style.overflow = '';
   adminSelectedCustomer = null;
   adminEditingProduct = null;
 }
+
+window.openAdminDashboard = openAdminDashboard;
+window.closeAdminDashboard = closeAdminDashboard;
 
 /**
  * Fetch all relational data from Supabase for admin inspection.

@@ -56,13 +56,14 @@ function loadCart() {
 
 // Visual Confirmation Feedback on Button Click
 function showAddedFeedback(button) {
-  if (!button) return;
+  if (!button || !button.classList) return;
   const originalText = button.innerHTML;
   button.innerHTML = '<span>Added ✓</span>';
   button.classList.add('bg-tertiary', 'text-on-tertiary', 'pink-glow');
   button.classList.remove('bg-secondary-container', 'text-on-secondary-container');
 
   setTimeout(() => {
+    if (!button || !button.classList) return;
     button.innerHTML = originalText;
     button.classList.remove('bg-tertiary', 'text-on-tertiary', 'pink-glow');
     button.classList.add('bg-secondary-container', 'text-on-secondary-container');
@@ -94,6 +95,14 @@ function updateCartCount() {
 
 // Open Cart Drawer
 function openCart() {
+  // Close any other open modals/drawers first (Mutual Exclusion)
+  if (typeof closeProfile === 'function') closeProfile();
+  if (typeof closeNavDrawer === 'function') closeNavDrawer();
+  if (typeof toggleNotificationPanel === 'function') toggleNotificationPanel(false);
+  if (typeof closeCheckout === 'function') closeCheckout();
+  if (typeof closeAdminDashboard === 'function') closeAdminDashboard();
+  if (typeof closeProductReviewsModal === 'function') closeProductReviewsModal();
+
   const cartDrawer = document.getElementById('cart-drawer');
   const cartOverlay = document.getElementById('cart-overlay');
   if (!cartDrawer || !cartOverlay) return;
@@ -104,20 +113,27 @@ function openCart() {
   cartDrawer.classList.remove('translate-x-full');
   cartDrawer.classList.add('translate-x-0');
   document.body.classList.add('overflow-hidden');
+  document.body.style.overflow = 'hidden';
 }
 
 // Close Cart Drawer
 function closeCart() {
   const cartDrawer = document.getElementById('cart-drawer');
   const cartOverlay = document.getElementById('cart-overlay');
-  if (!cartDrawer || !cartOverlay) return;
-
-  cartOverlay.classList.remove('opacity-100', 'pointer-events-auto');
-  cartOverlay.classList.add('opacity-0', 'pointer-events-none');
-  cartDrawer.classList.remove('translate-x-0');
-  cartDrawer.classList.add('translate-x-full');
+  if (cartOverlay) {
+    cartOverlay.classList.remove('opacity-100', 'pointer-events-auto');
+    cartOverlay.classList.add('opacity-0', 'pointer-events-none');
+  }
+  if (cartDrawer) {
+    cartDrawer.classList.remove('translate-x-0');
+    cartDrawer.classList.add('translate-x-full');
+  }
   document.body.classList.remove('overflow-hidden');
+  document.body.style.overflow = '';
 }
+
+window.openCart = openCart;
+window.closeCart = closeCart;
 
 // Increase Product Quantity
 function increaseQuantity(productId) {
