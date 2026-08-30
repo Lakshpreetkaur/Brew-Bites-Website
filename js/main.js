@@ -110,13 +110,13 @@ function renderProducts() {
 
     const imgSrc = (item.image && String(item.image).trim().length > 0)
       ? String(item.image).trim()
-      : 'assets/vanilla-cold-brew.jpg';
+      : 'assets/images/vanilla-cold-brew.jpg';
 
     return `
       <article class="bg-white rounded-2xl p-3 border border-outline shadow-warm-xs hover:shadow-warm-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group ${!isAvailable ? 'opacity-70' : ''}">
         <div>
           <div class="w-full aspect-[4/3] rounded-xl overflow-hidden mb-3 relative bg-surface-container">
-            <img alt="${item.name}" onerror="this.onerror=null; this.src='assets/vanilla-cold-brew.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-xl" src="${imgSrc}" />
+            <img alt="${item.name}" onerror="this.onerror=null; this.src='assets/images/vanilla-cold-brew.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-xl" src="${imgSrc}" />
             <div class="absolute top-2 right-2 bg-primary text-white font-body text-[11px] font-bold px-2 py-0.5 rounded-md shadow-xs">
               ${getDisplayPrice(item.price)}
             </div>
@@ -213,27 +213,18 @@ if (typeof onProductsUpdated === 'function') {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Floating Navbar Transparency, Compact Sizing and Blur on Scroll
-  const mainNav = document.getElementById('main-nav');
-  function updateNavStyle() {
-    if (!mainNav) return;
-    if (window.scrollY > 30) {
-      mainNav.classList.remove('bg-white/10', 'backdrop-blur-xs', 'border-white/20', 'top-4', 'sm:top-6', 'py-3', 'sm:py-3.5');
-      mainNav.classList.add('bg-surface/90', 'backdrop-blur-xl', 'border-outline-variant/30', 'shadow-md', 'top-2', 'sm:top-3', 'py-2', 'sm:py-2.5');
-    } else {
-      mainNav.classList.add('bg-white/10', 'backdrop-blur-xs', 'border-white/20', 'top-4', 'sm:top-6', 'py-3', 'sm:py-3.5');
-      mainNav.classList.remove('bg-surface/90', 'backdrop-blur-xl', 'border-outline-variant/30', 'shadow-md', 'top-2', 'sm:top-3', 'py-2', 'sm:py-2.5');
+  // Hero Video Autoplay Assurance
+  const heroVideo = document.getElementById('anim-video');
+  if (heroVideo) {
+    heroVideo.muted = true;
+    heroVideo.playsInline = true;
+    const playPromise = heroVideo.play();
+    if (playPromise !== undefined) {
+      playPromise.catch(() => {
+        // Autoplay policy prevented playback, video will play on first interaction
+      });
     }
   }
-
-  // Window Event Listeners
-  window.addEventListener('scroll', () => {
-    updateNavStyle();
-  }, { passive: true });
-
-  window.addEventListener('resize', () => {
-    updateNavStyle();
-  });
 
   // Storefront Search Input Listener
   const menuSearchInput = document.getElementById('menu-search-input');
@@ -341,5 +332,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Page-Level Initializations
   renderProducts();
-  updateNavStyle();
 });
