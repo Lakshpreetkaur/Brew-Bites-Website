@@ -9,11 +9,11 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
     rel="stylesheet" />
-  <!-- Google Fonts: Fraunces, Playfair Display & Plus Jakarta Sans -->
+  <!-- Google Fonts: Outfit, Fraunces, Playfair Display & Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600..900;1,9..144,600..900&amp;family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&amp;display=swap"
+    href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,600..900;1,9..144,600..900&amp;family=Outfit:wght@700;800;900&amp;family=Playfair+Display:ital,wght@0,400..900;1,400..900&amp;family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&amp;display=swap"
     rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
   <script id="tailwind-config">
@@ -41,7 +41,7 @@
           },
           "fontFamily": {
             "display": ["'Playfair Display'", "Georgia", "serif"],
-            "headline": ["'Playfair Display'", "Georgia", "serif"],
+            "headline": ["'Outfit'", "'Plus Jakarta Sans'", "sans-serif"],
             "serif": ["'Playfair Display'", "Georgia", "serif"],
             "body": ["'Plus Jakarta Sans'", "sans-serif"],
             "sans": ["'Plus Jakarta Sans'", "sans-serif"],
@@ -95,7 +95,7 @@
       <!-- Center: Brand Logo (Strictly Centered in Viewport) -->
       <div class="flex items-center justify-center">
         <a href="#animation-container"
-          class="font-display italic font-black text-2xl sm:text-3xl text-primary tracking-tight hover:opacity-90 transition-opacity whitespace-nowrap">
+          class="font-brand-logo font-serif italic font-black text-2xl sm:text-3xl text-primary tracking-tight hover:opacity-90 transition-opacity whitespace-nowrap">
           Brew&amp;Bites
         </a>
       </div>
@@ -276,13 +276,13 @@
           <!-- Eyebrow + Dash -->
           <div class="mb-2.5 sm:mb-3">
             <span
-              class="font-label-bold text-xs uppercase tracking-[0.22em] text-primary font-extrabold">BREW&amp;BITES</span>
-            <div class="w-8 sm:w-10 h-0.5 bg-caramel rounded-full mt-1"></div>
+              class="font-eyebrow font-extrabold text-xs tracking-[0.22em] text-primary">BREW&amp;BITES</span>
+            <div class="w-8 sm:w-10 h-0.5 bg-caramel rounded-full mt-1.5"></div>
           </div>
 
-          <!-- Editorial Headline (Playfair Display) -->
+          <!-- Editorial Headline (Outfit 900 / Chunky Rounded Display) -->
           <h1
-            class="font-display font-black text-4xl sm:text-5xl md:text-6xl lg:text-[60px] xl:text-[70px] text-primary leading-[1.04] tracking-tight mb-3 sm:mb-4">
+            class="font-headline-bold font-black text-4xl sm:text-5xl md:text-6xl lg:text-[62px] xl:text-[72px] text-primary leading-[1.03] tracking-tight mb-3 sm:mb-4">
             Your New<br />
             <span class="text-caramel font-black">Coffee</span><br />
             Obsession.
@@ -290,7 +290,7 @@
 
           <!-- Supporting Copy -->
           <p
-            class="font-body text-xs sm:text-sm md:text-base text-on-surface-variant max-w-[280px] sm:max-w-sm mb-5 sm:mb-6 leading-relaxed font-semibold">
+            class="font-lead-copy text-xs sm:text-sm md:text-base text-on-surface-variant max-w-[280px] sm:max-w-sm mb-5 sm:mb-6 leading-relaxed font-semibold">
             Rich coffee. Creamy indulgence.<br />
             Made to crave.
           </p>
