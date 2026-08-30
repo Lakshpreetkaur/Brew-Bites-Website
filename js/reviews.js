@@ -172,6 +172,14 @@ async function deleteProductReview(reviewId, user) {
  * Open Product Reviews & Ratings Modal.
  */
 async function openProductReviewsModal(productId) {
+  // Close other open modals/drawers first (Mutual Exclusion)
+  if (typeof closeCart === 'function') closeCart();
+  if (typeof closeProfile === 'function') closeProfile();
+  if (typeof closeNavDrawer === 'function') closeNavDrawer();
+  if (typeof toggleNotificationPanel === 'function') toggleNotificationPanel(false);
+  if (typeof closeCheckout === 'function') closeCheckout();
+  if (typeof closeAdminDashboard === 'function') closeAdminDashboard();
+
   activeReviewModalProductId = productId;
   const modal = document.getElementById('product-reviews-modal');
   if (!modal) return;
@@ -182,6 +190,7 @@ async function openProductReviewsModal(productId) {
   modal.classList.remove('opacity-0', 'pointer-events-none');
   modal.classList.add('opacity-100', 'pointer-events-auto');
   document.body.classList.add('overflow-hidden');
+  document.body.style.overflow = 'hidden';
 }
 
 /**
@@ -189,13 +198,17 @@ async function openProductReviewsModal(productId) {
  */
 function closeProductReviewsModal() {
   const modal = document.getElementById('product-reviews-modal');
-  if (!modal) return;
-
-  modal.classList.remove('opacity-100', 'pointer-events-auto');
-  modal.classList.add('opacity-0', 'pointer-events-none');
+  if (modal) {
+    modal.classList.remove('opacity-100', 'pointer-events-auto');
+    modal.classList.add('opacity-0', 'pointer-events-none');
+  }
   document.body.classList.remove('overflow-hidden');
+  document.body.style.overflow = '';
   activeReviewModalProductId = null;
 }
+
+window.openProductReviewsModal = openProductReviewsModal;
+window.closeProductReviewsModal = closeProductReviewsModal;
 
 /**
  * Render Content of Product Reviews Modal.

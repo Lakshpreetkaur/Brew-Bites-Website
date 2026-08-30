@@ -1,149 +1,153 @@
 /* ==========================================================================
-   Brew & Bite - Custom Stylesheet
+   Brew & Bites - Artisanal Warm Coffee Stylesheet
+   Global Design System: Editorial Typography Tokens
+   Display: Playfair Display / Outfit / Plus Jakarta Sans
+   Palette: Warm Cream (#FDF9EE), Deep Espresso (#331C11), Warm Caramel (#C87A2A)
    ========================================================================== */
 
-/* Glassmorphic Panels */
-.glass-panel-extreme {
-    background: rgba(255, 255, 255, 0.4);
-    backdrop-filter: blur(40px);
-    -webkit-backdrop-filter: blur(40px);
-    border: 2px solid rgba(255, 255, 255, 0.6);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.05);
+:root {
+  --color-espresso: #331C11;
+  --color-espresso-container: #4A1F0B;
+  --color-espresso-muted: #6B4F3E;
+  --color-caramel: #C87A2A;
+  --color-caramel-light: #E8A359;
+  --color-cream-bg: #FDF9EE;
+  --color-cream-surface: #F5EFE0;
+  --color-card-bg: #FFFFFF;
+  --color-border: #EADDD0;
+  --color-border-variant: #D8C7B5;
+  
+  --font-logo: 'Playfair Display', Georgia, serif;
+  --font-headline: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+  --font-serif: 'Playfair Display', Georgia, serif;
+  --font-body: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
-/* Ambient Glow Filters */
-.pink-glow {
-    box-shadow: 0 0 60px 20px rgba(244, 182, 193, 0.4);
+/* Generic base element typography defaults */
+body,
+p,
+span,
+button,
+a,
+input,
+select,
+textarea,
+.font-body,
+.font-sans,
+.font-label-bold {
+  font-family: var(--font-body);
 }
 
-.caramel-glow-strong {
-    box-shadow: 0 10px 40px 10px rgba(253, 190, 73, 0.3);
+/* Headings base rules */
+h1,
+.font-display,
+.font-headline {
+  font-family: var(--font-headline);
 }
 
-/* Text Shimmer Gradient */
-.text-gradient-buzz {
-    background: linear-gradient(135deg, #3e1821, #f4b6c1, #fdbe49);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-size: 200% 200%;
-    animation: gradient-shift 5s ease infinite;
+h2,
+h3,
+.font-serif,
+.font-section-heading {
+  font-family: var(--font-serif);
 }
 
-@keyframes gradient-shift {
-    0% {
-        background-position: 0% 50%;
-    }
-
-    50% {
-        background-position: 100% 50%;
-    }
-
-    100% {
-        background-position: 0% 50%;
-    }
+/* Specific Typography Design Tokens */
+.font-brand-logo {
+  font-family: var(--font-logo) !important;
+  font-style: italic;
+  font-weight: 900;
 }
 
-/* Floating Ambient Blobs */
-.blob-1 {
-    animation: float 8s ease-in-out infinite;
+.font-headline-bold {
+  font-family: var(--font-headline) !important;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+  color: var(--color-espresso);
 }
 
-.blob-2 {
-    animation: float 12s ease-in-out infinite reverse;
+.font-section-title {
+  font-family: var(--font-serif) !important;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  color: var(--color-espresso);
 }
 
-@keyframes float {
-    0% {
-        transform: translate(0, 0) scale(1);
-    }
-
-    33% {
-        transform: translate(30px, -50px) scale(1.1);
-    }
-
-    66% {
-        transform: translate(-20px, 20px) scale(0.9);
-    }
-
-    100% {
-        transform: translate(0, 0) scale(1);
-    }
+.font-card-title {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  color: var(--color-espresso);
 }
 
-/* Image Breakout Mask */
-.image-breakout {
-    mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+.font-eyebrow {
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-espresso);
 }
 
-/* Hero Text Animation & Styling (Fast & Responsive) */
-@keyframes heroTextEnter {
-    0% {
-        opacity: 0;
-        transform: translateY(20px) scale(0.98);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+.font-lead-copy {
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--color-espresso-muted);
+  line-height: 1.6;
 }
 
-.hero-text-overlay {
-    animation: heroTextEnter 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    will-change: opacity, transform;
+.font-price-tag {
+  font-family: var(--font-body);
+  font-weight: 800;
+  color: var(--color-espresso);
 }
 
-.text-shadow-subtle {
-    text-shadow: 0 2px 24px rgba(251, 251, 226, 0.9), 0 4px 12px rgba(255, 255, 255, 0.85);
+/* Hide scrollbar utility for horizontal scroll carousels */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
-/* ==========================================================================
-   Solid Non-Glass Mobile Navigation Panel & Viewport Containment
-   ========================================================================== */
-
-/* Solid Opaque Side Navigation Drawer (Matches Reference Layout) */
-#nav-drawer {
-    background-color: #fbfbe2 !important; /* Theme warm cream surface background */
-    background: #fbfbe2 !important;
-    box-shadow: -10px 0 50px rgba(62, 24, 33, 0.25) !important;
-    border-left: 1.5px solid rgba(128, 117, 108, 0.3) !important;
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-/* Solid Opaque Mobile Navigation Card (NOT Glass / NOT Transparent) */
-.mobile-nav-panel {
-    background-color: #fbfbe2 !important; /* Theme cream surface background */
-    background: #fbfbe2 !important;
-    border-radius: 1.25rem !important;
-    border: 1.5px solid rgba(128, 117, 108, 0.3) !important;
-    box-shadow: 0 15px 45px rgba(62, 24, 33, 0.22) !important;
-    max-height: 85vh;
-    overflow-y: auto;
-    z-index: 100 !important;
+/* Subtle smooth transition for interactive controls */
+button,
+a,
+input,
+select {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Text Wrapping & Container Containment */
 .break-anywhere {
-    overflow-wrap: anywhere !important;
-    word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
 }
 
 .min-w-0 {
-    min-width: 0 !important;
+  min-width: 0 !important;
 }
 
 .modal-scrollable-body {
-    max-height: calc(85vh - 120px);
-    overflow-y: auto;
+  max-height: calc(85vh - 120px);
+  overflow-y: auto;
 }
 
 .table-responsive-wrapper {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Prevent Horizontal Viewport Overflow */
-html, body {
-    max-width: 100vw;
-    overflow-x: hidden;
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  background-color: #FDF9EE;
+  color: #331C11;
+  font-family: 'Plus Jakarta Sans', sans-serif;
 }

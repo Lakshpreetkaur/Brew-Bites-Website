@@ -19,7 +19,7 @@ function escapeHtml(str) {
 }
 
 // Standard Country dataset with flags and dialing codes
-const COUNTRIES = [
+const PROFILE_COUNTRIES = [
   { name: "India", code: "IN", dial: "+91", flag: "🇮🇳" },
   { name: "United States", code: "US", dial: "+1", flag: "🇺🇸" },
   { name: "Canada", code: "CA", dial: "+1", flag: "🇨🇦" },
@@ -280,6 +280,14 @@ async function fetchOrCreateUserProfile(user) {
 
 // Open Customer Profile Modal View
 function openProfile() {
+  // Close other open modals/drawers first (Mutual Exclusion)
+  if (typeof closeCart === 'function') closeCart();
+  if (typeof closeNavDrawer === 'function') closeNavDrawer();
+  if (typeof toggleNotificationPanel === 'function') toggleNotificationPanel(false);
+  if (typeof closeCheckout === 'function') closeCheckout();
+  if (typeof closeAdminDashboard === 'function') closeAdminDashboard();
+  if (typeof closeProductReviewsModal === 'function') closeProductReviewsModal();
+
   const profileModal = document.getElementById('profile-modal');
   if (!profileModal) return;
 
@@ -287,19 +295,24 @@ function openProfile() {
   profileModal.classList.remove('opacity-0', 'pointer-events-none');
   profileModal.classList.add('opacity-100', 'pointer-events-auto');
   document.body.classList.add('overflow-hidden');
+  document.body.style.overflow = 'hidden';
 }
 
 // Close Customer Profile Modal View
 function closeProfile() {
   const profileModal = document.getElementById('profile-modal');
-  if (!profileModal) return;
-
-  profileModal.classList.remove('opacity-100', 'pointer-events-auto');
-  profileModal.classList.add('opacity-0', 'pointer-events-none');
+  if (profileModal) {
+    profileModal.classList.remove('opacity-100', 'pointer-events-auto');
+    profileModal.classList.add('opacity-0', 'pointer-events-none');
+  }
   document.body.classList.remove('overflow-hidden');
+  document.body.style.overflow = '';
   authNotificationMsg = null;
   editingAddressId = null;
 }
+
+window.openProfile = openProfile;
+window.closeProfile = closeProfile;
 
 // Main Render Function for Profile Modal Content
 function renderProfileMain() {
@@ -721,7 +734,7 @@ function renderProfileMain() {
               <label class="font-label-bold text-xs text-primary block mb-1">Country</label>
               <div class="relative">
                 <select id="edit-country-select" class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-surface-container-high/40 border border-outline-variant/40 text-primary appearance-none pr-8 focus:outline-none focus:border-tertiary cursor-pointer font-medium">
-                  ${COUNTRIES.map(c => `<option value="${c.name}" data-dial="${c.dial}" data-flag="${c.flag}" ${c.name === displayCountry ? 'selected' : ''}>${c.flag} ${c.name} (${c.dial})</option>`).join('')}
+                  ${PROFILE_COUNTRIES.map(c => `<option value="${c.name}" data-dial="${c.dial}" data-flag="${c.flag}" ${c.name === displayCountry ? 'selected' : ''}>${c.flag} ${c.name} (${c.dial})</option>`).join('')}
                 </select>
                 <span class="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-sm text-on-surface-variant pointer-events-none">expand_more</span>
               </div>
@@ -894,7 +907,7 @@ function renderProfileMain() {
               <label class="font-label-bold text-xs text-primary block mb-1">Country (Optional)</label>
               <select id="auth-country" class="w-full text-xs px-3 py-2.5 rounded-xl bg-surface border border-outline-variant/40 text-primary focus:outline-none focus:border-tertiary cursor-pointer">
                 <option value="">Select country...</option>
-                ${(typeof COUNTRIES !== 'undefined' ? (Array.isArray(COUNTRIES) ? COUNTRIES : Object.values(COUNTRIES)) : []).map(c => `
+                ${PROFILE_COUNTRIES.map(c => `
                   <option value="${c.code}" data-dial="${c.dial}">${c.flag} ${c.name}</option>
                 `).join('')}
               </select>
@@ -1887,15 +1900,24 @@ function getStatusBadgeClass(status) {
 // Initialize Profile Handlers on DOM Ready
 document.addEventListener('DOMContentLoaded', () => {
   const profileBtn = document.getElementById('profile-btn');
-  const mobileProfileBtn = document.getElementById('mobile-profile-btn');
   const closeProfileBtn = document.getElementById('close-profile-btn');
 
   if (profileBtn) profileBtn.addEventListener('click', openProfile);
-  if (mobileProfileBtn) mobileProfileBtn.addEventListener('click', openProfile);
   if (closeProfileBtn) closeProfileBtn.addEventListener('click', closeProfile);
 
   initSupabaseAuth();
 });
+
+// Global Window Bindings for HTML onclick and cross-module access
+window.openProfile = openProfile;
+window.closeProfile = closeProfile;
+window.handleSignIn = handleSignIn;
+window.handleSignUp = handleSignUp;
+window.handleSignOut = handleSignOut;
+window.initSupabaseAuth = initSupabaseAuth;
+window.renderProfileMain = renderProfileMain;
+window.openOrderDetail = openOrderDetail;
+window.handleReorderOrder = handleReorderOrder;
 
 // Exports for Node testing
 if (typeof module !== 'undefined' && module.exports) {
@@ -1904,6 +1926,9 @@ if (typeof module !== 'undefined' && module.exports) {
     openProfile,
     closeProfile,
     renderProfileMain,
+    handleSignIn,
+    handleSignUp,
+    handleSignOut,
     handleReorderOrder,
     openOrderDetail
   };

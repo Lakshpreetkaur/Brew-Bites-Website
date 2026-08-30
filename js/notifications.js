@@ -213,6 +213,11 @@ function toggleNotificationPanel(forceState) {
   }
 
   if (isNotificationPanelOpen) {
+    // Close other open modals/drawers first (Mutual Exclusion)
+    if (typeof closeCart === 'function') closeCart();
+    if (typeof closeProfile === 'function') closeProfile();
+    if (typeof closeNavDrawer === 'function') closeNavDrawer();
+
     panel.classList.remove('opacity-0', 'pointer-events-none', 'scale-95');
     panel.classList.add('opacity-100', 'pointer-events-auto', 'scale-100');
   } else {
@@ -220,6 +225,8 @@ function toggleNotificationPanel(forceState) {
     panel.classList.add('opacity-0', 'pointer-events-none', 'scale-95');
   }
 }
+
+window.toggleNotificationPanel = toggleNotificationPanel;
 
 /**
  * Mark a single notification as read in database and local cache.
@@ -546,13 +553,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (notifBtn) {
     notifBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleNotificationPanel();
-    });
-  }
-
-  if (mobileNotifBtn) {
-    mobileNotifBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       toggleNotificationPanel();
     });
