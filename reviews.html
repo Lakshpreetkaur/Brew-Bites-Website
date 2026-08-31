@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Customer Reviews &amp; Ratings | Brew &amp; Bites</title>
+  <meta name="description"
+    content="Read verified customer reviews and ratings for Brew &amp; Bites signature cold brews, fresh snacks, and artisanal desserts." />
+
+  <!-- Google Fonts: Playfair Display + Outfit + Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+
+  <!-- Material Symbols Outlined -->
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style type="text/tailwindcss">
+    @theme {
+      --color-primary: #331C11;
+      --color-primary-container: #4A2B1B;
+      --color-on-primary: #FFFFFF;
+      --color-secondary: #C87A2A;
+      --color-secondary-container: #F7D8B5;
+      --color-on-secondary: #FFFFFF;
+      --color-tertiary: #543310;
+      --color-surface: #FDF9EE;
+      --color-surface-container: #F5EEDB;
+      --color-surface-container-high: #EDE3CD;
+      --color-surface-container-highest: #E5D9BF;
+      --color-on-surface: #331C11;
+      --color-on-surface-variant: #6B4F3E;
+      --color-outline: #E2D2B8;
+      --color-outline-variant: #CFBC9E;
+      --color-caramel: #C87A2A;
+      --color-espresso: #331C11;
+
+      --font-display: "Outfit", "Plus Jakarta Sans", sans-serif;
+      --font-body: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-serif: "Playfair Display", Georgia, serif;
+    }
+  </style>
+
+  <!-- Base Styles -->
+  <link rel="stylesheet" href="css/style.css?v=8.0" />
+</head>
+
+<body
+  class="bg-surface text-primary font-body antialiased min-h-screen flex flex-col selection:bg-caramel/20 selection:text-primary overflow-x-hidden">
+
+  <!-- TOP NAVBAR -->
+  <header id="main-nav"
+    class="sticky top-0 left-0 w-full z-40 bg-surface/90 backdrop-blur-md border-b border-outline/60 px-4 sm:px-6 lg:px-8 py-3.5 transition-all duration-200">
+    <div class="max-w-7xl mx-auto grid grid-cols-3 items-center w-full">
+
+      <!-- Left: Hamburger + Nav Links -->
+      <div class="flex items-center gap-4 lg:gap-6 justify-start min-w-0">
+        <button id="mobile-menu-btn" onclick="openNavDrawer()" aria-label="Open Navigation Menu"
+          class="p-1.5 rounded-lg text-primary hover:bg-surface-container transition-colors cursor-pointer flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-2xl">menu</span>
+        </button>
+
+        <nav
+          class="hidden lg:flex items-center gap-5 xl:gap-6 text-xs font-label-bold uppercase tracking-wider shrink-0">
+          <a href="index.html" class="text-on-surface-variant hover:text-primary transition-colors">Home</a>
+          <a href="index.html#menu-section" class="text-on-surface-variant hover:text-primary transition-colors">Menu</a>
+          <a href="roastery.html" class="text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Our Roastery</a>
+          <a href="reviews.html" class="text-primary border-b-2 border-primary pb-0.5">Reviews</a>
+        </nav>
+      </div>
+
+      <!-- Center: Brand Logo -->
+      <div class="flex items-center justify-center">
+        <a href="index.html"
+          class="font-brand-logo font-serif italic font-black text-2xl sm:text-3xl text-primary tracking-tight hover:opacity-90 transition-opacity whitespace-nowrap">
+          Brew&amp;Bites
+        </a>
+      </div>
+
+      <!-- Right: Controls -->
+      <div class="flex items-center justify-end gap-2 sm:gap-3 lg:gap-4 min-w-0">
+        <!-- Admin Dashboard Button -->
+        <button id="nav-admin-btn" style="display: none;"
+          onclick="if(typeof openAdminDashboard==='function') openAdminDashboard()" aria-label="Open Admin Dashboard"
+          class="hidden sm:inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-caramel/15 hover:bg-caramel/25 text-primary text-xs font-bold transition-all cursor-pointer border border-caramel/30 shrink-0">
+          <span class="material-symbols-outlined text-base">dashboard</span>
+          <span class="hidden md:inline">Admin</span>
+        </button>
+
+        <!-- Currency Selector -->
+        <select id="currency-selector" aria-label="Select Currency"
+          class="bg-white border border-outline text-primary text-xs font-bold px-2 py-1 rounded-full cursor-pointer hover:border-primary transition-all outline-none shrink-0">
+          <option value="INR">INR (₹)</option>
+          <option value="USD">USD ($)</option>
+          <option value="CAD">CAD (CA$)</option>
+          <option value="GBP">GBP (£)</option>
+        </select>
+
+        <!-- Notification Bell -->
+        <button id="notification-btn" aria-label="View Notifications"
+          class="relative p-1.5 rounded-full text-primary hover:bg-surface-container transition-colors cursor-pointer shrink-0">
+          <span class="material-symbols-outlined text-xl">notifications</span>
+          <span id="notification-badge"
+            class="hidden absolute -top-0.5 -right-0.5 bg-caramel text-white font-bold text-[9px] min-w-[15px] h-[15px] px-0.5 rounded-full flex items-center justify-center">0</span>
+        </button>
+
+        <!-- Profile Button -->
+        <button id="profile-btn" onclick="openProfile()" aria-label="Customer Profile"
+          class="p-1.5 rounded-full text-primary hover:bg-surface-container transition-colors cursor-pointer shrink-0">
+          <span class="material-symbols-outlined text-xl">person</span>
+        </button>
+
+        <!-- Cart Button -->
+        <button id="cart-btn" onclick="openCart()" aria-label="View Cart"
+          class="relative p-1.5 rounded-full text-primary hover:bg-surface-container transition-colors cursor-pointer shrink-0">
+          <span class="material-symbols-outlined text-xl">shopping_bag</span>
+          <span id="cart-badge"
+            class="absolute -top-0.5 -right-0.5 bg-primary text-white font-bold text-[10px] min-w-[17px] h-[17px] px-1 rounded-full flex items-center justify-center">0</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Side Navigation Drawer Backdrop -->
+  <div id="nav-drawer-overlay"
+    class="fixed inset-0 bg-[#331C11]/50 backdrop-blur-xs z-[990] opacity-0 pointer-events-none transition-opacity duration-300">
+  </div>
+
+  <!-- Side Navigation Drawer -->
+  <aside id="nav-drawer" role="dialog" aria-labelledby="nav-drawer-heading" aria-modal="true"
+    class="fixed top-0 left-0 bottom-0 h-full h-[100dvh] w-[300px] sm:w-[340px] max-w-[85vw] bg-surface text-primary z-[1000] shadow-2xl flex flex-col transform -translate-x-full transition-transform duration-300 ease-out border-r border-outline">
+    <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-outline bg-surface flex-shrink-0">
+      <div class="flex items-center gap-2">
+        <span id="nav-drawer-heading" class="font-display italic font-black text-2xl text-primary">Brew&amp;Bites</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="close-nav-drawer-btn" aria-label="Close navigation menu"
+          class="p-2 rounded-full text-primary hover:bg-black/5 active:scale-95 transition-all cursor-pointer flex items-center justify-center">
+          <span class="material-symbols-outlined text-2xl">close</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex-1 px-6 py-5 flex flex-col gap-4 text-left overflow-y-auto bg-surface">
+      <div class="flex flex-col gap-3 font-bold text-base">
+        <a href="index.html" class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Home</a>
+        <a href="index.html#menu-section" class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Menu</a>
+        <a href="roastery.html" class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Our Roastery</a>
+        <a href="reviews.html" class="nav-drawer-link text-caramel transition-colors py-1 font-black">Reviews</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN REVIEWS PAGE CONTENT -->
+  <main class="w-full flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+
+    <!-- Page Header & Breadcrumb -->
+    <div class="mb-8">
+      <div class="flex items-center gap-2 text-xs font-semibold text-on-surface-variant mb-2">
+        <a href="index.html" class="hover:text-primary transition-colors">Home</a>
+        <span>/</span>
+        <span class="text-primary font-bold">Reviews</span>
+      </div>
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <span class="font-eyebrow font-extrabold text-xs tracking-[0.22em] text-caramel uppercase">COMMUNITY PRAISE</span>
+          <h1 class="font-headline-bold font-black text-3xl sm:text-4xl lg:text-5xl text-primary leading-tight mt-1">
+            Customer Reviews &amp; Ratings
+          </h1>
+          <p class="font-lead-copy text-xs sm:text-sm text-on-surface-variant mt-2 max-w-xl">
+            Real feedback and verified experiences from our coffee lovers across the country.
+          </p>
+        </div>
+
+        <button id="open-write-review-btn" onclick="handleWriteReviewClick()"
+          class="bg-primary hover:bg-primary-container text-white font-label-bold text-xs sm:text-sm px-6 py-3 rounded-full shadow-warm-xs hover:shadow-warm-md hover:scale-[1.02] active:scale-95 transition-all inline-flex items-center gap-2 cursor-pointer self-start md:self-auto shrink-0">
+          <span class="material-symbols-outlined text-base">rate_review</span>
+          <span>Write a Review</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Rating Summary Breakdown Hero -->
+    <div id="reviews-page-summary" class="mb-10">
+      <!-- Dynamically populated via js/reviews.js -->
+    </div>
+
+    <!-- Filter & Sort Bar -->
+    <div class="bg-white rounded-2xl border border-outline p-3 sm:p-4 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-2xs">
+      <!-- Category Filter Pills -->
+      <div class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar w-full sm:w-auto p-0.5">
+        <button onclick="setReviewsCategoryFilter('all', this)"
+          class="review-filter-btn px-4 py-2 rounded-full bg-primary text-white font-label-bold text-xs shadow-warm-xs transition-all cursor-pointer">
+          All Reviews
+        </button>
+        <button onclick="setReviewsCategoryFilter('coffee', this)"
+          class="review-filter-btn px-4 py-2 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer whitespace-nowrap">
+          Coffee &amp; Cold Brews
+        </button>
+        <button onclick="setReviewsCategoryFilter('snacks', this)"
+          class="review-filter-btn px-4 py-2 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer whitespace-nowrap">
+          Snacks
+        </button>
+        <button onclick="setReviewsCategoryFilter('dessert', this)"
+          class="review-filter-btn px-4 py-2 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer whitespace-nowrap">
+          Dessert
+        </button>
+      </div>
+
+      <!-- Sort Dropdown -->
+      <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+        <span class="text-xs font-bold text-on-surface-variant">Sort:</span>
+        <select id="reviews-sort-select" onchange="handleReviewsSortChange(this.value)"
+          class="bg-[#fbf6ec] border border-outline text-primary text-xs font-bold px-3 py-1.5 rounded-full cursor-pointer outline-none shadow-2xs">
+          <option value="newest">Newest First</option>
+          <option value="highest">Highest Rating</option>
+          <option value="lowest">Lowest Rating</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Customer Reviews Grid List -->
+    <div id="reviews-page-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-16">
+      <!-- Dynamically populated via js/reviews.js -->
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-primary text-white py-12 px-4 sm:px-6 lg:px-8 border-t border-primary-container mt-auto">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
+      <div>
+        <h4 class="font-brand-logo font-serif italic font-black text-2xl mb-1 text-white">Brew&amp;Bites</h4>
+        <p class="text-xs text-white/70">Artisanal Coffee, Fresh Pastries &amp; Crafted Indulgence.</p>
+      </div>
+      <div class="flex gap-6 text-xs text-white/80 font-bold">
+        <a href="index.html" class="hover:text-caramel transition-colors">Home</a>
+        <a href="index.html#menu-section" class="hover:text-caramel transition-colors">Menu</a>
+        <a href="roastery.html" class="hover:text-caramel transition-colors">Our Roastery</a>
+        <a href="reviews.html" class="text-caramel transition-colors">Reviews</a>
+      </div>
+      <p class="text-xs text-white/50">© 2026 Brew&amp;Bites. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- Product Review Modal (Generic / In-App) -->
+  <div id="product-reviews-modal" role="dialog" aria-modal="true"
+    class="fixed inset-0 bg-[#331C11]/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+    <div class="bg-white rounded-3xl w-full max-w-lg p-5 sm:p-6 border border-outline shadow-2xl relative max-h-[90vh] flex flex-col">
+      <div id="product-reviews-modal-content"></div>
+    </div>
+  </div>
+
+  <!-- General Write Review Selection Modal (When triggered from Reviews Page) -->
+  <div id="general-review-modal" role="dialog" aria-modal="true"
+    class="fixed inset-0 bg-[#331C11]/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 opacity-0 pointer-events-none transition-all duration-300">
+    <div class="bg-white rounded-3xl w-full max-w-lg p-5 sm:p-6 border border-outline shadow-2xl relative max-h-[90vh] flex flex-col">
+      <div class="flex items-center justify-between border-b border-outline pb-3 mb-4">
+        <h3 class="font-display font-bold text-base text-primary">Write a Customer Review</h3>
+        <button onclick="closeGeneralReviewModal()" class="p-1.5 rounded-full text-on-surface-variant hover:text-primary cursor-pointer">
+          <span class="material-symbols-outlined text-xl">close</span>
+        </button>
+      </div>
+
+      <div id="general-review-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- SUPABASE & APPLICATION SCRIPTS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js?v=8.0"></script>
+  <script src="js/country-config.js?v=8.0"></script>
+  <script src="js/currency.js?v=8.0"></script>
+  <script src="js/products.js?v=8.0"></script>
+  <script src="js/cart.js?v=8.0"></script>
+  <script src="js/orders.js?v=8.0"></script>
+  <script src="js/addresses.js?v=8.0"></script>
+  <script src="js/checkout.js?v=8.0"></script>
+  <script src="js/notifications.js?v=8.0"></script>
+  <script src="js/profile.js?v=8.0"></script>
+  <script src="js/admin.js?v=8.0"></script>
+  <script src="js/reviews.js?v=8.0"></script>
+  <script src="js/main.js?v=8.0"></script>
+
+  <script>
+    function setReviewsCategoryFilter(cat, btn) {
+      reviewsPageCategoryFilter = cat;
+      document.querySelectorAll('.review-filter-btn').forEach(b => {
+        b.className = 'review-filter-btn px-4 py-2 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer whitespace-nowrap';
+      });
+      btn.className = 'review-filter-btn px-4 py-2 rounded-full bg-primary text-white font-label-bold text-xs shadow-warm-xs transition-all cursor-pointer whitespace-nowrap';
+      renderReviewsPageContent();
+    }
+
+    function handleReviewsSortChange(val) {
+      reviewsPageSort = val;
+      renderReviewsPageContent();
+    }
+
+    function closeGeneralReviewModal() {
+      const modal = document.getElementById('general-review-modal');
+      if (modal) {
+        modal.classList.remove('opacity-100', 'pointer-events-auto');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+      }
+      document.body.classList.remove('overflow-hidden');
+    }
+
+    function handleWriteReviewClick() {
+      const isLoggedIn = typeof currentUser !== 'undefined' && currentUser !== null;
+      if (!isLoggedIn) {
+        if (typeof openProfile === 'function') openProfile();
+        return;
+      }
+
+      // Check user delivered items
+      const deliveredProds = (typeof getUserDeliveredProducts === 'function') ? getUserDeliveredProducts(currentUser) : [];
+      const allProds = (typeof PRODUCTS !== 'undefined' && PRODUCTS.length > 0) ? PRODUCTS : (typeof STATIC_PRODUCTS !== 'undefined' ? STATIC_PRODUCTS : []);
+      const availableOptions = deliveredProds.length > 0 ? deliveredProds : allProds;
+
+      const bodyEl = document.getElementById('general-review-modal-body');
+      const modal = document.getElementById('general-review-modal');
+      if (!bodyEl || !modal) return;
+
+      bodyEl.innerHTML = `
+        <form id="general-review-form" class="flex flex-col gap-3">
+          <div>
+            <label class="block text-[11px] font-label-bold text-on-surface-variant mb-1">Select Product *</label>
+            <select id="general-product-select" class="w-full text-xs px-3 py-2 rounded-xl bg-white border border-outline text-primary font-bold cursor-pointer outline-none">
+              ${availableOptions.map(p => `<option value="${p.id}">${p.name} (${p.category})</option>`).join('')}
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-label-bold text-on-surface-variant mb-1">Your Rating *</label>
+            <select id="general-rating-select" class="w-full text-xs px-3 py-2 rounded-xl bg-white border border-outline text-primary font-bold cursor-pointer outline-none">
+              <option value="5" selected>★★★★★ (5 Stars - Exceptional)</option>
+              <option value="4">★★★★☆ (4 Stars - Great)</option>
+              <option value="3">★★★☆☆ (3 Stars - Average)</option>
+              <option value="2">★★☆☆☆ (2 Stars - Below Average)</option>
+              <option value="1">★☆☆☆☆ (1 Star - Poor)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-label-bold text-on-surface-variant mb-1">Your Review *</label>
+            <textarea id="general-text-input" rows="3" required placeholder="Tell other coffee lovers about the taste, aroma, and texture..." class="w-full text-xs px-3 py-2 rounded-xl bg-white border border-outline text-primary resize-none outline-none"></textarea>
+          </div>
+
+          <p id="general-review-msg" class="text-xs font-medium hidden text-center"></p>
+
+          <div class="flex items-center justify-end gap-2 pt-2 border-t border-outline/40">
+            <button type="button" onclick="closeGeneralReviewModal()" class="px-4 py-2 rounded-full text-xs font-bold text-on-surface-variant hover:bg-surface-container cursor-pointer">Cancel</button>
+            <button type="submit" id="general-submit-btn" class="bg-primary hover:bg-primary-container text-white font-label-bold text-xs py-2 px-6 rounded-full transition-all shadow-xs cursor-pointer">Submit Review</button>
+          </div>
+        </form>
+      `;
+
+      modal.classList.remove('opacity-0', 'pointer-events-none');
+      modal.classList.add('opacity-100', 'pointer-events-auto');
+      document.body.classList.add('overflow-hidden');
+
+      const form = document.getElementById('general-review-form');
+      if (form) {
+        form.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const pId = document.getElementById('general-product-select')?.value;
+          const rating = document.getElementById('general-rating-select')?.value;
+          const text = document.getElementById('general-text-input')?.value;
+          const msgEl = document.getElementById('general-review-msg');
+          const submitBtn = document.getElementById('general-submit-btn');
+
+          if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span>Submitting...</span>';
+          }
+
+          try {
+            await submitProductReview(pId, rating, text, currentUser);
+            closeGeneralReviewModal();
+            renderReviewsPageContent();
+          } catch (err) {
+            if (msgEl) {
+              msgEl.textContent = err.message || "Failed to submit review.";
+              msgEl.className = 'text-xs text-red-600 font-medium text-center';
+              msgEl.classList.remove('hidden');
+            }
+          } finally {
+            if (submitBtn) {
+              submitBtn.disabled = false;
+              submitBtn.innerHTML = '<span>Submit Review</span>';
+            }
+          }
+        });
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderReviewsPageContent();
+    });
+  </script>
+</body>
+
+</html>

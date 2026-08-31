@@ -52,30 +52,23 @@ function renderProducts() {
     }
   }
 
-  // Category Filtering Logic
+  // Category Filtering Logic (3 Main Categories: 'coffee', 'snacks', 'dessert')
   if (storefrontCategoryFilter !== 'all') {
     filtered = filtered.filter(item => {
       const cat = (typeof normalizeCategory === 'function')
         ? normalizeCategory(item.category)
         : String(item.category || '').trim().toLowerCase();
-      const name = (item.name || '').toLowerCase();
 
       if (storefrontCategoryFilter === 'coffee' || storefrontCategoryFilter === 'cold-brews') {
         return cat === 'coffee';
       }
-      if (storefrontCategoryFilter === 'cookies') {
-        return cat === 'bites' && (name.includes('cookie') || name.includes('chunk') || name.includes('choco'));
+      if (storefrontCategoryFilter === 'snacks' || storefrontCategoryFilter === 'snack' || storefrontCategoryFilter === 'bites') {
+        return cat === 'snacks';
       }
-      if (storefrontCategoryFilter === 'muffins') {
-        return cat === 'bites' && name.includes('muffin');
+      if (storefrontCategoryFilter === 'dessert' || storefrontCategoryFilter === 'desserts' || storefrontCategoryFilter === 'cookies' || storefrontCategoryFilter === 'muffins' || storefrontCategoryFilter === 'croissants') {
+        return cat === 'dessert';
       }
-      if (storefrontCategoryFilter === 'croissants') {
-        return cat === 'bites' && name.includes('croissant');
-      }
-      if (storefrontCategoryFilter === 'bites') {
-        return cat === 'bites';
-      }
-      return true;
+      return cat === storefrontCategoryFilter;
     });
   }
 

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Our Roastery &amp; Craft Story | Brew &amp; Bites</title>
+  <meta name="description"
+    content="Discover the artisanal coffee process behind Brew &amp; Bites — from single-origin bean sourcing and small-batch roasting to 18-hour slow cold drip brewing." />
+
+  <!-- Google Fonts: Playfair Display + Outfit + Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,600;0,700;0,800;0,900;1,600;1,700;1,800;1,900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+
+  <!-- Material Symbols Outlined -->
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style type="text/tailwindcss">
+    @theme {
+      --color-primary: #331C11;
+      --color-primary-container: #4A2B1B;
+      --color-on-primary: #FFFFFF;
+      --color-secondary: #C87A2A;
+      --color-secondary-container: #F7D8B5;
+      --color-on-secondary: #FFFFFF;
+      --color-tertiary: #543310;
+      --color-surface: #FDF9EE;
+      --color-surface-container: #F5EEDB;
+      --color-surface-container-high: #EDE3CD;
+      --color-surface-container-highest: #E5D9BF;
+      --color-on-surface: #331C11;
+      --color-on-surface-variant: #6B4F3E;
+      --color-outline: #E2D2B8;
+      --color-outline-variant: #CFBC9E;
+      --color-caramel: #C87A2A;
+      --color-espresso: #331C11;
+
+      --font-display: "Outfit", "Plus Jakarta Sans", sans-serif;
+      --font-body: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-serif: "Playfair Display", Georgia, serif;
+    }
+  </style>
+
+  <!-- Base Styles -->
+  <link rel="stylesheet" href="css/style.css?v=8.0" />
+</head>
+
+<body
+  class="bg-surface text-primary font-body antialiased min-h-screen flex flex-col selection:bg-caramel/20 selection:text-primary overflow-x-hidden">
+
+  <!-- TOP NAVBAR -->
+  <header id="main-nav"
+    class="sticky top-0 left-0 w-full z-40 bg-surface/90 backdrop-blur-md border-b border-outline/60 px-4 sm:px-6 lg:px-8 py-3.5 transition-all duration-200">
+    <div class="max-w-7xl mx-auto grid grid-cols-3 items-center w-full">
+
+      <!-- Left: Hamburger + Nav Links -->
+      <div class="flex items-center gap-4 lg:gap-6 justify-start min-w-0">
+        <button id="mobile-menu-btn" onclick="openNavDrawer()" aria-label="Open Navigation Menu"
+          class="p-1.5 rounded-lg text-primary hover:bg-surface-container transition-colors cursor-pointer flex items-center justify-center shrink-0">
+          <span class="material-symbols-outlined text-2xl">menu</span>
+        </button>
+
+        <nav
+          class="hidden lg:flex items-center gap-5 xl:gap-6 text-xs font-label-bold uppercase tracking-wider shrink-0">
+          <a href="index.html" class="text-on-surface-variant hover:text-primary transition-colors">Home</a>
+          <a href="index.html#menu-section" class="text-on-surface-variant hover:text-primary transition-colors">Menu</a>
+          <a href="roastery.html" class="text-primary border-b-2 border-primary pb-0.5 whitespace-nowrap">Our Roastery</a>
+          <a href="reviews.html" class="text-on-surface-variant hover:text-primary transition-colors">Reviews</a>
+        </nav>
+      </div>
+
+      <!-- Center: Brand Logo -->
+      <div class="flex items-center justify-center">
+        <a href="index.html"
+          class="font-brand-logo font-serif italic font-black text-2xl sm:text-3xl text-primary tracking-tight hover:opacity-90 transition-opacity whitespace-nowrap">
+          Brew&amp;Bites
+        </a>
+      </div>
+
+      <!-- Right: Controls -->
+      <div class="flex items-center justify-end gap-2 sm:gap-3 lg:gap-4 min-w-0">
+        <!-- Admin Dashboard Button -->
+        <button id="nav-admin-btn" style="display: none;"
+          onclick="if(typeof openAdminDashboard==='function') openAdminDashboard()" aria-label="Open Admin Dashboard"
+          class="hidden sm:inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-caramel/15 hover:bg-caramel/25 text-primary text-xs font-bold transition-all cursor-pointer border border-caramel/30 shrink-0">
+          <span class="material-symbols-outlined text-base">dashboard</span>
+          <span class="hidden md:inline">Admin</span>
+        </button>
+
+        <!-- Currency Selector -->
+        <select id="currency-selector" aria-label="Select Currency"
+          class="bg-white border border-outline text-primary text-xs font-bold px-2 py-1 rounded-full cursor-pointer hover:border-primary transition-all outline-none shrink-0">
+          <option value="INR">INR (₹)</option>
+          <option value="USD">USD ($)</option>
+          <option value="CAD">CAD (CA$)</option>
+          <option value="GBP">GBP (£)</option>
+        </select>
+
+        <!-- Notification Bell -->
+        <button id="notification-btn" aria-label="View Notifications"
+          class="relative p-1.5 rounded-full text-primary hover:bg-surface-container transition-colors cursor-pointer shrink-0">
+          <span class="material-symbols-outlined text-xl">notifications</span>
+          <span id="notification-badge"
+            class="hidden absolute -top-0.5 -right-0.5 bg-caramel text-white font-bold text-[9px] min-w-[15px] h-[15px] px-0.5 rounded-full flex items-center justify-center">0</span>
+        </button>
+
+        <!-- Profile Button -->
+        <button id="profile-btn" onclick="openProfile()" aria-label="Customer Profile"
+          class="p-1.5 rounded-full text-primary hover:bg-surface-container transition-colors cursor-pointer shrink-0">
+          <span class="material-symbols-outlined text-xl">person</span>
+        </button>
+
+        <!-- Cart Button -->
+        <button id="cart-btn" onclick="openCart()" aria-label="View Cart"
+          class="relative p-1.5 rounded-full text-primary hover:bg-surface-container transition-colors cursor-pointer shrink-0">
+          <span class="material-symbols-outlined text-xl">shopping_bag</span>
+          <span id="cart-badge"
+            class="absolute -top-0.5 -right-0.5 bg-primary text-white font-bold text-[10px] min-w-[17px] h-[17px] px-1 rounded-full flex items-center justify-center">0</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Side Navigation Drawer Backdrop -->
+  <div id="nav-drawer-overlay"
+    class="fixed inset-0 bg-[#331C11]/50 backdrop-blur-xs z-[990] opacity-0 pointer-events-none transition-opacity duration-300">
+  </div>
+
+  <!-- Side Navigation Drawer -->
+  <aside id="nav-drawer" role="dialog" aria-labelledby="nav-drawer-heading" aria-modal="true"
+    class="fixed top-0 left-0 bottom-0 h-full h-[100dvh] w-[300px] sm:w-[340px] max-w-[85vw] bg-surface text-primary z-[1000] shadow-2xl flex flex-col transform -translate-x-full transition-transform duration-300 ease-out border-r border-outline">
+    <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-outline bg-surface flex-shrink-0">
+      <div class="flex items-center gap-2">
+        <span id="nav-drawer-heading" class="font-display italic font-black text-2xl text-primary">Brew&amp;Bites</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="close-nav-drawer-btn" aria-label="Close navigation menu"
+          class="p-2 rounded-full text-primary hover:bg-black/5 active:scale-95 transition-all cursor-pointer flex items-center justify-center">
+          <span class="material-symbols-outlined text-2xl">close</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex-1 px-6 py-5 flex flex-col gap-4 text-left overflow-y-auto bg-surface">
+      <div class="flex flex-col gap-3 font-bold text-base">
+        <a href="index.html" class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Home</a>
+        <a href="index.html#menu-section" class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Menu</a>
+        <a href="roastery.html" class="nav-drawer-link text-caramel transition-colors py-1 font-black">Our Roastery</a>
+        <a href="reviews.html" class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Reviews</a>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN ROASTERY STORY CONTENT -->
+  <main class="w-full flex-1">
+
+    <!-- HERO SECTION: The Craft & Story -->
+    <section class="w-full bg-[#f8f2e2] border-b border-outline/70 py-12 sm:py-16 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      <div class="max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-10">
+        <div class="max-w-xl text-left">
+          <div class="flex items-center gap-2 text-xs font-semibold text-on-surface-variant mb-3">
+            <a href="index.html" class="hover:text-primary transition-colors">Home</a>
+            <span>/</span>
+            <span class="text-primary font-bold">Our Roastery</span>
+          </div>
+
+          <span class="font-eyebrow font-extrabold text-xs tracking-[0.22em] text-caramel uppercase">CRAFT &amp; HERITAGE</span>
+          <h1 class="font-headline-bold font-black text-4xl sm:text-5xl lg:text-6xl text-primary leading-[1.05] tracking-tight mt-1.5 mb-4">
+            From High-Altitude Farms to Your Daily Cup.
+          </h1>
+          <p class="font-lead-copy text-xs sm:text-sm md:text-base text-on-surface-variant leading-relaxed font-semibold mb-6">
+            At Brew &amp; Bites, every single batch is roasted with uncompromised precision, celebrating the unique terroir, aroma, and complexity of ethically sourced Arabica beans.
+          </p>
+
+          <div class="flex items-center gap-4">
+            <a href="index.html#menu-section"
+              class="bg-primary hover:bg-primary-container text-white font-label-bold text-xs sm:text-sm px-7 py-3.5 rounded-full shadow-warm-md hover:scale-[1.02] active:scale-95 transition-all inline-flex items-center gap-2 cursor-pointer">
+              <span>Taste the Difference</span>
+              <span class="material-symbols-outlined text-sm">arrow_forward</span>
+            </a>
+          </div>
+        </div>
+
+        <div class="w-full lg:w-1/2 rounded-3xl overflow-hidden shadow-warm-lg border border-outline bg-surface-container relative">
+          <img src="assets/images/roastery-roasting.jpg" alt="Artisanal Roastery Drum"
+            class="w-full h-72 sm:h-96 object-cover rounded-3xl hover:scale-105 transition-transform duration-700" />
+          <div class="absolute bottom-4 left-4 right-4 bg-primary/90 backdrop-blur-md text-white p-4 rounded-2xl border border-white/20">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-caramel">Batch Roasting</p>
+                <p class="text-sm font-black">Micro-Lot Convection Drum Roaster</p>
+              </div>
+              <span class="material-symbols-outlined text-2xl text-caramel">local_fire_department</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 1: From Bean to Brew -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+        
+        <div class="lg:col-span-6 order-2 lg:order-1 rounded-3xl overflow-hidden shadow-warm-md border border-outline bg-surface-container">
+          <img src="https://images.unsplash.com/photo-1447933601403-0c6688de566e?auto=format&fit=crop&w=800&q=80"
+            alt="Handpicked Organic Coffee Cherries"
+            class="w-full h-80 sm:h-96 object-cover rounded-3xl hover:scale-105 transition-transform duration-500" />
+        </div>
+
+        <div class="lg:col-span-6 order-1 lg:order-2 text-left">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-6 h-6 rounded-full bg-caramel text-white font-black text-xs flex items-center justify-center">1</span>
+            <span class="font-eyebrow font-extrabold text-xs tracking-[0.22em] text-caramel uppercase">ETHICAL SOURCING</span>
+          </div>
+          <h2 class="font-headline-bold font-black text-3xl sm:text-4xl text-primary leading-tight mb-4">
+            From Bean to Brew
+          </h2>
+          <p class="font-body text-xs sm:text-sm text-on-surface-variant leading-relaxed font-medium mb-4">
+            We partner directly with sustainable, shade-grown family farms situated in volcanic highlands 1,400 meters above sea level. This high altitude slows the bean development, producing denser cherries with complex sugar concentrations.
+          </p>
+          <ul class="flex flex-col gap-2.5 text-xs text-primary font-bold">
+            <li class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-caramel text-base">check_circle</span>
+              <span>100% Hand-Selected Specialty Grade Arabica (Q-Grade 85+)</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-caramel text-base">check_circle</span>
+              <span>Direct-Trade Partnerships Guaranteeing Fair Compensation</span>
+            </li>
+            <li class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-caramel text-base">check_circle</span>
+              <span>Eco-Washed and Sun-Dried on Raised African Beds</span>
+            </li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 2: How We Roast -->
+    <section class="w-full bg-white border-y border-outline/70 py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+        
+        <div class="lg:col-span-6 text-left">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-6 h-6 rounded-full bg-caramel text-white font-black text-xs flex items-center justify-center">2</span>
+            <span class="font-eyebrow font-extrabold text-xs tracking-[0.22em] text-caramel uppercase">SMALL BATCH PRECISION</span>
+          </div>
+          <h2 class="font-headline-bold font-black text-3xl sm:text-4xl text-primary leading-tight mb-4">
+            How We Roast
+          </h2>
+          <p class="font-body text-xs sm:text-sm text-on-surface-variant leading-relaxed font-medium mb-4">
+            Roasting is an art guided by science. In our roastery, we utilize convection hot-air drum roasters that evenly distribute thermal energy, avoiding scorching while caramelizing the natural bean oils.
+          </p>
+          <div class="grid grid-cols-2 gap-4 mt-6">
+            <div class="bg-[#fcf9f2] p-4 rounded-2xl border border-outline/70">
+              <span class="material-symbols-outlined text-caramel text-2xl mb-1">timer</span>
+              <h4 class="font-display font-bold text-sm text-primary">12-Min Profile</h4>
+              <p class="text-[11px] text-on-surface-variant mt-1">Calibrated roast time curves to highlight chocolate &amp; caramel notes.</p>
+            </div>
+            <div class="bg-[#fcf9f2] p-4 rounded-2xl border border-outline/70">
+              <span class="material-symbols-outlined text-caramel text-2xl mb-1">thermostat</span>
+              <h4 class="font-display font-bold text-sm text-primary">Sensory Curves</h4>
+              <p class="text-[11px] text-on-surface-variant mt-1">Real-time probe monitoring to arrest development right at peak aroma.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="lg:col-span-6 rounded-3xl overflow-hidden shadow-warm-md border border-outline bg-surface-container">
+          <img src="https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&w=800&q=80"
+            alt="Freshly Roasted Brown Coffee Beans"
+            class="w-full h-80 sm:h-96 object-cover rounded-3xl hover:scale-105 transition-transform duration-500" />
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 3: How We Brew -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+        
+        <div class="lg:col-span-6 order-2 lg:order-1 rounded-3xl overflow-hidden shadow-warm-md border border-outline bg-surface-container">
+          <img src="https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=800&q=80"
+            alt="Cold Brew Drip Extraction"
+            class="w-full h-80 sm:h-96 object-cover rounded-3xl hover:scale-105 transition-transform duration-500" />
+        </div>
+
+        <div class="lg:col-span-6 order-1 lg:order-2 text-left">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="w-6 h-6 rounded-full bg-caramel text-white font-black text-xs flex items-center justify-center">3</span>
+            <span class="font-eyebrow font-extrabold text-xs tracking-[0.22em] text-caramel uppercase">SLOW EXTRACTION</span>
+          </div>
+          <h2 class="font-headline-bold font-black text-3xl sm:text-4xl text-primary leading-tight mb-4">
+            How We Brew
+          </h2>
+          <p class="font-body text-xs sm:text-sm text-on-surface-variant leading-relaxed font-medium mb-4">
+            Our signature cold brews are steeped in chilled, triple-filtered mountain water for a full 18 hours. This slow cold extraction draws out full-bodied chocolate and hazelnut undertones while stripping away 67% of unwanted acidity.
+          </p>
+          <div class="flex flex-col gap-3 text-xs text-primary font-bold">
+            <div class="flex items-start gap-2.5">
+              <span class="material-symbols-outlined text-caramel text-lg shrink-0">water_drop</span>
+              <span><strong>18-Hour Slow Immersion:</strong> Pure, ultra-smooth cold extraction with silky mouthfeel.</span>
+            </div>
+            <div class="flex items-start gap-2.5">
+              <span class="material-symbols-outlined text-caramel text-lg shrink-0">grain</span>
+              <span><strong>Micron-Calibrated Grinds:</strong> Consistent particle sizing for balanced, non-bitter extraction.</span>
+            </div>
+            <div class="flex items-start gap-2.5">
+              <span class="material-symbols-outlined text-caramel text-lg shrink-0">coffee</span>
+              <span><strong>Precision Espresso Pulls:</strong> 9-bar pressure extractions crafted for rich crema and aroma.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 4: Made Fresh. Served Better. -->
+    <section class="w-full bg-[#f8f2e2] border-t border-outline/70 py-16 sm:py-20 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-7xl mx-auto text-center">
+        <span class="font-eyebrow font-extrabold text-xs tracking-[0.22em] text-caramel uppercase">ARTISAN KITCHEN &amp; BAKERY</span>
+        <h2 class="font-headline-bold font-black text-3xl sm:text-4xl text-primary leading-tight mt-1.5 mb-4">
+          Made Fresh. Served Better.
+        </h2>
+        <p class="font-lead-copy text-xs sm:text-sm text-on-surface-variant max-w-xl mx-auto mb-10 font-semibold">
+          Great coffee deserves extraordinary companions. Our croissants, loaded toasts, and decadent desserts are crafted fresh every morning using European butter and pure ingredients.
+        </p>
+
+        <!-- 3 Feature Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+          <div class="bg-white p-6 rounded-3xl border border-outline shadow-warm-xs flex flex-col justify-between">
+            <div>
+              <div class="w-12 h-12 rounded-2xl bg-caramel/15 text-caramel flex items-center justify-center mb-4">
+                <span class="material-symbols-outlined text-2xl">bakery_dining</span>
+              </div>
+              <h4 class="font-display font-bold text-base text-primary mb-2">Fresh Viennoiserie</h4>
+              <p class="text-xs text-on-surface-variant leading-relaxed">
+                Hand-laminated French butter croissants baked fresh at dawn with flaky honeycomb structures.
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-white p-6 rounded-3xl border border-outline shadow-warm-xs flex flex-col justify-between">
+            <div>
+              <div class="w-12 h-12 rounded-2xl bg-caramel/15 text-caramel flex items-center justify-center mb-4">
+                <span class="material-symbols-outlined text-2xl">lunch_dining</span>
+              </div>
+              <h4 class="font-display font-bold text-base text-primary mb-2">Savory Snacks</h4>
+              <p class="text-xs text-on-surface-variant leading-relaxed">
+                Artisan sandwiches, whipped cream cheese bagels, and loaded rustic brioche toasts for every appetite.
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-white p-6 rounded-3xl border border-outline shadow-warm-xs flex flex-col justify-between">
+            <div>
+              <div class="w-12 h-12 rounded-2xl bg-caramel/15 text-caramel flex items-center justify-center mb-4">
+                <span class="material-symbols-outlined text-2xl">cake</span>
+              </div>
+              <h4 class="font-display font-bold text-base text-primary mb-2">Decadent Sweets</h4>
+              <p class="text-xs text-on-surface-variant leading-relaxed">
+                Fudgy dark chocolate brownies, glazed Saigon cinnamon rolls, and sea-salt choco-chunk cookies.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CTA Banner -->
+        <div class="mt-12">
+          <a href="index.html#menu-section"
+            class="bg-primary hover:bg-primary-container text-white font-label-bold text-sm px-9 py-4 rounded-full shadow-warm-md hover:shadow-warm-lg hover:scale-[1.02] active:scale-95 transition-all inline-flex items-center gap-2.5 cursor-pointer">
+            <span>Explore the Full Menu</span>
+            <span class="material-symbols-outlined text-base">arrow_forward</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-primary text-white py-12 px-4 sm:px-6 lg:px-8 border-t border-primary-container mt-auto">
+    <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
+      <div>
+        <h4 class="font-brand-logo font-serif italic font-black text-2xl mb-1 text-white">Brew&amp;Bites</h4>
+        <p class="text-xs text-white/70">Artisanal Coffee, Fresh Pastries &amp; Crafted Indulgence.</p>
+      </div>
+      <div class="flex gap-6 text-xs text-white/80 font-bold">
+        <a href="index.html" class="hover:text-caramel transition-colors">Home</a>
+        <a href="index.html#menu-section" class="hover:text-caramel transition-colors">Menu</a>
+        <a href="roastery.html" class="text-caramel transition-colors">Our Roastery</a>
+        <a href="reviews.html" class="hover:text-caramel transition-colors">Reviews</a>
+      </div>
+      <p class="text-xs text-white/50">© 2026 Brew&amp;Bites. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- SUPABASE & APPLICATION SCRIPTS -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase.js?v=8.0"></script>
+  <script src="js/country-config.js?v=8.0"></script>
+  <script src="js/currency.js?v=8.0"></script>
+  <script src="js/products.js?v=8.0"></script>
+  <script src="js/cart.js?v=8.0"></script>
+  <script src="js/orders.js?v=8.0"></script>
+  <script src="js/addresses.js?v=8.0"></script>
+  <script src="js/checkout.js?v=8.0"></script>
+  <script src="js/notifications.js?v=8.0"></script>
+  <script src="js/profile.js?v=8.0"></script>
+  <script src="js/admin.js?v=8.0"></script>
+  <script src="js/reviews.js?v=8.0"></script>
+  <script src="js/main.js?v=8.0"></script>
+</body>
+
+</html>
