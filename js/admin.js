@@ -1161,18 +1161,23 @@ function renderReviewsTab() {
       const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recent';
       const starsStr = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
 
+      const safeProdName = escapeHtml(prodName);
+      const safeProductId = escapeHtml(r.product_id);
+      const safeUserName = escapeHtml(r.user_name || 'Customer');
+      const safeReviewText = escapeHtml(r.review_text || '');
+
       return `
           <tr class="border-b border-outline-variant/15 hover:bg-surface/50 text-xs">
             <td class="py-3 px-3">
-              <span class="font-bold text-primary block">${prodName}</span>
-              <span class="text-[10px] text-on-surface-variant font-mono">${r.product_id}</span>
+              <span class="font-bold text-primary block">${safeProdName}</span>
+              <span class="text-[10px] text-on-surface-variant font-mono">${safeProductId}</span>
             </td>
-            <td class="py-3 px-3 font-medium text-primary">${r.user_name}</td>
+            <td class="py-3 px-3 font-medium text-primary">${safeUserName}</td>
             <td class="py-3 px-3">
               <span class="text-amber-500 font-bold">${starsStr}</span>
               <span class="text-[10px] text-on-surface-variant ml-1">(${r.rating}/5)</span>
             </td>
-            <td class="py-3 px-3 max-w-[240px] truncate text-on-surface" title="${r.review_text}">${r.review_text}</td>
+            <td class="py-3 px-3 max-w-[240px] truncate text-on-surface" title="${safeReviewText}">${safeReviewText}</td>
             <td class="py-3 px-3">
               <span class="px-2 py-0.5 rounded-full text-[9px] font-label-bold uppercase ${r.verified_purchase ? 'bg-green-100 text-green-800' : 'bg-surface-container-high text-on-surface-variant'}">
                 ${r.verified_purchase ? 'Verified' : 'Unverified'}
@@ -1180,7 +1185,7 @@ function renderReviewsTab() {
             </td>
             <td class="py-3 px-3 text-on-surface-variant">${dateStr}</td>
             <td class="py-3 px-3 text-right">
-              <button data-review-id="${r.id}" class="admin-delete-review-btn text-xs font-label-bold px-3 py-1 rounded-full text-red-600 hover:text-red-800 border border-red-200 hover:bg-red-50 transition-colors cursor-pointer">
+              <button data-review-id="${escapeHtml(r.id)}" class="admin-delete-review-btn text-xs font-label-bold px-3 py-1 rounded-full text-red-600 hover:text-red-800 border border-red-200 hover:bg-red-50 transition-colors cursor-pointer">
                 <span>Delete</span>
               </button>
             </td>
