@@ -493,6 +493,100 @@ async function fetchProductsFromSupabase(retryCount = 0) {
   return PRODUCTS;
 }
 
+/**
+ * Update a product in memory and persist changes to Supabase.
+ */
+async function updateProductInSupabase(productId, updates) {
+  if (!productId || !updates) return;
+
+  // 1. Update in-memory canonical catalog
+  const idx = PRODUCTS.findIndex(p => p.id === productId);
+  if (idx > -1) {
+    PRODUCTS[idx] = {
+      ...PRODUCTS[idx],
+      ...updates,
+      price: updates.price !== undefined ? Number(updates.price) : PRODUCTS[idx].price,
+      available: updates.available !== undefined ? normalizeProductAvailable(updates.available) : PRODUCTS[idx].available
+    };
+  }
+
+  notifyProductsUpdated();
+
+  // 2. Persist to Supabase products table if connected
+  if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+    try {
+      const prod = idx > -1 ? PRODUCTS[idx] : null;
+      const dbPayload = {
+        id: productId,
+        name: updates.name || prod?.name || productId,
+        category: updates.category || prod?.category || 'coffee',
+        price: updates.price !== undefined ? Number(updates.price) : (prod?.price || 0),
+        description: updates.description || prod?.description || '',
+        available: updates.available !== undefined ? normalizeProductAvailable(updates.available) : (prod?.available !== false),
+        image: updates.image || prod?.image || ''
+      };
+
+      const { error } = await supabaseClient
+        .from('products')
+        .upsert(dbPayload, { onConflict: 'id' });
+
+      if (error) {
+        console.warn("Supabase product upsert notice:", error.message);
+      }
+    } catch (e) {
+      console.warn("Could not persist product update to database:", e);
+    }
+  }
+
+  return PRODUCTS[idx] || null;
+}
+
+/**
+ * Create a new product in memory and in Supabase.
+ */
+async function createProductInSupabase(productData) {
+  if (!productData || !productData.name) return;
+
+  const newId = productData.id || productData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  const newProduct = {
+    id: newId,
+    name: productData.name,
+    category: normalizeCategory(productData.category || 'coffee'),
+    description: productData.description || '',
+    ingredients: Array.isArray(productData.ingredients) ? productData.ingredients : [],
+    price: Number(productData.price) || 4.50,
+    image: productData.image || 'assets/images/vanilla-cold-brew.jpg',
+    accentColor: productData.accentColor || 'bg-primary-fixed',
+    rating: 5.0,
+    reviewCount: 0,
+    available: productData.available !== false
+  };
+
+  PRODUCTS.unshift(newProduct);
+  notifyProductsUpdated();
+
+  if (typeof supabaseClient !== 'undefined' && supabaseClient) {
+    try {
+      await supabaseClient.from('products').upsert({
+        id: newProduct.id,
+        name: newProduct.name,
+        category: newProduct.category,
+        price: newProduct.price,
+        description: newProduct.description,
+        available: newProduct.available,
+        image: newProduct.image
+      });
+    } catch (e) {
+      console.warn("Could not insert product into database:", e);
+    }
+  }
+
+  return newProduct;
+}
+
+window.updateProductInSupabase = updateProductInSupabase;
+window.createProductInSupabase = createProductInSupabase;
+
 // Exports for Node testing
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -500,6 +594,8 @@ if (typeof module !== 'undefined' && module.exports) {
     normalizeCategory,
     normalizeProductAvailable,
     getProductById,
-    fetchProductsFromSupabase
+    fetchProductsFromSupabase,
+    updateProductInSupabase,
+    createProductInSupabase
   };
 }

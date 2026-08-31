@@ -70,9 +70,7 @@ async function openAdminDashboard() {
 
   const isAdmin = await isUserAdmin();
   if (!isAdmin) {
-    if (typeof showInAppToast === 'function') {
-      showInAppToast("Access Denied: Admin authorization required.", "error");
-    }
+    alert("Access Denied: Admin authorization required. Your account does not have admin privileges.");
     return;
   }
 
@@ -110,6 +108,8 @@ function closeAdminDashboard() {
 
 window.openAdminDashboard = openAdminDashboard;
 window.closeAdminDashboard = closeAdminDashboard;
+window.loadAdminData = loadAdminData;
+window.renderAdminDashboard = renderAdminDashboard;
 
 /**
  * Fetch all relational data from Supabase for admin inspection.
@@ -131,7 +131,51 @@ async function loadAdminData() {
     adminOrders = ordersRes.data || [];
     adminOrderItems = itemsRes.data || [];
     adminProfiles = profilesRes.data || [];
-    adminProducts = productsRes.data || [];
+
+    const dbProducts = productsRes.data || [];
+    const canonicalProducts = (typeof PRODUCTS !== 'undefined' && Array.isArray(PRODUCTS) && PRODUCTS.length > 0)
+      ? PRODUCTS
+      : ((typeof STATIC_PRODUCTS !== 'undefined' && Array.isArray(STATIC_PRODUCTS)) ? STATIC_PRODUCTS : []);
+
+    const productMap = new Map();
+    // 1. Populate full canonical items
+    canonicalProducts.forEach(cp => {
+      productMap.set(cp.id, { ...cp });
+    });
+
+    // 2. Overlay live DB values / extra custom items
+    dbProducts.forEach(dp => {
+      let mappedId = dp.id;
+      if (mappedId === 'classic-black') mappedId = 'classic-cold-brew';
+      if (mappedId === 'mocha-cream') mappedId = 'mocha-chill';
+      if (mappedId === 'caramel-latte') mappedId = 'caramel-cloud';
+      if (mappedId === 'vanilla-cream') mappedId = 'vanilla-cold-brew';
+      if (mappedId === 'chocolate-croissant') mappedId = 'cheese-croissant';
+      if (mappedId === 'almond-brownie') mappedId = 'fudge-brownie';
+
+      if (productMap.has(mappedId)) {
+        const existing = productMap.get(mappedId);
+        productMap.set(mappedId, {
+          ...existing,
+          price: Number(dp.price) || existing.price,
+          available: (typeof normalizeProductAvailable === 'function')
+            ? normalizeProductAvailable(dp.available !== undefined ? dp.available : existing.available)
+            : (dp.available !== false)
+        });
+      } else {
+        productMap.set(dp.id, {
+          id: dp.id,
+          name: dp.name,
+          category: dp.category || 'coffee',
+          price: Number(dp.price) || 4.50,
+          description: dp.description || '',
+          image: dp.image || 'assets/images/vanilla-cold-brew.jpg',
+          available: dp.available !== false
+        });
+      }
+    });
+
+    adminProducts = Array.from(productMap.values());
 
     try {
       const { data: payData } = await supabaseClient.from('payments').select('*');
@@ -170,9 +214,7 @@ async function updateAdminOrderStatus(orderId, newStatus) {
       .eq('id', orderId);
 
     if (error) {
-      if (typeof showInAppToast === 'function') {
-        showInAppToast(`Could not update order status: ${error.message}`, 'error');
-      }
+      alert(`Could not update order status: ${error.message}`);
       return;
     }
 
@@ -209,9 +251,7 @@ async function toggleAdminProductAvailability(productId, currentAvailable) {
 
     renderAdminDashboard();
   } catch (err) {
-    if (typeof showInAppToast === 'function') {
-      showInAppToast(`Could not update product availability: ${err.message}`, 'error');
-    }
+    alert(`Could not update product availability: ${err.message}`);
   }
 }
 
@@ -227,9 +267,7 @@ async function saveProductEdit(productId, formData) {
     adminEditingProduct = null;
     renderAdminDashboard();
   } catch (err) {
-    if (typeof showInAppToast === 'function') {
-      showInAppToast(`Error updating product: ${err.message}`, 'error');
-    }
+    alert(`Error updating product: ${err.message}`);
   }
 }
 
@@ -245,9 +283,7 @@ async function handleAddNewProduct(formData) {
     adminEditingProduct = null;
     renderAdminDashboard();
   } catch (err) {
-    if (typeof showInAppToast === 'function') {
-      showInAppToast(`Error creating product: ${err.message}`, 'error');
-    }
+    alert(`Error creating product: ${err.message}`);
   }
 }
 
@@ -570,16 +606,16 @@ function renderOverviewTab(bestSellers, rangeOrders) {
   const recentOrdersRows = recentOrders.length === 0
     ? `<tr><td colspan="5" class="py-6 text-center text-xs text-on-surface-variant">No orders recorded for this time range.</td></tr>`
     : recentOrders.map(order => {
-        const profile = adminProfiles.find(p => p.id === order.user_id);
-        const customerName = order.customer_name || profile?.full_name || 'Customer';
-        const dateStr = order.created_at ? new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Recent';
-        const payment = adminPayments.find(p => p.order_id === order.id);
-        const orderCurr = payment?.currency || order.currency || 'USD';
-        const formattedTotal = (typeof formatHistoricalCurrency === 'function')
-          ? formatHistoricalCurrency(order.subtotal, orderCurr)
-          : `$${Number(order.subtotal || 0).toFixed(2)}`;
+      const profile = adminProfiles.find(p => p.id === order.user_id);
+      const customerName = order.customer_name || profile?.full_name || 'Customer';
+      const dateStr = order.created_at ? new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Recent';
+      const payment = adminPayments.find(p => p.order_id === order.id);
+      const orderCurr = payment?.currency || order.currency || 'USD';
+      const formattedTotal = (typeof formatHistoricalCurrency === 'function')
+        ? formatHistoricalCurrency(order.subtotal, orderCurr)
+        : `$${Number(order.subtotal || 0).toFixed(2)}`;
 
-        return `
+      return `
           <tr class="border-b border-outline-variant/15 hover:bg-surface/50 text-xs">
             <td class="py-3 px-3 font-display font-bold text-primary">${order.order_reference || order.id?.slice(0, 8)}</td>
             <td class="py-3 px-3 text-primary font-medium">${escapeHtml(customerName)}</td>
@@ -590,7 +626,7 @@ function renderOverviewTab(bestSellers, rangeOrders) {
             </td>
           </tr>
         `;
-      }).join('');
+    }).join('');
 
   const bestSellersHTML = bestSellers.length === 0
     ? `<p class="text-xs text-on-surface-variant">No sales recorded in this time range.</p>`
@@ -631,9 +667,9 @@ function renderOverviewTab(bestSellers, rangeOrders) {
             <h4 class="font-display text-xs font-bold text-primary uppercase tracking-wider mb-2.5">Order Lifecycle Breakdown</h4>
             <div class="flex flex-col gap-2 text-xs">
               ${statuses.map(st => {
-                const count = statusCounts[st] || 0;
-                const pct = rangeOrders.length > 0 ? ((count / rangeOrders.length) * 100).toFixed(0) : 0;
-                return `
+    const count = statusCounts[st] || 0;
+    const pct = rangeOrders.length > 0 ? ((count / rangeOrders.length) * 100).toFixed(0) : 0;
+    return `
                   <div class="flex flex-col gap-1">
                     <div class="flex items-center justify-between text-[11px]">
                       <span class="capitalize font-bold text-primary">${st}</span>
@@ -644,7 +680,7 @@ function renderOverviewTab(bestSellers, rangeOrders) {
                     </div>
                   </div>
                 `;
-              }).join('')}
+  }).join('')}
             </div>
           </div>
 
@@ -746,28 +782,28 @@ function renderOrdersTab() {
   const orderCardsHTML = filtered.length === 0
     ? `<div class="p-8 text-center bg-surface rounded-2xl border border-outline-variant/20 text-xs text-on-surface-variant">No orders match your filter criteria.</div>`
     : filtered.map(order => {
-        const profile = adminProfiles.find(p => p.id === order.user_id);
-        const customerName = order.customer_name || profile?.full_name || 'Brew & Bite Customer';
-        const customerEmail = order.customer_email || profile?.email || 'No email provided';
-        const customerPhone = order.customer_phone || profile?.phone || 'No phone provided';
-        const dateStr = order.created_at
-          ? new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
-          : 'Recent';
+      const profile = adminProfiles.find(p => p.id === order.user_id);
+      const customerName = order.customer_name || profile?.full_name || 'Brew & Bite Customer';
+      const customerEmail = order.customer_email || profile?.email || 'No email provided';
+      const customerPhone = order.customer_phone || profile?.phone || 'No phone provided';
+      const dateStr = order.created_at
+        ? new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : 'Recent';
 
-        const payment = adminPayments.find(p => p.order_id === order.id);
-        const isPaid = payment?.payment_status === 'paid';
-        const isCOD = payment?.payment_method === 'cash_on_delivery' || !payment;
-        const txnRef = payment?.transaction_ref || `COD-${order.order_reference || order.id?.slice(0, 8)}`;
-        const orderCurr = payment?.currency || order.currency || 'USD';
-        const formatPrice = (val) => (typeof formatHistoricalCurrency === 'function')
-          ? formatHistoricalCurrency(val, orderCurr)
-          : `$${Number(val || 0).toFixed(2)}`;
+      const payment = adminPayments.find(p => p.order_id === order.id);
+      const isPaid = payment?.payment_status === 'paid';
+      const isCOD = payment?.payment_method === 'cash_on_delivery' || !payment;
+      const txnRef = payment?.transaction_ref || `COD-${order.order_reference || order.id?.slice(0, 8)}`;
+      const orderCurr = payment?.currency || order.currency || 'USD';
+      const formatPrice = (val) => (typeof formatHistoricalCurrency === 'function')
+        ? formatHistoricalCurrency(val, orderCurr)
+        : `$${Number(val || 0).toFixed(2)}`;
 
-        const items = adminOrderItems.filter(item => item.order_id === order.id);
+      const items = adminOrderItems.filter(item => item.order_id === order.id);
 
-        const itemsHTML = items.length === 0
-          ? `<p class="text-xs text-on-surface-variant">No line item details recorded.</p>`
-          : items.map(item => `
+      const itemsHTML = items.length === 0
+        ? `<p class="text-xs text-on-surface-variant">No line item details recorded.</p>`
+        : items.map(item => `
               <div class="flex items-center justify-between py-1 border-b border-outline-variant/10 text-xs">
                 <div>
                   <span class="font-bold text-primary">${item.product_name || item.product_id}</span>
@@ -777,7 +813,7 @@ function renderOrdersTab() {
               </div>
             `).join('');
 
-        return `
+      return `
           <div class="bg-surface rounded-2xl p-4 sm:p-5 border border-outline-variant/30 shadow-xs flex flex-col gap-3.5">
             <!-- Order Header -->
             <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 border-b border-outline-variant/15 pb-3">
@@ -857,7 +893,7 @@ function renderOrdersTab() {
             </div>
           </div>
         `;
-      }).join('');
+    }).join('');
 
   return `
     <div class="flex flex-col gap-4">
@@ -925,13 +961,13 @@ function renderCustomersTab() {
   const customerRows = filteredCustomers.length === 0
     ? `<tr><td colspan="7" class="py-6 text-center text-xs text-on-surface-variant">No customers match your search query.</td></tr>`
     : filteredCustomers.map(p => {
-        const userOrders = adminOrders.filter(o => o.user_id === p.id);
-        const spend = userOrders
-          .filter(o => o.status !== 'cancelled')
-          .reduce((sum, o) => sum + Number(o.subtotal || 0), 0);
-        const joinDate = p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown';
+      const userOrders = adminOrders.filter(o => o.user_id === p.id);
+      const spend = userOrders
+        .filter(o => o.status !== 'cancelled')
+        .reduce((sum, o) => sum + Number(o.subtotal || 0), 0);
+      const joinDate = p.created_at ? new Date(p.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Unknown';
 
-        return `
+      return `
           <tr class="border-b border-outline-variant/15 hover:bg-surface/50 text-xs">
             <td class="py-3 px-3 font-bold text-primary">${p.full_name || 'Member'}</td>
             <td class="py-3 px-3 text-on-surface-variant">${p.email || '—'}</td>
@@ -946,7 +982,7 @@ function renderCustomersTab() {
             </td>
           </tr>
         `;
-      }).join('');
+    }).join('');
 
   return `
     <div class="bg-surface rounded-2xl p-5 border border-outline-variant/30 shadow-xs flex flex-col gap-4">
@@ -1003,7 +1039,7 @@ function renderProductsTab() {
   const productRows = filteredProducts.length === 0
     ? `<tr><td colspan="5" class="py-6 text-center text-xs text-on-surface-variant">No products match your filter criteria.</td></tr>`
     : filteredProducts.map(p => {
-        return `
+      return `
           <tr class="border-b border-outline-variant/15 hover:bg-surface/50 text-xs">
             <td class="py-3 px-3">
               <div class="flex items-center gap-2.5">
@@ -1035,7 +1071,7 @@ function renderProductsTab() {
             </td>
           </tr>
         `;
-      }).join('');
+    }).join('');
 
   return `
     <div class="flex flex-col gap-4">
@@ -1101,16 +1137,11 @@ async function deleteAdminReview(reviewId) {
   try {
     const { error } = await supabaseClient.from('reviews').delete().eq('id', reviewId);
     if (error) {
-      if (typeof showInAppToast === 'function') {
-        showInAppToast(`Could not delete review: ${error.message}`, 'error');
-      }
+      alert(`Could not delete review: ${error.message}`);
       return;
     }
 
     adminReviews = adminReviews.filter(r => r.id !== reviewId);
-    if (typeof showInAppToast === 'function') {
-      showInAppToast("Review deleted successfully.", "info");
-    }
     renderAdminDashboard();
     if (typeof fetchAllReviewsFromSupabase === 'function') fetchAllReviewsFromSupabase();
   } catch (err) {
@@ -1125,27 +1156,23 @@ function renderReviewsTab() {
   const reviewsRows = adminReviews.length === 0
     ? `<tr><td colspan="7" class="py-6 text-center text-xs text-on-surface-variant">No customer reviews submitted yet.</td></tr>`
     : adminReviews.map(r => {
-        const prod = adminProducts.find(p => p.id === r.product_id);
-        const prodName = prod?.name || r.product_id;
-        const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recent';
-        const starsStr = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+      const prod = adminProducts.find(p => p.id === r.product_id);
+      const prodName = prod?.name || r.product_id;
+      const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recent';
+      const starsStr = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
 
-        const safeProdName = escapeHtml(prodName);
-        const safeUserName = escapeHtml(r.user_name || 'Customer');
-        const safeReviewText = escapeHtml(r.review_text || '');
-
-        return `
+      return `
           <tr class="border-b border-outline-variant/15 hover:bg-surface/50 text-xs">
             <td class="py-3 px-3">
-              <span class="font-bold text-primary block">${safeProdName}</span>
-              <span class="text-[10px] text-on-surface-variant font-mono">${escapeHtml(r.product_id)}</span>
+              <span class="font-bold text-primary block">${prodName}</span>
+              <span class="text-[10px] text-on-surface-variant font-mono">${r.product_id}</span>
             </td>
-            <td class="py-3 px-3 font-medium text-primary">${safeUserName}</td>
+            <td class="py-3 px-3 font-medium text-primary">${r.user_name}</td>
             <td class="py-3 px-3">
               <span class="text-amber-500 font-bold">${starsStr}</span>
               <span class="text-[10px] text-on-surface-variant ml-1">(${r.rating}/5)</span>
             </td>
-            <td class="py-3 px-3 max-w-[240px] truncate text-on-surface" title="${safeReviewText}">${safeReviewText}</td>
+            <td class="py-3 px-3 max-w-[240px] truncate text-on-surface" title="${r.review_text}">${r.review_text}</td>
             <td class="py-3 px-3">
               <span class="px-2 py-0.5 rounded-full text-[9px] font-label-bold uppercase ${r.verified_purchase ? 'bg-green-100 text-green-800' : 'bg-surface-container-high text-on-surface-variant'}">
                 ${r.verified_purchase ? 'Verified' : 'Unverified'}
@@ -1159,7 +1186,7 @@ function renderReviewsTab() {
             </td>
           </tr>
         `;
-      }).join('');
+    }).join('');
 
   return `
     <div class="bg-surface rounded-2xl p-5 border border-outline-variant/30 shadow-xs flex flex-col gap-4">
@@ -1202,13 +1229,13 @@ function renderCustomerHistoryModal(customer) {
   const ordersHTML = customerOrders.length === 0
     ? `<p class="text-xs text-on-surface-variant text-center py-6">No orders placed by this customer yet.</p>`
     : customerOrders.map(order => {
-        const payment = adminPayments.find(p => p.order_id === order.id);
-        const orderCurr = payment?.currency || order.currency || 'USD';
-        const formattedSubtotal = (typeof formatHistoricalCurrency === 'function')
-          ? formatHistoricalCurrency(order.subtotal, orderCurr)
-          : `$${Number(order.subtotal || 0).toFixed(2)}`;
+      const payment = adminPayments.find(p => p.order_id === order.id);
+      const orderCurr = payment?.currency || order.currency || 'USD';
+      const formattedSubtotal = (typeof formatHistoricalCurrency === 'function')
+        ? formatHistoricalCurrency(order.subtotal, orderCurr)
+        : `$${Number(order.subtotal || 0).toFixed(2)}`;
 
-        return `
+      return `
           <div class="p-3.5 rounded-xl bg-surface border border-outline-variant/20 flex flex-col gap-2">
             <div class="flex items-center justify-between">
               <span class="font-bold text-xs text-primary">${order.order_reference || order.id?.slice(0, 8)}</span>
@@ -1221,7 +1248,7 @@ function renderCustomerHistoryModal(customer) {
             </div>
           </div>
         `;
-      }).join('');
+    }).join('');
 
   return `
     <div id="customer-history-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
@@ -1304,9 +1331,7 @@ function renderProductEditModal(product) {
  */
 function exportAdminOrdersToCSV() {
   if (!adminOrders || adminOrders.length === 0) {
-    if (typeof showInAppToast === 'function') {
-      showInAppToast("No orders available to export.", "warning");
-    }
+    alert("No orders available to export.");
     return;
   }
 
