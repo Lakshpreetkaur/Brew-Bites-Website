@@ -56,10 +56,10 @@ const SEED_REVIEWS = [
   },
   {
     id: "seed-rev-5",
-    product_id: "veggie-sandwich",
+    product_id: "loaded-veggie-toast",
     user_name: "Elena Rostova",
     rating: 5,
-    review_text: "So fresh and flavorful! The herb hummus and toasted sourdough make this a fantastic artisan lunch.",
+    review_text: "So fresh and flavorful! The loaded multigrain toast and smashed avocado make this a fantastic healthy breakfast.",
     verified_purchase: true,
     created_at: new Date(Date.now() - 10 * 86400000).toISOString()
   },

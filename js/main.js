@@ -52,7 +52,7 @@ function renderProducts() {
     }
   }
 
-  // Category Filtering Logic (3 Main Categories: 'coffee', 'snacks', 'dessert')
+  // Category Filtering Logic (3 Main Categories: 'coffee', 'savory', 'sweet')
   if (storefrontCategoryFilter !== 'all') {
     filtered = filtered.filter(item => {
       const cat = (typeof normalizeCategory === 'function')
@@ -62,11 +62,11 @@ function renderProducts() {
       if (storefrontCategoryFilter === 'coffee' || storefrontCategoryFilter === 'cold-brews') {
         return cat === 'coffee';
       }
-      if (storefrontCategoryFilter === 'snacks' || storefrontCategoryFilter === 'snack' || storefrontCategoryFilter === 'bites') {
-        return cat === 'snacks';
+      if (storefrontCategoryFilter === 'savory' || storefrontCategoryFilter === 'savory-bites' || storefrontCategoryFilter === 'snacks' || storefrontCategoryFilter === 'snack' || storefrontCategoryFilter === 'bites') {
+        return cat === 'savory';
       }
-      if (storefrontCategoryFilter === 'dessert' || storefrontCategoryFilter === 'desserts' || storefrontCategoryFilter === 'cookies' || storefrontCategoryFilter === 'muffins' || storefrontCategoryFilter === 'croissants') {
-        return cat === 'dessert';
+      if (storefrontCategoryFilter === 'sweet' || storefrontCategoryFilter === 'sweet-bites' || storefrontCategoryFilter === 'dessert' || storefrontCategoryFilter === 'desserts' || storefrontCategoryFilter === 'cookies' || storefrontCategoryFilter === 'muffins' || storefrontCategoryFilter === 'croissants') {
+        return cat === 'sweet';
       }
       return cat === storefrontCategoryFilter;
     });
@@ -106,7 +106,7 @@ function renderProducts() {
       : 'assets/images/vanilla-cold-brew.jpg';
 
     return `
-      <article class="bg-white rounded-2xl p-3 border border-outline shadow-warm-xs hover:shadow-warm-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group ${!isAvailable ? 'opacity-70' : ''}">
+      <article class="bg-white rounded-2xl p-3 border border-outline shadow-warm-xs hover:shadow-warm-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group cursor-pointer ${!isAvailable ? 'opacity-70' : ''}" onclick="openProductDetailsModal('${item.id}')">
         <div>
           <div class="w-full aspect-[4/3] rounded-xl overflow-hidden mb-3 relative bg-surface-container">
             <img alt="${item.name}" onerror="this.onerror=null; this.src='assets/images/vanilla-cold-brew.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-xl" src="${imgSrc}" />
@@ -120,7 +120,7 @@ function renderProducts() {
           <p class="font-body text-[11px] text-on-surface-variant leading-relaxed line-clamp-2 mb-2">${item.description}</p>
         </div>
 
-        <div class="flex items-center justify-between pt-1 border-t border-outline/50 mt-auto">
+        <div class="flex items-center justify-between pt-2 border-t border-outline/50 mt-auto" onclick="event.stopPropagation()">
           <div>${getReviewBadgeHTML(item.id)}</div>
           <button data-product-id="${item.id}" ${!isAvailable ? 'disabled' : ''} aria-label="Add ${item.name} to order" class="add-to-order-btn w-7 h-7 rounded-full bg-primary hover:bg-primary-container text-white flex items-center justify-center text-sm font-bold shadow-xs active:scale-90 transition-all cursor-pointer">
             <span>+</span>
@@ -150,6 +150,130 @@ function renderProducts() {
     });
   });
 }
+
+/**
+ * Open Product Quick Details & Ingredients Modal
+ */
+function openProductDetailsModal(productId) {
+  if (!productId) return;
+  const product = (typeof getProductById === 'function') ? getProductById(productId) : null;
+  if (!product) return;
+
+  const modal = document.getElementById('product-details-modal');
+  const content = document.getElementById('product-details-modal-content');
+  if (!modal || !content) return;
+
+  const isAvailable = (typeof normalizeProductAvailable === 'function')
+    ? normalizeProductAvailable(product.available)
+    : (product.available !== false);
+
+  const summary = (typeof getProductReviewSummary === 'function')
+    ? getProductReviewSummary(product.id)
+    : { average: product.rating || 5.0, count: product.reviewCount || 0, starsHTML: '★★★★★' };
+
+  const ingredientsHTML = Array.isArray(product.ingredients) && product.ingredients.length > 0
+    ? `
+      <div class="bg-[#fcf9f2] p-4 rounded-2xl border border-outline/70">
+        <h5 class="text-xs font-bold uppercase tracking-wider text-caramel mb-2.5 flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-sm">local_dining</span>
+          <span>Ingredients</span>
+        </h5>
+        <ul class="flex flex-col gap-1.5 text-xs text-primary font-medium">
+          ${product.ingredients.map(ing => `
+            <li class="flex items-center gap-2">
+              <span class="w-1.5 h-1.5 rounded-full bg-caramel shrink-0"></span>
+              <span>${ing}</span>
+            </li>
+          `).join('')}
+        </ul>
+      </div>
+    `
+    : '';
+
+  const getDisplayPrice = (priceUSD) => {
+    if (typeof formatCurrency === 'function') {
+      return formatCurrency(priceUSD);
+    }
+    return `$${Number(priceUSD || 0).toFixed(2)}`;
+  };
+
+  const categoryName = product.category === 'coffee' ? 'Coffee & Cold Brews' : (product.category === 'savory' ? 'Savory Bites' : 'Sweet Bites');
+
+  content.innerHTML = `
+    <!-- Header with Close Button -->
+    <div class="flex items-center justify-between border-b border-outline pb-3">
+      <div class="flex items-center gap-2">
+        <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-surface-container text-caramel border border-outline/50">${categoryName}</span>
+      </div>
+      <button onclick="closeProductDetailsModal()" aria-label="Close details modal" class="p-1.5 rounded-full text-on-surface-variant hover:text-primary cursor-pointer">
+        <span class="material-symbols-outlined text-xl">close</span>
+      </button>
+    </div>
+
+    <!-- Product Image & Hero -->
+    <div class="w-full aspect-[16/10] rounded-2xl overflow-hidden bg-surface-container relative border border-outline/40">
+      <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover" onerror="this.src='assets/images/vanilla-cold-brew.jpg'" />
+      <div class="absolute bottom-3 right-3 bg-primary/95 backdrop-blur-xs text-white font-bold text-sm px-3.5 py-1 rounded-full shadow-warm-xs">
+        ${getDisplayPrice(product.price)}
+      </div>
+      ${!isAvailable ? `<span class="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-sm font-bold uppercase">Sold Out</span>` : ''}
+    </div>
+
+    <!-- Title & Rating -->
+    <div class="flex items-center justify-between gap-2">
+      <h3 class="font-display font-black text-xl sm:text-2xl text-primary leading-tight">${product.name}</h3>
+      <button onclick="closeProductDetailsModal(); if(typeof openProductReviewsModal==='function') openProductReviewsModal('${product.id}');" class="flex items-center gap-1 text-xs font-bold text-caramel hover:underline cursor-pointer shrink-0">
+        <span>★ ${summary.average}</span>
+        <span class="text-on-surface-variant font-normal text-[11px]">(${summary.count} reviews)</span>
+      </button>
+    </div>
+
+    <!-- Description -->
+    <p class="font-body text-xs text-on-surface-variant leading-relaxed font-medium">
+      ${product.description}
+    </p>
+
+    <!-- Ingredients List -->
+    ${ingredientsHTML}
+
+    <!-- Footer Action -->
+    <div class="flex items-center justify-between gap-3 pt-2 border-t border-outline/50 mt-1">
+      <div>
+        <span class="text-[10px] text-on-surface-variant uppercase font-bold block">Price</span>
+        <span class="font-display font-black text-lg text-primary leading-none">${getDisplayPrice(product.price)}</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="closeProductDetailsModal(); if(typeof openProductReviewsModal==='function') openProductReviewsModal('${product.id}');" class="px-3.5 py-2.5 rounded-full border border-outline text-xs font-bold text-primary hover:bg-surface-container transition-colors cursor-pointer flex items-center gap-1">
+          <span class="material-symbols-outlined text-sm">rate_review</span>
+          <span>Reviews</span>
+        </button>
+        <button onclick="if(typeof addToCart==='function') { addToCart('${product.id}'); closeProductDetailsModal(); if(typeof openCart==='function') openCart(); }" ${!isAvailable ? 'disabled' : ''} class="bg-primary hover:bg-primary-container text-white font-label-bold text-xs px-5 py-2.5 rounded-full shadow-warm-xs active:scale-95 transition-all inline-flex items-center gap-1.5 cursor-pointer">
+          <span class="material-symbols-outlined text-sm">shopping_bag</span>
+          <span>Add to Order</span>
+        </button>
+      </div>
+    </div>
+  `;
+
+  modal.classList.remove('opacity-0', 'pointer-events-none');
+  modal.classList.add('opacity-100', 'pointer-events-auto');
+  document.body.classList.add('overflow-hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeProductDetailsModal() {
+  const modal = document.getElementById('product-details-modal');
+  if (modal) {
+    modal.classList.remove('opacity-100', 'pointer-events-auto');
+    modal.classList.add('opacity-0', 'pointer-events-none');
+  }
+  document.body.classList.remove('overflow-hidden');
+  document.body.style.overflow = '';
+}
+
+window.openProductDetailsModal = openProductDetailsModal;
+window.closeProductDetailsModal = closeProductDetailsModal;
 
 // Side Navigation Drawer Controller (Fixed Modal from Left)
 function openNavDrawer() {
