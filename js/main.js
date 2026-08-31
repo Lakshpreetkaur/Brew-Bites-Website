@@ -110,13 +110,13 @@ function renderProducts() {
         <div>
           <div class="w-full aspect-[4/3] rounded-xl overflow-hidden mb-3 relative bg-surface-container">
             <img alt="${item.name}" onerror="this.onerror=null; this.src='assets/images/vanilla-cold-brew.jpg'" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 rounded-xl" src="${imgSrc}" />
-            <div class="absolute top-2 right-2 bg-primary text-white font-body text-[11px] font-bold px-2 py-0.5 rounded-md shadow-xs">
-              ${getDisplayPrice(item.price)}
-            </div>
             ${!isAvailable ? `<span class="absolute inset-0 bg-black/50 rounded-xl flex items-center justify-center text-white text-xs font-bold uppercase">Sold Out</span>` : ''}
           </div>
 
-          <h4 class="font-display font-bold text-sm text-primary mb-0.5 leading-snug">${item.name}</h4>
+          <div class="flex items-start justify-between gap-1 mb-1">
+            <h4 class="font-display font-bold text-sm text-primary leading-snug">${item.name}</h4>
+            <span class="font-body text-xs font-black text-primary shrink-0">${getDisplayPrice(item.price)}</span>
+          </div>
           <p class="font-body text-[11px] text-on-surface-variant leading-relaxed line-clamp-2 mb-2">${item.description}</p>
         </div>
 

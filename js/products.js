@@ -47,7 +47,7 @@ const STATIC_PRODUCTS = [
       "Crystalline Ice"
     ],
     price: 4.50,
-    image: "assets/images/classic-black.jpg",
+    image: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&w=1200&q=95",
     accentColor: "bg-tertiary-fixed",
     rating: 4.9,
     reviewCount: 38,
@@ -65,7 +65,7 @@ const STATIC_PRODUCTS = [
       "Crystalline Ice"
     ],
     price: 5.25,
-    image: "assets/images/vanilla-cold-brew.jpg",
+    image: "https://images.unsplash.com/photo-1572442388796-11668a67e53d?auto=format&fit=crop&w=1200&q=95",
     accentColor: "bg-primary-fixed",
     rating: 5.0,
     reviewCount: 52,
@@ -84,7 +84,7 @@ const STATIC_PRODUCTS = [
       "Crystalline Ice"
     ],
     price: 5.75,
-    image: "assets/images/caramel-cloud.jpg",
+    image: "https://images.unsplash.com/photo-1589396575653-c09c794ff6a6?auto=format&fit=crop&w=1200&q=95",
     accentColor: "bg-secondary-fixed",
     rating: 4.9,
     reviewCount: 44,
@@ -102,7 +102,7 @@ const STATIC_PRODUCTS = [
       "Crystalline Ice"
     ],
     price: 5.50,
-    image: "assets/images/mocha-chill.jpg",
+    image: "https://images.unsplash.com/photo-1541167760496-1628856ab772?auto=format&fit=crop&w=1200&q=95",
     accentColor: "bg-tertiary-fixed-dim",
     rating: 4.8,
     reviewCount: 29,
@@ -120,7 +120,7 @@ const STATIC_PRODUCTS = [
       "Crystalline Ice"
     ],
     price: 5.25,
-    image: "assets/images/hazelnut-cold-brew.jpg",
+    image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?auto=format&fit=crop&w=1200&q=95",
     accentColor: "bg-secondary-fixed-dim",
     rating: 4.9,
     reviewCount: 31,
@@ -274,7 +274,7 @@ const STATIC_PRODUCTS = [
       "Maldon Flaky Sea Salt"
     ],
     price: 3.75,
-    image: "assets/images/choco-chunk-cookie.jpg",
+    image: "https://images.unsplash.com/photo-1499636136210-6f4ee915583e?auto=format&fit=crop&w=1200&q=95",
     accentColor: "bg-secondary-fixed",
     rating: 5.0,
     reviewCount: 61,
