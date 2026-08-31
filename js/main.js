@@ -114,17 +114,17 @@ function renderProducts() {
       : inCartQty > 0
         ? `
           <div class="flex items-center gap-1.5 bg-[#fbf6ec] border border-outline rounded-full px-1.5 py-0.5 shadow-2xs" onclick="event.stopPropagation()">
-            <button data-product-id="${item.id}" aria-label="Decrease ${item.name} quantity" class="card-decrease-qty-btn w-6 h-6 rounded-full flex items-center justify-center text-primary hover:bg-black/5 active:scale-90 transition-all cursor-pointer font-bold text-sm">
+            <button data-product-id="${item.id}" aria-label="Decrease ${item.name} quantity" class="card-decrease-qty-btn w-6 h-6 rounded-full flex items-center justify-center text-primary hover:bg-black/5 active:scale-90 transition-all cursor-pointer font-bold text-sm" onclick="event.stopPropagation(); if(typeof decreaseQuantity==='function') decreaseQuantity('${item.id}');">
               −
             </button>
             <span class="font-label-bold text-xs text-primary min-w-[14px] text-center">${inCartQty}</span>
-            <button data-product-id="${item.id}" aria-label="Increase ${item.name} quantity" class="card-increase-qty-btn w-6 h-6 rounded-full flex items-center justify-center text-primary hover:bg-black/5 active:scale-90 transition-all cursor-pointer font-bold text-sm">
+            <button data-product-id="${item.id}" aria-label="Increase ${item.name} quantity" class="card-increase-qty-btn w-6 h-6 rounded-full flex items-center justify-center text-primary hover:bg-black/5 active:scale-90 transition-all cursor-pointer font-bold text-sm" onclick="event.stopPropagation(); if(typeof addToCart==='function') addToCart('${item.id}');">
               +
             </button>
           </div>
         `
         : `
-          <button data-product-id="${item.id}" aria-label="Add ${item.name} to order" class="add-to-order-btn w-7 h-7 rounded-full bg-primary hover:bg-primary-container text-white flex items-center justify-center text-sm font-bold shadow-xs active:scale-90 transition-all cursor-pointer">
+          <button data-product-id="${item.id}" aria-label="Add ${item.name} to order" class="add-to-order-btn w-7 h-7 rounded-full bg-primary hover:bg-primary-container text-white flex items-center justify-center text-sm font-bold shadow-xs active:scale-90 transition-all cursor-pointer" onclick="event.stopPropagation(); if(typeof addToCart==='function') addToCart('${item.id}', this);">
             <span>+</span>
           </button>
         `;

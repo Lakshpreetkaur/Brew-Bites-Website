@@ -584,6 +584,12 @@ async function createProductInSupabase(productData) {
   return newProduct;
 }
 
+window.PRODUCTS = PRODUCTS;
+window.STATIC_PRODUCTS = STATIC_PRODUCTS;
+window.getProductById = getProductById;
+window.normalizeProductAvailable = normalizeProductAvailable;
+window.normalizeCategory = normalizeCategory;
+window.fetchProductsFromSupabase = fetchProductsFromSupabase;
 window.updateProductInSupabase = updateProductInSupabase;
 window.createProductInSupabase = createProductInSupabase;
 
