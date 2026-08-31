@@ -70,7 +70,9 @@ async function openAdminDashboard() {
 
   const isAdmin = await isUserAdmin();
   if (!isAdmin) {
-    alert("Access Denied: Admin authorization required. Your account does not have admin privileges.");
+    if (typeof showInAppToast === 'function') {
+      showInAppToast("Access Denied: Admin authorization required.", "error");
+    }
     return;
   }
 
@@ -168,7 +170,9 @@ async function updateAdminOrderStatus(orderId, newStatus) {
       .eq('id', orderId);
 
     if (error) {
-      alert(`Could not update order status: ${error.message}`);
+      if (typeof showInAppToast === 'function') {
+        showInAppToast(`Could not update order status: ${error.message}`, 'error');
+      }
       return;
     }
 
@@ -205,7 +209,9 @@ async function toggleAdminProductAvailability(productId, currentAvailable) {
 
     renderAdminDashboard();
   } catch (err) {
-    alert(`Could not update product availability: ${err.message}`);
+    if (typeof showInAppToast === 'function') {
+      showInAppToast(`Could not update product availability: ${err.message}`, 'error');
+    }
   }
 }
 
@@ -221,7 +227,9 @@ async function saveProductEdit(productId, formData) {
     adminEditingProduct = null;
     renderAdminDashboard();
   } catch (err) {
-    alert(`Error updating product: ${err.message}`);
+    if (typeof showInAppToast === 'function') {
+      showInAppToast(`Error updating product: ${err.message}`, 'error');
+    }
   }
 }
 
@@ -237,7 +245,9 @@ async function handleAddNewProduct(formData) {
     adminEditingProduct = null;
     renderAdminDashboard();
   } catch (err) {
-    alert(`Error creating product: ${err.message}`);
+    if (typeof showInAppToast === 'function') {
+      showInAppToast(`Error creating product: ${err.message}`, 'error');
+    }
   }
 }
 
@@ -1091,11 +1101,16 @@ async function deleteAdminReview(reviewId) {
   try {
     const { error } = await supabaseClient.from('reviews').delete().eq('id', reviewId);
     if (error) {
-      alert(`Could not delete review: ${error.message}`);
+      if (typeof showInAppToast === 'function') {
+        showInAppToast(`Could not delete review: ${error.message}`, 'error');
+      }
       return;
     }
 
     adminReviews = adminReviews.filter(r => r.id !== reviewId);
+    if (typeof showInAppToast === 'function') {
+      showInAppToast("Review deleted successfully.", "info");
+    }
     renderAdminDashboard();
     if (typeof fetchAllReviewsFromSupabase === 'function') fetchAllReviewsFromSupabase();
   } catch (err) {
@@ -1115,18 +1130,22 @@ function renderReviewsTab() {
         const dateStr = r.created_at ? new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recent';
         const starsStr = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
 
+        const safeProdName = escapeHtml(prodName);
+        const safeUserName = escapeHtml(r.user_name || 'Customer');
+        const safeReviewText = escapeHtml(r.review_text || '');
+
         return `
           <tr class="border-b border-outline-variant/15 hover:bg-surface/50 text-xs">
             <td class="py-3 px-3">
-              <span class="font-bold text-primary block">${prodName}</span>
-              <span class="text-[10px] text-on-surface-variant font-mono">${r.product_id}</span>
+              <span class="font-bold text-primary block">${safeProdName}</span>
+              <span class="text-[10px] text-on-surface-variant font-mono">${escapeHtml(r.product_id)}</span>
             </td>
-            <td class="py-3 px-3 font-medium text-primary">${r.user_name}</td>
+            <td class="py-3 px-3 font-medium text-primary">${safeUserName}</td>
             <td class="py-3 px-3">
               <span class="text-amber-500 font-bold">${starsStr}</span>
               <span class="text-[10px] text-on-surface-variant ml-1">(${r.rating}/5)</span>
             </td>
-            <td class="py-3 px-3 max-w-[240px] truncate text-on-surface" title="${r.review_text}">${r.review_text}</td>
+            <td class="py-3 px-3 max-w-[240px] truncate text-on-surface" title="${safeReviewText}">${safeReviewText}</td>
             <td class="py-3 px-3">
               <span class="px-2 py-0.5 rounded-full text-[9px] font-label-bold uppercase ${r.verified_purchase ? 'bg-green-100 text-green-800' : 'bg-surface-container-high text-on-surface-variant'}">
                 ${r.verified_purchase ? 'Verified' : 'Unverified'}
@@ -1285,7 +1304,9 @@ function renderProductEditModal(product) {
  */
 function exportAdminOrdersToCSV() {
   if (!adminOrders || adminOrders.length === 0) {
-    alert("No orders available to export.");
+    if (typeof showInAppToast === 'function') {
+      showInAppToast("No orders available to export.", "warning");
+    }
     return;
   }
 

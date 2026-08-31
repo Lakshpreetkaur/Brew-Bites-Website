@@ -11,49 +11,72 @@ let isNotificationPanelOpen = false;
 let notificationRealtimeChannel = null;
 
 /**
- * Format relative time (e.g. "Just now", "5m ago", "2h ago", "1d ago")
+ * Lightweight in-app toast notification banner (replaces browser alerts)
  */
-function getRelativeTime(timestamp) {
-  if (!timestamp) return 'Recently';
-  const now = new Date();
-  const date = new Date(timestamp);
-  const diffInSeconds = Math.floor((now - date) / 1000);
-
-  if (diffInSeconds < 30) return 'Just now';
-  if (diffInSeconds < 60) return `${diffInSeconds}s ago`;
-  const minutes = Math.floor(diffInSeconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
-}
-
-/**
- * Get icon and style for notification type
- */
-function getNotificationVisuals(type) {
-  switch (type) {
-    case 'order_placed':
-      return { icon: 'receipt_long', bg: 'bg-secondary/15', text: 'text-secondary' };
-    case 'order_status_update':
-      return { icon: 'coffee_maker', bg: 'bg-primary/10', text: 'text-primary' };
-    case 'payment_success':
-      return { icon: 'check_circle', bg: 'bg-green-100', text: 'text-green-800' };
-    case 'payment_failed':
-      return { icon: 'error', bg: 'bg-red-100', text: 'text-red-800' };
-    case 'payment_pending':
-      return { icon: 'pending', bg: 'bg-amber-100', text: 'text-amber-800' };
-    case 'order_cancelled':
-      return { icon: 'cancel', bg: 'bg-red-100', text: 'text-red-800' };
-    case 'admin_alert':
-    case 'admin_new_order':
-      return { icon: 'notifications_active', bg: 'bg-tertiary/20', text: 'text-tertiary' };
-    default:
-      return { icon: 'notifications', bg: 'bg-surface-container-high', text: 'text-primary' };
+function showInAppToast(message, type = 'info') {
+  if (!message) return;
+  let container = document.getElementById('in-app-toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'in-app-toast-container';
+    container.className = 'fixed bottom-5 right-5 z-[9999] flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-4 sm:px-0';
+    document.body.appendChild(container);
   }
+
+  const toast = document.createElement('div');
+  const typeStyles = {
+    success: 'bg-[#1b4332] text-white border-emerald-500/40',
+    error: 'bg-[#5c1d1d] text-white border-red-500/40',
+    warning: 'bg-[#533807] text-white border-amber-500/40',
+    info: 'bg-[#2b1e16] text-[#fbf7ee] border-caramel/40'
+  };
+
+  const typeIcons = {
+    success: 'check_circle',
+    error: 'error',
+    warning: 'warning',
+    info: 'info'
+  };
+
+  const chosenStyle = typeStyles[type] || typeStyles.info;
+  const chosenIcon = typeIcons[type] || typeIcons.info;
+
+  toast.className = `pointer-events-auto flex items-center gap-3 p-3.5 rounded-2xl border shadow-warm-lg transition-all duration-300 transform translate-y-4 opacity-0 text-xs font-semibold ${chosenStyle}`;
+  toast.innerHTML = `
+    <span class="material-symbols-outlined text-lg shrink-0">${chosenIcon}</span>
+    <span class="flex-1 leading-snug">${escapeToastHtml(message)}</span>
+    <button class="opacity-70 hover:opacity-100 p-1 cursor-pointer transition-opacity">
+      <span class="material-symbols-outlined text-sm">close</span>
+    </button>
+  `;
+
+  const closeBtn = toast.querySelector('button');
+  const removeToast = () => {
+    toast.classList.add('opacity-0', 'translate-y-4');
+    setTimeout(() => toast.remove(), 300);
+  };
+
+  if (closeBtn) closeBtn.onclick = removeToast;
+
+  container.appendChild(toast);
+  requestAnimationFrame(() => {
+    toast.classList.remove('opacity-0', 'translate-y-4');
+  });
+
+  setTimeout(removeToast, 4000);
 }
+
+function escapeToastHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+window.showInAppToast = showInAppToast;
 
 /**
  * Fetch all notifications for active authenticated user from Supabase.

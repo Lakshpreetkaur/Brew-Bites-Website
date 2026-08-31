@@ -963,7 +963,9 @@ function renderProfileMain() {
 async function handleReorderOrder(orderId) {
   const order = (typeof getOrderById === 'function') ? getOrderById(orderId) : null;
   if (!order || !Array.isArray(order.items) || order.items.length === 0) {
-    alert("Could not load items from this order.");
+    if (typeof showInAppToast === 'function') {
+      showInAppToast("Could not load items from this order.", "error");
+    }
     return;
   }
 
@@ -977,7 +979,7 @@ async function handleReorderOrder(orderId) {
 
     if (product && product.available !== false) {
       if (typeof addToCart === 'function') {
-        addToCart(product.id, item.quantity || 1);
+        addToCart(product.id);
         addedCount += (item.quantity || 1);
       }
     } else {
@@ -991,13 +993,17 @@ async function handleReorderOrder(orderId) {
   }
 
   if (addedCount > 0) {
-    let alertMsg = `Added ${addedCount} item(s) from order #${order.orderId} to your cart with current catalog prices.`;
+    let msg = `Added items from order #${order.orderId} to your cart.`;
     if (omittedItems.length > 0) {
-      alertMsg += ` (Note: ${omittedItems.join(', ')} is currently sold out and was skipped).`;
+      msg += ` (${omittedItems.join(', ')} is sold out and was skipped).`;
     }
-    console.log("[Reorder]", alertMsg);
+    if (typeof showInAppToast === 'function') {
+      showInAppToast(msg, "success");
+    }
   } else if (omittedItems.length > 0) {
-    alert(`Could not reorder: ${omittedItems.join(', ')} is currently sold out.`);
+    if (typeof showInAppToast === 'function') {
+      showInAppToast(`Could not reorder: ${omittedItems.join(', ')} is sold out.`, "warning");
+    }
   }
 }
 
@@ -1870,8 +1876,13 @@ function openOrderDetail(orderId) {
           try {
             await cancelOrderInSupabase(order.orderId);
             openOrderDetail(order.orderId);
+            if (typeof showInAppToast === 'function') {
+              showInAppToast("Order cancelled successfully.", "info");
+            }
           } catch (e) {
-            alert(e.message || "Failed to cancel order.");
+            if (typeof showInAppToast === 'function') {
+              showInAppToast(e.message || "Failed to cancel order.", "error");
+            }
           }
         }
       }

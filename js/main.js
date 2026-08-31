@@ -105,6 +105,30 @@ function renderProducts() {
       ? String(item.image).trim()
       : 'assets/images/vanilla-cold-brew.jpg';
 
+    const inCartQty = (typeof getItemQuantityInCart === 'function')
+      ? getItemQuantityInCart(item.id)
+      : 0;
+
+    const actionButtonHTML = !isAvailable
+      ? `<span class="text-[10px] font-bold text-on-surface-variant/60 uppercase">Sold Out</span>`
+      : inCartQty > 0
+        ? `
+          <div class="flex items-center gap-1.5 bg-[#fbf6ec] border border-outline rounded-full px-1.5 py-0.5 shadow-2xs" onclick="event.stopPropagation()">
+            <button data-product-id="${item.id}" aria-label="Decrease ${item.name} quantity" class="card-decrease-qty-btn w-6 h-6 rounded-full flex items-center justify-center text-primary hover:bg-black/5 active:scale-90 transition-all cursor-pointer font-bold text-sm">
+              −
+            </button>
+            <span class="font-label-bold text-xs text-primary min-w-[14px] text-center">${inCartQty}</span>
+            <button data-product-id="${item.id}" aria-label="Increase ${item.name} quantity" class="card-increase-qty-btn w-6 h-6 rounded-full flex items-center justify-center text-primary hover:bg-black/5 active:scale-90 transition-all cursor-pointer font-bold text-sm">
+              +
+            </button>
+          </div>
+        `
+        : `
+          <button data-product-id="${item.id}" aria-label="Add ${item.name} to order" class="add-to-order-btn w-7 h-7 rounded-full bg-primary hover:bg-primary-container text-white flex items-center justify-center text-sm font-bold shadow-xs active:scale-90 transition-all cursor-pointer">
+            <span>+</span>
+          </button>
+        `;
+
     return `
       <article class="bg-white rounded-2xl p-3 border border-outline shadow-warm-xs hover:shadow-warm-md hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group cursor-pointer ${!isAvailable ? 'opacity-70' : ''}" onclick="openProductDetailsModal('${item.id}')">
         <div>
@@ -122,9 +146,7 @@ function renderProducts() {
 
         <div class="flex items-center justify-between pt-2 border-t border-outline/50 mt-auto" onclick="event.stopPropagation()">
           <div>${getReviewBadgeHTML(item.id)}</div>
-          <button data-product-id="${item.id}" ${!isAvailable ? 'disabled' : ''} aria-label="Add ${item.name} to order" class="add-to-order-btn w-7 h-7 rounded-full bg-primary hover:bg-primary-container text-white flex items-center justify-center text-sm font-bold shadow-xs active:scale-90 transition-all cursor-pointer">
-            <span>+</span>
-          </button>
+          ${actionButtonHTML}
         </div>
       </article>
     `;
@@ -151,6 +173,13 @@ function renderProducts() {
   });
 }
 
+// Re-render product cards when cart state updates anywhere
+if (typeof onCartUpdated === 'function') {
+  onCartUpdated(() => {
+    renderProducts();
+  });
+}
+
 /**
  * Open Product Quick Details & Ingredients Modal
  */
@@ -166,6 +195,10 @@ function openProductDetailsModal(productId) {
   const isAvailable = (typeof normalizeProductAvailable === 'function')
     ? normalizeProductAvailable(product.available)
     : (product.available !== false);
+
+  const inCartQty = (typeof getItemQuantityInCart === 'function')
+    ? getItemQuantityInCart(product.id)
+    : 0;
 
   const summary = (typeof getProductReviewSummary === 'function')
     ? getProductReviewSummary(product.id)
@@ -198,6 +231,29 @@ function openProductDetailsModal(productId) {
   };
 
   const categoryName = product.category === 'coffee' ? 'Coffee & Cold Brews' : (product.category === 'savory' ? 'Savory Bites' : 'Sweet Bites');
+
+  const actionModalControls = !isAvailable
+    ? `<span class="text-xs font-bold text-on-surface-variant/60 uppercase">Currently Sold Out</span>`
+    : inCartQty > 0
+      ? `
+        <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 bg-[#fbf6ec] border border-outline rounded-full px-2.5 py-1">
+            <button onclick="decreaseQuantity('${product.id}'); openProductDetailsModal('${product.id}');" aria-label="Decrease quantity" class="w-6 h-6 rounded-full flex items-center justify-center text-primary hover:bg-black/5 active:scale-90 font-bold text-sm cursor-pointer">−</button>
+            <span class="font-label-bold text-xs text-primary min-w-[16px] text-center">${inCartQty}</span>
+            <button onclick="addToCart('${product.id}'); openProductDetailsModal('${product.id}');" aria-label="Increase quantity" class="w-6 h-6 rounded-full flex items-center justify-center text-primary hover:bg-black/5 active:scale-90 font-bold text-sm cursor-pointer">+</button>
+          </div>
+          <button onclick="closeProductDetailsModal(); if(typeof openCart==='function') openCart();" class="bg-primary hover:bg-primary-container text-white font-label-bold text-xs px-4 py-2.5 rounded-full shadow-warm-xs active:scale-95 transition-all inline-flex items-center gap-1.5 cursor-pointer">
+            <span class="material-symbols-outlined text-sm">shopping_bag</span>
+            <span>View Cart</span>
+          </button>
+        </div>
+      `
+      : `
+        <button onclick="if(typeof addToCart==='function') { addToCart('${product.id}'); openProductDetailsModal('${product.id}'); }" class="bg-primary hover:bg-primary-container text-white font-label-bold text-xs px-5 py-2.5 rounded-full shadow-warm-xs active:scale-95 transition-all inline-flex items-center gap-1.5 cursor-pointer">
+          <span class="material-symbols-outlined text-sm">shopping_bag</span>
+          <span>Add to Order</span>
+        </button>
+      `;
 
   content.innerHTML = `
     <!-- Header with Close Button -->
@@ -248,10 +304,7 @@ function openProductDetailsModal(productId) {
           <span class="material-symbols-outlined text-sm">rate_review</span>
           <span>Reviews</span>
         </button>
-        <button onclick="if(typeof addToCart==='function') { addToCart('${product.id}'); closeProductDetailsModal(); if(typeof openCart==='function') openCart(); }" ${!isAvailable ? 'disabled' : ''} class="bg-primary hover:bg-primary-container text-white font-label-bold text-xs px-5 py-2.5 rounded-full shadow-warm-xs active:scale-95 transition-all inline-flex items-center gap-1.5 cursor-pointer">
-          <span class="material-symbols-outlined text-sm">shopping_bag</span>
-          <span>Add to Order</span>
-        </button>
+        ${actionModalControls}
       </div>
     </div>
   `;

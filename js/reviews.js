@@ -728,8 +728,13 @@ function attachReviewModalEvents(productId) {
         try {
           await deleteProductReview(id, currentUser);
           renderProductReviewsModalContent(productId);
+          if (typeof showInAppToast === 'function') {
+            showInAppToast("Review removed successfully.", "info");
+          }
         } catch (err) {
-          alert(err.message || "Could not delete review.");
+          if (typeof showInAppToast === 'function') {
+            showInAppToast(err.message || "Could not delete review.", "error");
+          }
         }
       }
     });
