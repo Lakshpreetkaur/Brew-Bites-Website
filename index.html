@@ -84,11 +84,11 @@
 
         <nav
           class="hidden lg:flex items-center gap-5 xl:gap-6 text-xs font-label-bold uppercase tracking-wider shrink-0">
-          <a href="#animation-container" class="text-primary border-b-2 border-primary pb-0.5">Home</a>
+          <a href="index.html" class="text-primary border-b-2 border-primary pb-0.5">Home</a>
           <a href="#menu-section" class="text-on-surface-variant hover:text-primary transition-colors">Menu</a>
-          <a href="#story-section"
+          <a href="roastery.html"
             class="text-on-surface-variant hover:text-primary transition-colors whitespace-nowrap">Our Roastery</a>
-          <a href="#reviews-section" class="text-on-surface-variant hover:text-primary transition-colors">Reviews</a>
+          <a href="reviews.html" class="text-on-surface-variant hover:text-primary transition-colors">Reviews</a>
         </nav>
       </div>
 
@@ -176,12 +176,12 @@
     <!-- Drawer Links & Mobile Actions -->
     <div class="flex-1 px-6 py-5 flex flex-col gap-4 text-left overflow-y-auto bg-surface">
       <div class="flex flex-col gap-3 font-bold text-base">
-        <a href="#animation-container"
+        <a href="index.html"
           class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Home</a>
         <a href="#menu-section" class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Menu</a>
-        <a href="#story-section" class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Our
+        <a href="roastery.html" class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Our
           Roastery</a>
-        <a href="#reviews-section"
+        <a href="reviews.html"
           class="nav-drawer-link text-primary hover:text-caramel transition-colors py-1">Reviews</a>
       </div>
 
@@ -321,32 +321,27 @@
       <div
         class="bg-[#fbf7ee] rounded-full border border-outline p-1.5 flex flex-col md:flex-row items-center justify-between gap-3 shadow-warm-xs">
 
-        <!-- Left: Category Pills -->
-        <div class="flex items-center gap-1 overflow-x-auto hide-scrollbar w-full md:w-auto p-0.5">
+        <!-- Left: Category Pills (3 Main Categories: Coffee & Cold Brews, Snacks, Dessert) -->
+        <div class="flex items-center gap-1.5 overflow-x-auto hide-scrollbar w-full md:w-auto p-0.5">
           <button data-menu-cat="all"
             class="menu-cat-btn flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-white font-label-bold text-xs shadow-warm-xs transition-all cursor-pointer">
-            <span class="material-symbols-outlined text-base">local_cafe</span>
+            <span class="material-symbols-outlined text-base">restaurant_menu</span>
             <span>All Menu</span>
           </button>
           <button data-menu-cat="coffee"
-            class="menu-cat-btn flex items-center gap-2 px-4 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer">
-            <span class="material-symbols-outlined text-base">icecream</span>
-            <span>Cold Brews</span>
+            class="menu-cat-btn flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer whitespace-nowrap">
+            <span class="material-symbols-outlined text-base">local_cafe</span>
+            <span>Coffee &amp; Cold Brews</span>
           </button>
-          <button data-menu-cat="cookies"
-            class="menu-cat-btn flex items-center gap-2 px-4 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer">
-            <span class="material-symbols-outlined text-base">cookie</span>
-            <span>Cookies</span>
+          <button data-menu-cat="snacks"
+            class="menu-cat-btn flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer whitespace-nowrap">
+            <span class="material-symbols-outlined text-base">lunch_dining</span>
+            <span>Snacks</span>
           </button>
-          <button data-menu-cat="muffins"
-            class="menu-cat-btn flex items-center gap-2 px-4 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer">
-            <span class="material-symbols-outlined text-base">bakery_dining</span>
-            <span>Muffins</span>
-          </button>
-          <button data-menu-cat="croissants"
-            class="menu-cat-btn flex items-center gap-2 px-4 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer">
-            <span class="material-symbols-outlined text-base">breakfast_dining</span>
-            <span>Croissants</span>
+          <button data-menu-cat="dessert"
+            class="menu-cat-btn flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-full text-on-surface-variant hover:bg-surface-container font-label-bold text-xs transition-all cursor-pointer whitespace-nowrap">
+            <span class="material-symbols-outlined text-base">cake</span>
+            <span>Dessert</span>
           </button>
         </div>
 
@@ -380,15 +375,14 @@
         </a>
       </div>
 
-      <!-- Coffee Section Container -->
+      <!-- Products Grid Container -->
       <div id="coffee-section">
-        <!-- 5-Column Product Grid -->
-        <div id="coffee-products" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div id="coffee-products" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-4 sm:gap-5">
           <!-- Dynamically rendered via js/main.js renderProducts() -->
         </div>
       </div>
 
-      <!-- Bites Section Container (Fallback/Hidden) -->
+      <!-- Bites Section Container (Fallback) -->
       <div id="bites-section" class="hidden">
         <div id="bite-products"></div>
       </div>
@@ -398,7 +392,7 @@
     <section class="w-full max-w-7xl mx-auto px-4 sm:px-8 py-6 mb-16">
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
 
-        <!-- LEFT: Our Roastery Card (7 Cols) -->
+        <!-- LEFT: Our Roastery Card (6 Cols) -->
         <div id="story-section"
           class="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-7 border border-outline shadow-warm-xs flex flex-col justify-between scroll-mt-24 relative overflow-hidden">
           <div>
@@ -407,11 +401,10 @@
               <span class="material-symbols-outlined text-primary text-xl">coffee_maker</span>
             </div>
             <p class="font-body text-xs sm:text-sm text-on-surface-variant leading-relaxed max-w-md mb-6 font-medium">
-              We source the finest beans from the best farms and roast them in small batches to bring out rich flavours
-              in every cup.
+              We source the finest single-origin beans from sustainable farms and roast them in small batches to bring out rich flavours in every cup.
             </p>
-            <a href="#menu-section"
-              class="bg-primary hover:bg-primary-container text-white font-label-bold text-xs px-5 py-2.5 rounded-full shadow-warm-xs hover:scale-[1.02] active:scale-95 transition-all inline-flex items-center gap-2 mb-6">
+            <a href="roastery.html" id="know-our-story-btn"
+              class="bg-primary hover:bg-primary-container text-white font-label-bold text-xs px-5 py-2.5 rounded-full shadow-warm-xs hover:scale-[1.02] active:scale-95 transition-all inline-flex items-center gap-2 mb-6 cursor-pointer">
               <span>Know Our Story</span>
               <span class="material-symbols-outlined text-xs">arrow_forward</span>
             </a>
@@ -423,66 +416,33 @@
           </div>
         </div>
 
-        <!-- RIGHT: What Our Locals Say (5 Cols) -->
+        <!-- RIGHT: Customer Reviews Card (6 Cols) -->
         <div id="reviews-section"
           class="lg:col-span-6 bg-white rounded-3xl p-6 sm:p-7 border border-outline shadow-warm-xs flex flex-col justify-between scroll-mt-24">
-          <div class="flex items-center justify-between mb-5">
+          <div class="flex items-center justify-between mb-4">
             <div class="flex items-center gap-2">
-              <h3 class="font-display font-bold text-2xl text-primary">What Our Locals Say</h3>
+              <h3 class="font-display font-bold text-2xl text-primary">Customer Reviews</h3>
               <span class="material-symbols-outlined text-caramel text-xl">star</span>
             </div>
-            <div class="flex items-center gap-1.5">
-              <button
-                class="w-7 h-7 rounded-full border border-outline flex items-center justify-center text-primary hover:bg-surface-container transition-colors cursor-pointer text-xs font-bold">&lt;</button>
-              <button
-                class="w-7 h-7 rounded-full border border-outline flex items-center justify-center text-primary hover:bg-surface-container transition-colors cursor-pointer text-xs font-bold">&gt;</button>
-            </div>
-          </div>
-
-          <!-- 3 Review Testimonial Cards Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div
-              class="bg-[#fcf9f2] rounded-2xl p-3.5 border border-outline/70 flex flex-col justify-between text-left">
-              <div>
-                <div class="flex text-caramel text-xs mb-2">★★★★★</div>
-                <p class="font-body text-[11px] text-on-surface-variant leading-relaxed mb-3">
-                  "The cold brew is out of this world! And those croissants? Just perfect."
-                </p>
-              </div>
-              <div class="border-t border-outline/40 pt-2">
-                <p class="font-bold text-[11px] text-primary">— Sarah J.</p>
-                <span class="text-[10px] text-emerald-700 font-medium">✓ Verified Buyer</span>
-              </div>
-            </div>
-
-            <div
-              class="bg-[#fcf9f2] rounded-2xl p-3.5 border border-outline/70 flex flex-col justify-between text-left">
-              <div>
-                <div class="flex text-caramel text-xs mb-2">★★★★★</div>
-                <p class="font-body text-[11px] text-on-surface-variant leading-relaxed mb-3">
-                  "My go-to place for coffee and a cozy morning vibe."
-                </p>
-              </div>
-              <div class="border-t border-outline/40 pt-2">
-                <p class="font-bold text-[11px] text-primary">— Karan M.</p>
-                <span class="text-[10px] text-emerald-700 font-medium">✓ Verified Buyer</span>
-              </div>
-            </div>
-
-            <div
-              class="bg-[#fcf9f2] rounded-2xl p-3.5 border border-outline/70 flex flex-col justify-between text-left">
-              <div>
-                <div class="flex text-caramel text-xs mb-2">★★★★★</div>
-                <p class="font-body text-[11px] text-on-surface-variant leading-relaxed mb-3">
-                  "Fresh, delicious and made with so much love. Highly recommend!"
-                </p>
-              </div>
-              <div class="border-t border-outline/40 pt-2">
-                <p class="font-bold text-[11px] text-primary">— Priya S.</p>
-                <span class="text-[10px] text-emerald-700 font-medium">✓ Verified Buyer</span>
+            <div class="flex items-center gap-3">
+              <a href="reviews.html" class="text-xs font-bold text-caramel hover:text-primary transition-colors flex items-center gap-1">
+                <span>All Reviews</span>
+                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+              </a>
+              <div class="flex items-center gap-1">
+                <button id="prev-home-review-btn" aria-label="Previous Reviews"
+                  class="w-7 h-7 rounded-full border border-outline flex items-center justify-center text-primary hover:bg-surface-container transition-colors cursor-pointer text-xs font-bold">&lt;</button>
+                <button id="next-home-review-btn" aria-label="Next Reviews"
+                  class="w-7 h-7 rounded-full border border-outline flex items-center justify-center text-primary hover:bg-surface-container transition-colors cursor-pointer text-xs font-bold">&gt;</button>
               </div>
             </div>
           </div>
+
+          <!-- Dynamic Review Cards Grid -->
+          <div id="homepage-reviews-container" class="grid grid-cols-1 sm:grid-cols-3 gap-3 min-h-[160px]">
+            <!-- Dynamically populated via js/reviews.js -->
+          </div>
+        </div>
 
         </div>
 
